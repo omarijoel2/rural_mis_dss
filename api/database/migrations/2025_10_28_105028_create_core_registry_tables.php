@@ -196,6 +196,7 @@ return new class extends Migration
             $table->string('title')->nullable();
             $table->foreignId('uploaded_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
             
             $table->index(['entity_type', 'entity_id']);
         });
