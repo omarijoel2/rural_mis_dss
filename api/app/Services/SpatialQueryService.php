@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
 
 class SpatialQueryService
 {
@@ -44,7 +45,8 @@ class SpatialQueryService
         
         return match($type) {
             'Point' => Point::fromJson(json_encode($geojson)),
-            'Polygon', 'MultiPolygon' => Polygon::fromJson(json_encode($geojson)),
+            'Polygon' => Polygon::fromJson(json_encode($geojson)),
+            'MultiPolygon' => MultiPolygon::fromJson(json_encode($geojson)),
             default => throw new \InvalidArgumentException("Unsupported geometry type: {$type}")
         };
     }
