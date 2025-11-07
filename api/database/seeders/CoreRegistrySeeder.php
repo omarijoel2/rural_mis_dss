@@ -31,9 +31,8 @@ class CoreRegistrySeeder extends Seeder
             $org = Organization::create([
                 'tenant_id' => $tenant->id,
                 'name' => 'Nairobi Water & Sewerage Company',
-                'code' => 'NWSC',
-                'type' => 'water_utility',
-                'status' => 'active',
+                'org_code' => 'NWSC',
+                'type' => 'utility',
             ]);
         }
 
@@ -151,7 +150,6 @@ class CoreRegistrySeeder extends Seeder
                         new Point(-1.28, 36.80),
                     ], 4326)
                 ], 4326),
-                'centroid' => new Point(-1.29, 36.815, 4326),
             ],
             [
                 'name' => 'DMA Zone 2 - Kilimani',
@@ -169,7 +167,6 @@ class CoreRegistrySeeder extends Seeder
                         new Point(-1.29, 36.76),
                     ], 4326)
                 ], 4326),
-                'centroid' => new Point(-1.305, 36.78, 4326),
             ],
             [
                 'name' => 'DMA Zone 3 - Eastleigh',
@@ -187,7 +184,6 @@ class CoreRegistrySeeder extends Seeder
                         new Point(-1.26, 36.85),
                     ], 4326)
                 ], 4326),
-                'centroid' => new Point(-1.28, 36.875, 4326),
             ],
         ];
 
@@ -214,7 +210,6 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'treatment',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'capacity_m3_day' => 45000,
                 'location' => new Point(-1.10, 36.65, 4326),
             ],
             [
@@ -223,7 +218,6 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'source',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'capacity_m3_day' => 8000,
                 'location' => new Point(-1.08, 36.68, 4326),
             ],
             [
@@ -232,7 +226,6 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'pumpstation',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'capacity_m3_day' => 25000,
                 'location' => new Point(-1.24, 36.78, 4326),
             ],
             [
@@ -241,7 +234,6 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'reservoir',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'capacity_m3_day' => 15000,
                 'location' => new Point(-1.25, 36.88, 4326),
             ],
             [
@@ -250,7 +242,6 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'pumpstation',
                 'status' => 'standby',
                 'scheme_id' => $nairobi->id,
-                'capacity_m3_day' => 12000,
                 'location' => new Point(-1.26, 36.73, 4326),
             ],
             [
@@ -267,7 +258,6 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'source',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'capacity_m3_day' => 420000,
                 'location' => new Point(-0.75, 37.05, 4326),
             ],
             [
@@ -276,7 +266,6 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'reservoir',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'capacity_m3_day' => 10000,
                 'location' => new Point(-1.27, 36.83, 4326),
             ],
         ];
