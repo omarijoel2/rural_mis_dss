@@ -10,11 +10,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api', createProxyMiddleware({
   target: 'http://127.0.0.1:8001',
   changeOrigin: true,
-  logLevel: 'debug',
-  onProxyReq: (proxyReq, req, res) => {
+  pathRewrite: (path) => `/api${path}`,
+  onProxyReq: (proxyReq: any, req: any) => {
     log(`[Proxy] ${req.method} ${req.url} → Laravel API`);
   },
-  onError: (err, req, res) => {
+  onError: (err: any, req: any, res: any) => {
     log(`[Proxy Error] ${err.message}`);
     res.writeHead(503, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
