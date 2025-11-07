@@ -6,14 +6,18 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+import { apiClient } from '../../lib/api-client';
+import { Shield } from 'lucide-react';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [requires2FA, setRequires2FA] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,8 +26,27 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      navigate('/');
+      if (requires2FA) {
+        const response = await apiClient.post<{ user: any }>('/auth/2fa/challenge', {
+          email,
+          password,
+          code: twoFactorCode,
+        });
+        setUser(response.user);
+        navigate('/');
+      } else {
+        try {
+          await login(email, password);
+          navigate('/');
+        } catch (err: any) {
+          if (err.message?.includes('2FA') || err.message?.includes('two-factor')) {
+            setRequires2FA(true);
+            setError('');
+          } else {
+            throw err;
+          }
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -49,41 +72,88 @@ export function LoginPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
+            {requires2FA && (
+              <Alert>
+                <Shield className="h-4 w-4" />
+                <AlertDescription>
+                  Two-factor authentication is enabled. Please enter the code from your authenticator app.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {!requires2FA ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="user@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="2fa-code">Verification Code</Label>
+                  <Input
+                    id="2fa-code"
+                    type="text"
+                    placeholder="000000"
+                    maxLength={6}
+                    value={twoFactorCode}
+                    onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                    required
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Enter the 6-digit code from your authenticator app
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setRequires2FA(false);
+                    setTwoFactorCode('');
+                    setError('');
+                  }}
+                  disabled={isLoading}
+                >
+                  Back to login
+                </Button>
+              </>
+            )}
           </CardContent>
 
           <CardFooter>
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isLoading}
+              disabled={isLoading || (requires2FA && twoFactorCode.length !== 6)}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Signing in...' : requires2FA ? 'Verify & Sign In' : 'Sign In'}
             </Button>
           </CardFooter>
         </form>
