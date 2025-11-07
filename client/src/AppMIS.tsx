@@ -17,6 +17,7 @@ import { ConsentsPage } from './pages/security/ConsentsPage';
 import { KmsPage } from './pages/security/KmsPage';
 import { RetentionPage } from './pages/security/RetentionPage';
 import { DataCatalogPage } from './pages/security/DataCatalogPage';
+import { TwoFactorSetupPage } from './pages/security/TwoFactorSetupPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -101,6 +102,11 @@ export function AppMIS() {
                 <Route path="data-catalog" element={
                   <ProtectedRoute requiredPermission="view data catalog">
                     <DataCatalogPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="2fa" element={
+                  <ProtectedRoute>
+                    <TwoFactorSetupPage />
                   </ProtectedRoute>
                 } />
               </Route>
