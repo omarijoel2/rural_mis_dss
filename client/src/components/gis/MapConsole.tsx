@@ -1,10 +1,12 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import Map, { Source, Layer, NavigationControl, ScaleControl, FullscreenControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface MapLayer {
   id: string;
@@ -13,6 +15,29 @@ interface MapLayer {
   type: 'fill' | 'circle' | 'line';
   paint: any;
 }
+
+const BASEMAP_STYLES = [
+  {
+    id: 'positron',
+    name: 'Light',
+    url: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+  },
+  {
+    id: 'dark-matter',
+    name: 'Dark',
+    url: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  },
+  {
+    id: 'voyager',
+    name: 'Voyager',
+    url: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+  },
+  {
+    id: 'osm',
+    name: 'OpenStreetMap',
+    url: 'https://tiles.openfreemap.org/styles/liberty',
+  },
+];
 
 const MAP_LAYERS: MapLayer[] = [
   {
@@ -73,6 +98,28 @@ const MAP_LAYERS: MapLayer[] = [
   },
 ];
 
+async function fetchGeoJSON(url: string) {
+  const response = await fetch(url, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  
+  return response.json();
+}
+
+function useLayerData(layerId: string, url: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['gis-layer', layerId],
+    queryFn: () => fetchGeoJSON(url),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
 interface MapConsoleProps {
   className?: string;
 }
@@ -84,13 +131,10 @@ export function MapConsole({ className }: MapConsoleProps) {
     zoom: 8,
   });
 
+  const [basemapId, setBasemapId] = useState('positron');
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(
     new Set(['schemes', 'dmas', 'facilities'])
   );
-
-  const [layerData, setLayerData] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState<Set<string>>(new Set());
-  const [errors, setErrors] = useState<Set<string>>(new Set());
 
   const toggleLayer = useCallback((layerId: string) => {
     setEnabledLayers((prev) => {
@@ -104,53 +148,24 @@ export function MapConsole({ className }: MapConsoleProps) {
     });
   }, []);
 
-  useEffect(() => {
-    const fetchLayerData = async (layer: MapLayer) => {
-      if (!enabledLayers.has(layer.id) || layerData[layer.id]) return;
+  const schemesQuery = useLayerData('schemes', MAP_LAYERS[0].url, enabledLayers.has('schemes'));
+  const dmasQuery = useLayerData('dmas', MAP_LAYERS[1].url, enabledLayers.has('dmas'));
+  const facilitiesQuery = useLayerData('facilities', MAP_LAYERS[2].url, enabledLayers.has('facilities'));
 
-      setLoading((prev) => new Set(prev).add(layer.id));
-      setErrors((prev) => {
-        const next = new Set(prev);
-        next.delete(layer.id);
-        return next;
-      });
+  const layerQueries = {
+    schemes: schemesQuery,
+    dmas: dmasQuery,
+    facilities: facilitiesQuery,
+  };
 
-      try {
-        const response = await fetch(layer.url, {
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        setLayerData((prev) => ({ ...prev, [layer.id]: data }));
-      } catch (error) {
-        console.error(`Failed to load ${layer.id}:`, error);
-        setErrors((prev) => new Set(prev).add(layer.id));
-      } finally {
-        setLoading((prev) => {
-          const next = new Set(prev);
-          next.delete(layer.id);
-          return next;
-        });
-      }
-    };
-
-    MAP_LAYERS.forEach((layer) => {
-      if (enabledLayers.has(layer.id) && !layerData[layer.id]) {
-        fetchLayerData(layer);
-      }
-    });
-  }, [enabledLayers, layerData]);
+  const selectedBasemap = BASEMAP_STYLES.find((style) => style.id === basemapId) || BASEMAP_STYLES[0];
 
   return (
     <div className={`relative w-full h-full ${className || ''}`}>
       <Map
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
-        mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+        mapStyle={selectedBasemap.url}
         style={{ width: '100%', height: '100%' }}
       >
         <NavigationControl position="top-right" />
@@ -158,14 +173,15 @@ export function MapConsole({ className }: MapConsoleProps) {
         <FullscreenControl position="top-right" />
 
         {MAP_LAYERS.map((layer) => {
-          if (!enabledLayers.has(layer.id) || !layerData[layer.id]) return null;
+          const query = layerQueries[layer.id as keyof typeof layerQueries];
+          if (!enabledLayers.has(layer.id) || !query.data) return null;
 
           return (
             <Source
               key={layer.id}
               id={layer.id}
               type="geojson"
-              data={layerData[layer.id]}
+              data={query.data}
             >
               <Layer
                 id={layer.id}
@@ -179,31 +195,52 @@ export function MapConsole({ className }: MapConsoleProps) {
 
       <Card className="absolute top-4 left-4 w-64 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
         <CardContent className="p-4">
-          <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Map Layers</h3>
+          <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Map Controls</h3>
+          
+          <div className="mb-4">
+            <Label className="text-sm mb-2 block text-gray-700 dark:text-gray-300">Basemap</Label>
+            <Select value={basemapId} onValueChange={setBasemapId}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {BASEMAP_STYLES.map((style) => (
+                  <SelectItem key={style.id} value={style.id}>
+                    {style.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Layers</h4>
           <div className="space-y-3">
-            {MAP_LAYERS.map((layer) => (
-              <div key={layer.id} className="flex items-center justify-between">
-                <Label
-                  htmlFor={`layer-${layer.id}`}
-                  className="text-sm cursor-pointer text-gray-700 dark:text-gray-300"
-                >
-                  {layer.name}
-                </Label>
-                <div className="flex items-center gap-2">
-                  {loading.has(layer.id) && (
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                  )}
-                  {errors.has(layer.id) && (
-                    <span className="text-xs text-red-500">Error</span>
-                  )}
-                  <Switch
-                    id={`layer-${layer.id}`}
-                    checked={enabledLayers.has(layer.id)}
-                    onCheckedChange={() => toggleLayer(layer.id)}
-                  />
+            {MAP_LAYERS.map((layer) => {
+              const query = layerQueries[layer.id as keyof typeof layerQueries];
+              return (
+                <div key={layer.id} className="flex items-center justify-between">
+                  <Label
+                    htmlFor={`layer-${layer.id}`}
+                    className="text-sm cursor-pointer text-gray-700 dark:text-gray-300"
+                  >
+                    {layer.name}
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    {query.isLoading && (
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    )}
+                    {query.isError && (
+                      <span className="text-xs text-red-500">Error</span>
+                    )}
+                    <Switch
+                      id={`layer-${layer.id}`}
+                      checked={enabledLayers.has(layer.id)}
+                      onCheckedChange={() => toggleLayer(layer.id)}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">

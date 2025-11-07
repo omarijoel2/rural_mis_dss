@@ -47,8 +47,8 @@ class CoreRegistrySeeder extends Seeder
     {
         $schemes = [
             [
-                'name' => 'Nairobi Central Water Supply Scheme',
                 'code' => 'NCWSS-001',
+                'name' => 'Nairobi Central Water Supply Scheme',
                 'type' => 'urban',
                 'status' => 'active',
                 'population_estimate' => 1500000,
@@ -64,8 +64,8 @@ class CoreRegistrySeeder extends Seeder
                 'centroid' => new Point(-1.30, 36.80, 4326),
             ],
             [
-                'name' => 'Westlands Water Supply Scheme',
                 'code' => 'WWSS-002',
+                'name' => 'Westlands Water Supply Scheme',
                 'type' => 'urban',
                 'status' => 'active',
                 'population_estimate' => 450000,
@@ -81,8 +81,8 @@ class CoreRegistrySeeder extends Seeder
                 'centroid' => new Point(-1.26, 36.805, 4326),
             ],
             [
-                'name' => 'Kikuyu Rural Water Project',
                 'code' => 'KRWP-003',
+                'name' => 'Kikuyu Rural Water Project',
                 'type' => 'rural',
                 'status' => 'active',
                 'population_estimate' => 85000,
@@ -98,8 +98,8 @@ class CoreRegistrySeeder extends Seeder
                 'centroid' => new Point(-1.24, 36.67, 4326),
             ],
             [
-                'name' => 'Thika Water & Sanitation Scheme',
                 'code' => 'TWSS-004',
+                'name' => 'Thika Water & Sanitation Scheme',
                 'type' => 'urban',
                 'status' => 'planning',
                 'population_estimate' => 250000,
@@ -117,9 +117,16 @@ class CoreRegistrySeeder extends Seeder
         ];
 
         foreach ($schemes as $data) {
-            $data['tenant_id'] = $tenant->id;
-            $data['org_id'] = $org->id;
-            Scheme::create($data);
+            Scheme::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'code' => $data['code'],
+                ],
+                array_merge($data, [
+                    'tenant_id' => $tenant->id,
+                    'org_id' => $org->id,
+                ])
+            );
         }
     }
 
@@ -135,8 +142,8 @@ class CoreRegistrySeeder extends Seeder
         
         $dmas = [
             [
-                'name' => 'DMA Zone 1 - CBD',
                 'code' => 'DMA-Z1-CBD',
+                'name' => 'DMA Zone 1 - CBD',
                 'scheme_id' => $nairobi->id,
                 'status' => 'active',
                 'nightline_threshold_m3h' => 12.5,
@@ -152,8 +159,8 @@ class CoreRegistrySeeder extends Seeder
                 ], 4326),
             ],
             [
-                'name' => 'DMA Zone 2 - Kilimani',
                 'code' => 'DMA-Z2-KLM',
+                'name' => 'DMA Zone 2 - Kilimani',
                 'scheme_id' => $nairobi->id,
                 'status' => 'active',
                 'nightline_threshold_m3h' => 15.0,
@@ -169,8 +176,8 @@ class CoreRegistrySeeder extends Seeder
                 ], 4326),
             ],
             [
-                'name' => 'DMA Zone 3 - Eastleigh',
                 'code' => 'DMA-Z3-EST',
+                'name' => 'DMA Zone 3 - Eastleigh',
                 'scheme_id' => $nairobi->id,
                 'status' => 'planned',
                 'nightline_threshold_m3h' => 18.0,
@@ -188,8 +195,13 @@ class CoreRegistrySeeder extends Seeder
         ];
 
         foreach ($dmas as $data) {
-            $data['tenant_id'] = $tenant->id;
-            Dma::create($data);
+            Dma::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'code' => $data['code'],
+                ],
+                array_merge($data, ['tenant_id' => $tenant->id])
+            );
         }
     }
 
@@ -205,64 +217,64 @@ class CoreRegistrySeeder extends Seeder
 
         $facilities = [
             [
-                'name' => 'Sasumua Water Treatment Plant',
                 'code' => 'FAC-SWTP-001',
+                'name' => 'Sasumua Water Treatment Plant',
                 'category' => 'treatment',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.10, 36.65, 4326),
             ],
             [
-                'name' => 'Ngethu Spring Source',
                 'code' => 'FAC-NSS-002',
+                'name' => 'Ngethu Spring Source',
                 'category' => 'source',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.08, 36.68, 4326),
             ],
             [
-                'name' => 'Gigiri Pumping Station',
                 'code' => 'FAC-GPS-003',
+                'name' => 'Gigiri Pumping Station',
                 'category' => 'pumpstation',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.24, 36.78, 4326),
             ],
             [
-                'name' => 'Ruaraka Service Reservoir',
                 'code' => 'FAC-RSR-004',
+                'name' => 'Ruaraka Service Reservoir',
                 'category' => 'reservoir',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.25, 36.88, 4326),
             ],
             [
-                'name' => 'Kabete Booster Station',
                 'code' => 'FAC-KBS-005',
+                'name' => 'Kabete Booster Station',
                 'category' => 'pumpstation',
                 'status' => 'standby',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.26, 36.73, 4326),
             ],
             [
-                'name' => 'Karura Water Quality Lab',
                 'code' => 'FAC-KWQL-006',
+                'name' => 'Karura Water Quality Lab',
                 'category' => 'lab',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.25, 36.82, 4326),
             ],
             [
-                'name' => 'Ndakaini Dam Source',
                 'code' => 'FAC-NDS-007',
+                'name' => 'Ndakaini Dam Source',
                 'category' => 'source',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-0.75, 37.05, 4326),
             ],
             [
-                'name' => 'City Park Reservoir',
                 'code' => 'FAC-CPR-008',
+                'name' => 'City Park Reservoir',
                 'category' => 'reservoir',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
@@ -271,8 +283,13 @@ class CoreRegistrySeeder extends Seeder
         ];
 
         foreach ($facilities as $data) {
-            $data['tenant_id'] = $tenant->id;
-            Facility::create($data);
+            Facility::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'code' => $data['code'],
+                ],
+                array_merge($data, ['tenant_id' => $tenant->id])
+            );
         }
     }
 }
