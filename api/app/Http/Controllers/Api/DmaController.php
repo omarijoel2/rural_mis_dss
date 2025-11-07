@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDmaRequest;
 use App\Http\Requests\UpdateDmaRequest;
 use App\Models\Dma;
+use App\Services\SpatialQueryService;
 use Illuminate\Http\Request;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
 
@@ -13,7 +14,8 @@ class DmaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Dma::with(['scheme', 'tenant']);
+        $query = Dma::where('tenant_id', auth()->user()->tenant_id)
+            ->with(['scheme', 'tenant']);
 
         if ($request->has('scheme_id')) {
             $query->where('scheme_id', $request->scheme_id);
@@ -29,6 +31,10 @@ class DmaController extends Controller
                 $q->where('name', 'ilike', "%{$search}%")
                   ->orWhere('code', 'ilike', "%{$search}%");
             });
+        }
+
+        if ($request->has('bbox')) {
+            $query = SpatialQueryService::applyBboxFilter($query, $request->bbox, 'geom');
         }
 
         $dmas = $query->paginate($request->get('per_page', 15));
@@ -74,5 +80,36 @@ class DmaController extends Controller
     {
         $dma->delete();
         return response()->json(['message' => 'DMA deleted successfully'], 204);
+    }
+
+    public function geojson(Request $request)
+    {
+        $query = Dma::where('tenant_id', auth()->user()->tenant_id);
+
+        if ($request->has('bbox')) {
+            $query = SpatialQueryService::applyBboxFilter($query, $request->bbox, 'geom');
+        }
+
+        if ($request->has('scheme_id')) {
+            $query->where('scheme_id', $request->scheme_id);
+        }
+
+        $dmas = $query->limit($request->get('limit', 1000))->get();
+
+        return response()->json(SpatialQueryService::buildMapLayers('dma', $dmas));
+    }
+
+    public function export(Request $request)
+    {
+        $query = Dma::where('tenant_id', auth()->user()->tenant_id);
+
+        if ($request->has('bbox')) {
+            $query = SpatialQueryService::applyBboxFilter($query, $request->bbox, 'geom');
+        }
+
+        $dmas = $query->limit($request->get('limit', 10000))->get();
+
+        return response()->json(SpatialQueryService::buildMapLayers('dma', $dmas))
+            ->header('Content-Disposition', 'attachment; filename="dmas.geojson"');
     }
 }

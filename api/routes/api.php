@@ -50,6 +50,59 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('zones', ZoneController::class);
     Route::apiResource('addresses', AddressController::class);
 
+    Route::prefix('gis')->group(function () {
+        Route::get('/schemes/geojson', [SchemeController::class, 'geojson']);
+        Route::get('/schemes/export', [SchemeController::class, 'export']);
+        Route::post('/schemes/import', [SchemeController::class, 'importGeojson']);
+        
+        Route::get('/dmas/geojson', [DmaController::class, 'geojson']);
+        Route::get('/dmas/export', [DmaController::class, 'export']);
+        
+        Route::get('/facilities/geojson', [FacilityController::class, 'geojson']);
+        Route::get('/facilities/export', [FacilityController::class, 'export']);
+        
+        Route::get('/layers', function (Request $request) {
+            return response()->json([
+                'layers' => [
+                    [
+                        'id' => 'schemes',
+                        'name' => 'Water Supply Schemes',
+                        'type' => 'fill',
+                        'source' => url('/api/v1/gis/schemes/geojson'),
+                        'paint' => [
+                            'fill-color' => ['match', ['get', 'status'], 'active', '#22c55e', 'planning', '#3b82f6', 'decommissioned', '#94a3b8', '#6b7280'],
+                            'fill-opacity' => 0.6,
+                            'fill-outline-color' => '#000000',
+                        ],
+                    ],
+                    [
+                        'id' => 'dmas',
+                        'name' => 'District Metered Areas',
+                        'type' => 'fill',
+                        'source' => url('/api/v1/gis/dmas/geojson'),
+                        'paint' => [
+                            'fill-color' => ['match', ['get', 'status'], 'active', '#8b5cf6', 'planned', '#06b6d4', 'retired', '#94a3b8', '#6b7280'],
+                            'fill-opacity' => 0.5,
+                            'fill-outline-color' => '#000000',
+                        ],
+                    ],
+                    [
+                        'id' => 'facilities',
+                        'name' => 'Facilities',
+                        'type' => 'circle',
+                        'source' => url('/api/v1/gis/facilities/geojson'),
+                        'paint' => [
+                            'circle-radius' => 6,
+                            'circle-color' => ['match', ['get', 'type'], 'source', '#10b981', 'treatment', '#3b82f6', 'pumpstation', '#f59e0b', 'reservoir', '#06b6d4', '#6b7280'],
+                            'circle-stroke-width' => 2,
+                            'circle-stroke-color' => '#ffffff',
+                        ],
+                    ],
+                ],
+            ]);
+        });
+    });
+
     Route::prefix('security')->group(function () {
         Route::get('/audit', [AuditController::class, 'index']);
         Route::get('/audit/entity/{entityType}/{entityId}', [AuditController::class, 'getEntityAuditTrail']);
