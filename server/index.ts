@@ -11,7 +11,26 @@ app.use('/api', createProxyMiddleware({
   target: 'http://127.0.0.1:8001',
   changeOrigin: true,
   pathRewrite: {
-    '^/api': '/api'
+    '^/': '/api/'
+  },
+  on: {
+    proxyReq: (proxyReq: any, req: any) => {
+      log(`[Proxy] ${req.method} ${req.url} → Laravel`);
+    },
+    proxyRes: (proxyRes: any, req: any) => {
+      log(`[Proxy] ✓ ${proxyRes.statusCode}`);
+    },
+    error: (err: any, req: any, res: any) => {
+      log(`[Proxy Error] ${err.message}`);
+      if (!res.headersSent) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          error: 'Laravel API unavailable', 
+          message: 'Start Laravel: cd api && php artisan serve --host=0.0.0.0 --port=8001',
+          details: err.message
+        }));
+      }
+    }
   }
 }) as any);
 

@@ -41,6 +41,17 @@ Route::prefix('v1/auth')->group(function () {
     });
 });
 
+Route::prefix('v1/gis')->group(function () {
+    Route::get('/schemes/geojson', [SchemeController::class, 'geojson']);
+    Route::get('/schemes/export', [SchemeController::class, 'export']);
+    
+    Route::get('/dmas/geojson', [DmaController::class, 'geojson']);
+    Route::get('/dmas/export', [DmaController::class, 'export']);
+    
+    Route::get('/facilities/geojson', [FacilityController::class, 'geojson']);
+    Route::get('/facilities/export', [FacilityController::class, 'export']);
+});
+
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('organizations', OrganizationController::class);
     Route::apiResource('schemes', SchemeController::class);
@@ -51,15 +62,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('addresses', AddressController::class);
 
     Route::prefix('gis')->group(function () {
-        Route::get('/schemes/geojson', [SchemeController::class, 'geojson']);
-        Route::get('/schemes/export', [SchemeController::class, 'export']);
         Route::post('/schemes/import', [SchemeController::class, 'importGeojson']);
-        
-        Route::get('/dmas/geojson', [DmaController::class, 'geojson']);
-        Route::get('/dmas/export', [DmaController::class, 'export']);
-        
-        Route::get('/facilities/geojson', [FacilityController::class, 'geojson']);
-        Route::get('/facilities/export', [FacilityController::class, 'export']);
         
         Route::get('/layers', function (Request $request) {
             return response()->json([
