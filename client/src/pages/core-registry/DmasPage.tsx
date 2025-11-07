@@ -3,12 +3,37 @@ import { dmaService } from '../../services/dma.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { RequirePerm } from '../../components/RequirePerm';
+import { Download } from 'lucide-react';
 
 export function DmasPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['dmas'],
     queryFn: () => dmaService.getAll({ per_page: 50 }),
   });
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/v1/gis/dmas/export', {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dmas-${new Date().toISOString().split('T')[0]}.geojson`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -33,9 +58,15 @@ export function DmasPage() {
           <h1 className="text-3xl font-bold">District Metered Areas (DMAs)</h1>
           <p className="text-muted-foreground">Manage water distribution network DMAs</p>
         </div>
-        <RequirePerm permission="create dmas">
-          <Button>Create DMA</Button>
-        </RequirePerm>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            Export GeoJSON
+          </Button>
+          <RequirePerm permission="create dmas">
+            <Button>Create DMA</Button>
+          </RequirePerm>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
