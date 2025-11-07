@@ -33,6 +33,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit dmas',
             'delete dmas',
             
+            'import spatial data',
+            'export spatial data',
+            
             'view pipelines',
             'create pipelines',
             'edit pipelines',
@@ -93,6 +96,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view facilities', 'create facilities', 'edit facilities', 'delete facilities',
             'view organizations', 'create organizations', 'edit organizations', 'delete organizations',
             'view dmas', 'create dmas', 'edit dmas', 'delete dmas',
+            'import spatial data', 'export spatial data',
             'view pipelines', 'create pipelines', 'edit pipelines', 'delete pipelines',
             'view zones', 'create zones', 'edit zones', 'delete zones',
             'view audit', 'export audit',
@@ -110,6 +114,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view facilities', 'create facilities', 'edit facilities',
             'view organizations', 'edit organizations',
             'view dmas', 'create dmas', 'edit dmas',
+            'import spatial data', 'export spatial data',
             'view pipelines', 'create pipelines', 'edit pipelines',
             'view zones', 'create zones', 'edit zones',
             'view audit',
