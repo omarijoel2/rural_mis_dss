@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('wo_labor', function (Blueprint $table) {
             $table->id();
             $table->foreignId('work_order_id')->constrained('work_orders')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
+            $table->uuid('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('restrict');
             $table->decimal('hours', 8, 2);
             $table->decimal('rate', 12, 2);
             $table->timestamps();

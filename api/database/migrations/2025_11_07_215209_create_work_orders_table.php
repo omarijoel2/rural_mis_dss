@@ -21,8 +21,10 @@ return new class extends Migration
             $table->enum('type', ['pm', 'cm', 'inspection', 'project'])->default('cm');
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
             $table->enum('status', ['new', 'assigned', 'in_progress', 'on_hold', 'done', 'closed'])->default('new');
-            $table->foreignId('requester_id')->constrained('users')->onDelete('restrict');
-            $table->foreignId('assignee_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->uuid('requester_id');
+            $table->foreign('requester_id')->references('id')->on('users')->onDelete('restrict');
+            $table->uuid('assignee_id')->nullable();
+            $table->foreign('assignee_id')->references('id')->on('users')->onDelete('set null');
             $table->timestampTz('opened_at');
             $table->timestampTz('due_at')->nullable();
             $table->timestampTz('closed_at')->nullable();

@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->uuid('tenant_id');
             $table->foreign('tenant_id')->references('id')->on('organizations')->onDelete('cascade');
-            $table->foreignId('scheme_id')->nullable()->constrained('schemes')->onDelete('set null');
-            $table->foreignId('dma_id')->nullable()->constrained('dmas')->onDelete('set null');
+            $table->uuid('scheme_id')->nullable();
+            $table->foreign('scheme_id')->references('id')->on('schemes')->onDelete('set null');
+            $table->uuid('dma_id')->nullable();
+            $table->foreign('dma_id')->references('id')->on('dmas')->onDelete('set null');
             $table->foreignId('class_id')->constrained('asset_classes')->onDelete('restrict');
             $table->foreignId('parent_id')->nullable()->constrained('assets')->onDelete('cascade');
             $table->string('tag')->unique();
