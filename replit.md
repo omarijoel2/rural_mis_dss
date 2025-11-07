@@ -12,12 +12,35 @@ The application uses a monorepo structure with separate frontend (React/Vite), b
 ## Dual-Server Architecture
 
 The MIS requires two servers running simultaneously:
-- **Express server** (port 5000) - Serves React frontend, proxies API requests
+- **Express server** (port 5000) - Serves React frontend, proxies API requests to Laravel
 - **Laravel API server** (port 8001) - Handles backend logic, database, spatial queries
 
-**⚠️ Important**: Both servers must be running for full functionality. Laravel must be started manually via:
+### Starting Both Servers
+
+**Step 1**: Click "Run" button (starts Express on port 5000)
+
+**Step 2**: Open Shell and start Laravel manually:
 ```bash
 cd api && php artisan serve --host=0.0.0.0 --port=8001
+```
+
+**⚠️ Important**: 
+- Both servers must be running for full MIS functionality
+- Express proxies all `/api/*` requests to Laravel
+- If Laravel isn't running, MapConsole and API endpoints will fail with "Laravel API unavailable" error
+- Proxy automatically adds helpful error messages with startup instructions
+
+### Testing the Servers
+
+```bash
+# Test Express (should always work)
+curl http://localhost:5000/
+
+# Test Laravel health endpoint (requires Laravel running)
+curl http://localhost:5000/api/health
+
+# Test GeoJSON endpoints (requires Laravel + seeded data)
+curl http://localhost:5000/api/v1/gis/schemes/geojson
 ```
 
 # User Preferences
