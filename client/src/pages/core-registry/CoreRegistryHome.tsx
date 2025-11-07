@@ -5,6 +5,13 @@ import { Button } from '../../components/ui/button';
 export function CoreRegistryHome() {
   const modules = [
     {
+      title: 'Map Console',
+      description: 'Interactive GIS map with layers and spatial analysis',
+      path: '/gis/map',
+      icon: '🗺️',
+      featured: true,
+    },
+    {
       title: 'Schemes',
       description: 'Water supply schemes and infrastructure',
       path: '/core/schemes',
@@ -32,13 +39,13 @@ export function CoreRegistryHome() {
       title: 'Zones',
       description: 'Administrative zones and boundaries',
       path: '/core/zones',
-      icon: '🗺️',
+      icon: '📍',
     },
     {
       title: 'Addresses',
       description: 'Geocoded address registry',
       path: '/core/addresses',
-      icon: '📍',
+      icon: '📌',
     },
   ];
 
@@ -53,19 +60,31 @@ export function CoreRegistryHome() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {modules.map((module) => (
-          <Card key={module.path} className="hover:shadow-lg transition-shadow">
+          <Card 
+            key={module.path} 
+            className={`hover:shadow-lg transition-shadow ${
+              module.featured ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-300 dark:from-blue-950 dark:to-cyan-950 dark:border-blue-700' : ''
+            }`}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <span className="text-4xl">{module.icon}</span>
                 <div>
-                  <CardTitle>{module.title}</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    {module.title}
+                    {module.featured && (
+                      <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">NEW</span>
+                    )}
+                  </CardTitle>
                   <CardDescription>{module.description}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <Link to={module.path}>
-                <Button className="w-full">Open {module.title}</Button>
+                <Button className={`w-full ${module.featured ? 'bg-blue-600 hover:bg-blue-700' : ''}`}>
+                  Open {module.title}
+                </Button>
               </Link>
             </CardContent>
           </Card>
