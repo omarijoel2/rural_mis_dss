@@ -118,6 +118,78 @@ class FacilityController extends Controller
         return response()->json(SpatialQueryService::buildMapLayers('facility', $facilities));
     }
 
+    public function importGeojson(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:json,geojson|max:10240',
+            'name_field' => 'required|string',
+            'category_field' => 'nullable|string',
+            'scheme_id_field' => 'nullable|string',
+        ]);
+
+        $content = file_get_contents($request->file('file')->getRealPath());
+        $geojson = json_decode($content, true);
+
+        if (!isset($geojson['features'])) {
+            return response()->json(['error' => 'Invalid GeoJSON format'], 400);
+        }
+
+        if (count($geojson['features']) > 1000) {
+            return response()->json(['error' => 'Maximum 1000 facilities allowed per import'], 400);
+        }
+
+        $imported = 0;
+        $errors = [];
+
+        foreach ($geojson['features'] as $index => $feature) {
+            try {
+                $properties = $feature['properties'] ?? [];
+                $geometry = $feature['geometry'] ?? null;
+
+                if (!$geometry) {
+                    $errors[] = "Feature {$index}: Missing geometry";
+                    continue;
+                }
+
+                if ($geometry['type'] !== 'Point') {
+                    $errors[] = "Feature {$index}: Invalid geometry type '{$geometry['type']}'. Expected Point.";
+                    continue;
+                }
+
+                $data = [
+                    'tenant_id' => auth()->user()->tenant_id,
+                    'name' => $properties[$request->name_field] ?? 'Unnamed Facility',
+                    'code' => $properties['code'] ?? 'FAC-' . uniqid(),
+                    'category' => $properties[$request->category_field ?? 'category'] ?? 'other',
+                    'status' => $properties['status'] ?? 'active',
+                ];
+
+                if ($request->has('scheme_id_field') && isset($properties[$request->scheme_id_field])) {
+                    $data['scheme_id'] = $properties[$request->scheme_id_field];
+                }
+
+                $point = Point::fromJson(json_encode($geometry));
+                if (!$point) {
+                    $errors[] = "Feature {$index}: Invalid point geometry";
+                    continue;
+                }
+                
+                $data['location'] = $point;
+
+                Facility::create($data);
+                $imported++;
+            } catch (\Exception $e) {
+                $errors[] = "Feature {$index}: " . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'imported' => $imported,
+            'total' => count($geojson['features']),
+            'errors' => $errors,
+        ]);
+    }
+
     public function export(Request $request)
     {
         $query = Facility::where('tenant_id', auth()->user()->tenant_id);
@@ -127,6 +199,31 @@ class FacilityController extends Controller
         }
 
         $facilities = $query->limit($request->get('limit', 10000))->get();
+
+        $format = $request->get('format', 'geojson');
+
+        if ($format === 'csv') {
+            $csv = "ID,Code,Name,Category,Scheme ID,Status,Latitude,Longitude,Created At\n";
+            foreach ($facilities as $facility) {
+                $lat = $facility->location ? $facility->location->latitude : '';
+                $lng = $facility->location ? $facility->location->longitude : '';
+                $csv .= sprintf(
+                    "%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    $facility->id,
+                    $facility->code,
+                    '"' . str_replace('"', '""', $facility->name) . '"',
+                    $facility->category,
+                    $facility->scheme_id ?? '',
+                    $facility->status,
+                    $lat,
+                    $lng,
+                    $facility->created_at
+                );
+            }
+            return response($csv, 200)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', 'attachment; filename="facilities.csv"');
+        }
 
         return response()->json(SpatialQueryService::buildMapLayers('facility', $facilities))
             ->header('Content-Disposition', 'attachment; filename="facilities.geojson"');
