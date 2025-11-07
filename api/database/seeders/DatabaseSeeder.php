@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Tenant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,11 +14,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        Tenant::firstOrCreate(
+            ['short_code' => 'KWU'],
+            [
+                'name' => 'Kenya Water Utilities',
+                'country' => 'KE',
+                'timezone' => 'Africa/Nairobi',
+                'currency' => 'KES',
+                'status' => 'active',
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            CoreRegistrySeeder::class,
         ]);
+
+        $this->command->info('Database seeded successfully with Kenya spatial data');
     }
 }
