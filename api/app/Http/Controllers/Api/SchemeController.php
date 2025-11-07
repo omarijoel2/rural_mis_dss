@@ -200,6 +200,31 @@ class SchemeController extends Controller
 
         $schemes = $query->limit($request->get('limit', 10000))->get();
 
+        $format = $request->get('format', 'geojson');
+
+        if ($format === 'csv') {
+            $csv = "ID,Code,Name,Type,Status,Population,Centroid Lat,Centroid Lng,Created At\n";
+            foreach ($schemes as $scheme) {
+                $centroidLat = $scheme->centroid ? $scheme->centroid->latitude : '';
+                $centroidLng = $scheme->centroid ? $scheme->centroid->longitude : '';
+                $csv .= sprintf(
+                    "%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    $scheme->id,
+                    $scheme->code,
+                    '"' . str_replace('"', '""', $scheme->name) . '"',
+                    $scheme->type,
+                    $scheme->status,
+                    $scheme->population_estimate ?? '',
+                    $centroidLat,
+                    $centroidLng,
+                    $scheme->created_at
+                );
+            }
+            return response($csv, 200)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', 'attachment; filename="schemes.csv"');
+        }
+
         return response()->json(SpatialQueryService::buildMapLayers('scheme', $schemes))
             ->header('Content-Disposition', 'attachment; filename="schemes.geojson"');
     }
