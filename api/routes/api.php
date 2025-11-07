@@ -173,4 +173,36 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
         Route::post('/kms/encrypt', [KmsController::class, 'encrypt']);
         Route::post('/kms/decrypt', [KmsController::class, 'decrypt']);
     });
+
+    Route::prefix('assets')->group(function () {
+        Route::get('/', [\App\Http\Controllers\API\V1\AssetController::class, 'index'])->middleware('permission:view assets');
+        Route::post('/', [\App\Http\Controllers\API\V1\AssetController::class, 'store'])->middleware('permission:create assets');
+        Route::get('/tree', [\App\Http\Controllers\API\V1\AssetController::class, 'tree'])->middleware('permission:view assets');
+        Route::get('/nearby', [\App\Http\Controllers\API\V1\AssetController::class, 'nearbyAssets'])->middleware('permission:view assets');
+        Route::get('/{asset}', [\App\Http\Controllers\API\V1\AssetController::class, 'show'])->middleware('permission:view assets');
+        Route::get('/{asset}/descendants', [\App\Http\Controllers\API\V1\AssetController::class, 'descendants'])->middleware('permission:view assets');
+        Route::get('/{asset}/ancestors', [\App\Http\Controllers\API\V1\AssetController::class, 'ancestors'])->middleware('permission:view assets');
+        Route::get('/{asset}/location-history', [\App\Http\Controllers\API\V1\AssetController::class, 'locationHistory'])->middleware('permission:view assets');
+        Route::get('/{asset}/utilization', [\App\Http\Controllers\API\V1\AssetController::class, 'utilization'])->middleware('permission:view assets');
+        Route::patch('/{asset}', [\App\Http\Controllers\API\V1\AssetController::class, 'update'])->middleware('permission:edit assets');
+        Route::put('/{asset}', [\App\Http\Controllers\API\V1\AssetController::class, 'update'])->middleware('permission:edit assets');
+        Route::delete('/{asset}', [\App\Http\Controllers\API\V1\AssetController::class, 'destroy'])->middleware('permission:delete assets');
+    });
+
+    Route::prefix('work-orders')->group(function () {
+        Route::get('/', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'index'])->middleware('permission:view work orders');
+        Route::post('/', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'store'])->middleware('permission:create work orders');
+        Route::get('/overdue', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'overdue'])->middleware('permission:view work orders');
+        Route::get('/stats', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'stats'])->middleware('permission:view work orders');
+        Route::get('/{workOrder}', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'show'])->middleware('permission:view work orders');
+        Route::patch('/{workOrder}', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'update'])->middleware('permission:edit work orders');
+        Route::put('/{workOrder}', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'update'])->middleware('permission:edit work orders');
+        Route::delete('/{workOrder}', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'destroy'])->middleware('permission:delete work orders');
+        Route::post('/{workOrder}/assign', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'assign'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/start', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'start'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/complete', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'complete'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/cancel', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'cancel'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/parts', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addParts'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/labor', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addLabor'])->middleware('permission:edit work orders');
+    });
 });
