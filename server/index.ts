@@ -10,19 +10,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api', createProxyMiddleware({
   target: 'http://127.0.0.1:8001',
   changeOrigin: true,
-  pathRewrite: (path) => `/api${path}`,
-  onProxyReq: (proxyReq: any, req: any) => {
-    log(`[Proxy] ${req.method} ${req.url} → Laravel API`);
-  },
-  onError: (err: any, req: any, res: any) => {
-    log(`[Proxy Error] ${err.message}`);
-    res.writeHead(503, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ 
-      error: 'Laravel API unavailable', 
-      message: 'Please start the Laravel API server on port 8001' 
-    }));
+  pathRewrite: {
+    '^/api': '/api'
   }
-}));
+}) as any);
 
 app.use((req, res, next) => {
   const start = Date.now();
