@@ -60,6 +60,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'grant permissions',
             'revoke permissions',
             
+            'view api keys',
+            'create api keys',
+            'revoke api keys',
+            
             'view dsr requests',
             'process dsr requests',
             'reject dsr requests',
@@ -95,6 +99,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view security alerts', 'acknowledge security alerts', 'resolve security alerts',
             'view roles', 'assign roles',
             'view permissions',
+            'view api keys', 'create api keys', 'revoke api keys',
             'view dsr requests', 'process dsr requests',
             'view consents', 'manage consents',
         ]);
@@ -136,6 +141,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view audit', 'export audit',
             'view security alerts', 'acknowledge security alerts', 'resolve security alerts',
             'view roles', 'view permissions',
+            'view api keys', 'create api keys', 'revoke api keys',
             'view dsr requests', 'process dsr requests', 'reject dsr requests',
             'view consents', 'manage consents',
             'view kms keys', 'generate kms keys', 'rotate kms keys',
