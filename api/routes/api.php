@@ -47,24 +47,49 @@ Route::prefix('v1/gis')->group(function () {
     Route::get('/facilities/geojson', [FacilityController::class, 'geojson']);
 });
 
-Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
     Route::apiResource('organizations', OrganizationController::class);
-    Route::apiResource('schemes', SchemeController::class);
-    Route::apiResource('facilities', FacilityController::class);
-    Route::apiResource('dmas', DmaController::class);
+    
+    Route::prefix('schemes')->group(function () {
+        Route::get('/', [SchemeController::class, 'index'])->middleware('permission:view schemes');
+        Route::post('/', [SchemeController::class, 'store'])->middleware('permission:create schemes');
+        Route::get('/{scheme}', [SchemeController::class, 'show'])->middleware('permission:view schemes');
+        Route::patch('/{scheme}', [SchemeController::class, 'update'])->middleware('permission:edit schemes');
+        Route::put('/{scheme}', [SchemeController::class, 'update'])->middleware('permission:edit schemes');
+        Route::delete('/{scheme}', [SchemeController::class, 'destroy'])->middleware('permission:delete schemes');
+    });
+    
+    Route::prefix('facilities')->group(function () {
+        Route::get('/', [FacilityController::class, 'index'])->middleware('permission:view facilities');
+        Route::post('/', [FacilityController::class, 'store'])->middleware('permission:create facilities');
+        Route::get('/{facility}', [FacilityController::class, 'show'])->middleware('permission:view facilities');
+        Route::patch('/{facility}', [FacilityController::class, 'update'])->middleware('permission:edit facilities');
+        Route::put('/{facility}', [FacilityController::class, 'update'])->middleware('permission:edit facilities');
+        Route::delete('/{facility}', [FacilityController::class, 'destroy'])->middleware('permission:delete facilities');
+    });
+    
+    Route::prefix('dmas')->group(function () {
+        Route::get('/', [DmaController::class, 'index'])->middleware('permission:view dmas');
+        Route::post('/', [DmaController::class, 'store'])->middleware('permission:create dmas');
+        Route::get('/{dma}', [DmaController::class, 'show'])->middleware('permission:view dmas');
+        Route::patch('/{dma}', [DmaController::class, 'update'])->middleware('permission:edit dmas');
+        Route::put('/{dma}', [DmaController::class, 'update'])->middleware('permission:edit dmas');
+        Route::delete('/{dma}', [DmaController::class, 'destroy'])->middleware('permission:delete dmas');
+    });
+    
     Route::apiResource('pipelines', PipelineController::class);
     Route::apiResource('zones', ZoneController::class);
     Route::apiResource('addresses', AddressController::class);
 
     Route::prefix('gis')->group(function () {
-        Route::post('/schemes/import', [SchemeController::class, 'importGeojson']);
-        Route::get('/schemes/export', [SchemeController::class, 'export']);
+        Route::post('/schemes/import', [SchemeController::class, 'importGeojson'])->middleware('permission:import spatial data');
+        Route::get('/schemes/export', [SchemeController::class, 'export'])->middleware('permission:export spatial data');
         
-        Route::post('/dmas/import', [DmaController::class, 'importGeojson']);
-        Route::get('/dmas/export', [DmaController::class, 'export']);
+        Route::post('/dmas/import', [DmaController::class, 'importGeojson'])->middleware('permission:import spatial data');
+        Route::get('/dmas/export', [DmaController::class, 'export'])->middleware('permission:export spatial data');
         
-        Route::post('/facilities/import', [FacilityController::class, 'importGeojson']);
-        Route::get('/facilities/export', [FacilityController::class, 'export']);
+        Route::post('/facilities/import', [FacilityController::class, 'importGeojson'])->middleware('permission:import spatial data');
+        Route::get('/facilities/export', [FacilityController::class, 'export'])->middleware('permission:export spatial data');
         
         Route::get('/layers', function (Request $request) {
             return response()->json([
