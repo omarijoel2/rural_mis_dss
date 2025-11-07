@@ -43,6 +43,23 @@ curl http://localhost:5000/api/health
 curl http://localhost:5000/api/v1/gis/schemes/geojson
 ```
 
+### Troubleshooting
+
+**"Laravel API unavailable" errors:**
+- Laravel process is not running or has terminated
+- Restart Laravel: `cd api && php artisan serve --host=0.0.0.0 --port=8001`
+- Background processes don't persist in Replit - must keep terminal open
+
+**GeoJSON endpoints return HTML errors:**
+- Check Laravel logs for PHP errors
+- Verify database has seeded data: `cd api && php artisan db:seed`
+- Ensure PostGIS extension is installed
+
+**Map Console shows "Loading..." forever:**
+- Open browser DevTools Console to see React Query errors
+- Verify both Express and Laravel are running
+- Check network tab for failed API requests
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
