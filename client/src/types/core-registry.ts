@@ -1,3 +1,9 @@
+declare namespace GeoJSON {
+  export type Polygon = any;
+  export type Point = any;
+  export type LineString = any;
+}
+
 export interface Tenant {
   id: string;
   name: string;
