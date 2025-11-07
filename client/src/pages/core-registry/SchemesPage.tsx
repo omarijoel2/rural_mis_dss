@@ -2,12 +2,38 @@ import { useQuery } from '@tanstack/react-query';
 import { schemeService } from '../../services/scheme.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { ImportGeoJSONDialog } from '../../components/gis/ImportGeoJSONDialog';
+import { Download, Upload } from 'lucide-react';
 
 export function SchemesPage() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['schemes'],
     queryFn: () => schemeService.getAll({ per_page: 50 }),
   });
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/v1/gis/schemes/export', {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `schemes-${new Date().toISOString().split('T')[0]}.geojson`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -32,7 +58,14 @@ export function SchemesPage() {
           <h1 className="text-3xl font-bold">Water Supply Schemes</h1>
           <p className="text-muted-foreground">Manage water supply schemes and infrastructure</p>
         </div>
-        <Button>Create Scheme</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            Export GeoJSON
+          </Button>
+          <ImportGeoJSONDialog onImportComplete={() => refetch()} />
+          <Button>Create Scheme</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

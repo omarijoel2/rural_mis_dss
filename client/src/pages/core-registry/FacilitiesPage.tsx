@@ -3,12 +3,37 @@ import { facilityService } from '../../services/facility.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { Download } from 'lucide-react';
 
 export function FacilitiesPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['facilities'],
     queryFn: () => facilityService.getAll({ per_page: 50 }),
   });
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/v1/gis/facilities/export', {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facilities-${new Date().toISOString().split('T')[0]}.geojson`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -44,7 +69,13 @@ export function FacilitiesPage() {
           <h1 className="text-3xl font-bold">Facilities</h1>
           <p className="text-muted-foreground">Manage water infrastructure facilities</p>
         </div>
-        <Button>Create Facility</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            Export GeoJSON
+          </Button>
+          <Button>Create Facility</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
