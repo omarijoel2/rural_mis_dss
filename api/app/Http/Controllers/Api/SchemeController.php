@@ -54,7 +54,13 @@ class SchemeController extends Controller
 
     public function geojson(Request $request)
     {
-        $query = Scheme::where('tenant_id', auth()->user()->tenant_id);
+        $query = Scheme::query();
+        
+        if (auth()->check()) {
+            $query->where('tenant_id', auth()->user()->tenant_id);
+        } else {
+            $query->where('tenant_id', 1);
+        }
 
         if ($request->has('bbox')) {
             $query = SpatialQueryService::applyBboxFilter($query, $request->bbox, 'geom');
