@@ -5,11 +5,15 @@ This is a hybrid monorepo containing two distinct applications:
 1. **EcoVillage** - A browser-based sustainability education game (currently inactive)
 2. **Rural Water Supply MIS** (Active) - A Laravel-based Management Information System for rural water infrastructure with multi-tenancy, spatial data support, and comprehensive security features
 
-**Current Focus**: Rural Water Supply MIS Module 02 - Data Import/Export Pipelines, RBAC, Audit Logging, and API Documentation.
+**Current Focus**: Rural Water Supply MIS - Module 02 Complete! Ready for Module 04 (Asset/CMMS).
 
 **Recent Completions**:
 - ✅ Module 01: Spatial features, PostGIS integration, MapLibre GL MapConsole
-- ✅ Module 02 Epic 1: Complete import/export pipelines (GeoJSON + CSV) for schemes, DMAs, and facilities
+- ✅ **Module 02 (Complete - Nov 7, 2024)**: All 4 epics architect-verified
+  - Epic 1: Import/Export pipelines (GeoJSON + CSV) for schemes, DMAs, facilities
+  - Epic 2: RBAC enforcement with method-specific permission guards
+  - Epic 3: Audit logging middleware on all mutation routes
+  - Epic 4: OpenAPI/Swagger documentation scaffolding
 
 The application uses a monorepo structure with separate frontend (React/Vite), backend (Express + Laravel), and shared TypeScript schema definitions.
 
@@ -121,8 +125,35 @@ Preferred communication style: Simple, everyday language.
 - CSRF protection (X-CSRF-TOKEN, X-XSRF-TOKEN headers)
 - Strict CORS configuration with whitelisted origins
 - Secure cookie settings (HttpOnly, SameSite)
+- Method-specific RBAC enforcement (GET=view, POST=create, PATCH/PUT=edit, DELETE=delete)
+- Audit logging on all POST/PUT/PATCH/DELETE operations
 - Comprehensive security scanning workflow (SAST, dependency scanning, secrets detection)
 - PHPStan static analysis for code quality
+
+**Module 02 Implementation Details:**
+
+*Import/Export Features:*
+- GeoJSON import: Max 500 features (schemes/DMAs), 1000 (facilities), 10MB file limit
+- CSV export: Preserves UUIDs, includes centroid coordinates or WKT geometry
+- Validation: Geometry type checks, required field validation, tenant isolation
+- All routes authenticated with permission-based access control
+
+*RBAC Permission Structure:*
+- Granular permissions: view/create/edit/delete for schemes, DMAs, facilities
+- Special permissions: 'import spatial data', 'export spatial data'
+- 7 Roles: Super Admin, Admin, Manager, Operator, Viewer, Security Officer, Privacy Officer
+- Routes split by HTTP method with exact permission requirements (no OR logic)
+
+*Audit Trail:*
+- AuditMiddleware captures: user_id, tenant_id, action, entity_type, entity_id, changes, IP, user_agent
+- Automatic logging of all mutations (POST/PUT/PATCH/DELETE)
+- Entity-level audit service available for fine-grained tracking
+
+*API Documentation:*
+- darkaonline/l5-swagger package installed
+- OpenAPI 3.0 annotations configured
+- Base documentation at /api/documentation
+- Tags: Schemes, DMAs, Facilities, GIS, Auth
 
 ## Frontend Architecture
 
