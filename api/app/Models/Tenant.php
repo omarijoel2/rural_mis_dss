@@ -60,4 +60,36 @@ class Tenant extends Model
     {
         return $this->hasMany(Address::class);
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'tenant_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function auditEvents()
+    {
+        return $this->hasMany(AuditEvent::class);
+    }
+
+    public function securityAlerts()
+    {
+        return $this->hasMany(SecurityAlert::class);
+    }
+
+    public function apiKeys()
+    {
+        return $this->hasMany(ApiKey::class);
+    }
+
+    public function consents()
+    {
+        return $this->hasMany(Consent::class);
+    }
+
+    public function dsrRequests()
+    {
+        return $this->hasMany(DsrRequest::class);
+    }
 }
