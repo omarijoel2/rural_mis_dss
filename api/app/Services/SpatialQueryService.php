@@ -15,11 +15,11 @@ class SpatialQueryService
         
         $bboxPolygon = new Polygon([
             new LineString([
-                new Point($minLng, $minLat),
-                new Point($maxLng, $minLat),
-                new Point($maxLng, $maxLat),
-                new Point($minLng, $maxLat),
-                new Point($minLng, $minLat),
+                new Point($minLat, $minLng),
+                new Point($minLat, $maxLng),
+                new Point($maxLat, $maxLng),
+                new Point($maxLat, $minLng),
+                new Point($minLat, $minLng),
             ], 4326)
         ], 4326);
 
@@ -28,7 +28,7 @@ class SpatialQueryService
 
     public static function applyNearFilter(Builder $query, float $lat, float $lng, float $radiusMeters, string $geometryColumn = 'geom'): Builder
     {
-        $point = new Point($lng, $lat, 4326);
+        $point = new Point($lat, $lng, 4326);
         return $query->whereDistance($geometryColumn, $point, '<=', $radiusMeters);
     }
 
