@@ -1,11 +1,24 @@
 # Overview
 
-This is a hybrid application combining two distinct systems:
+This is a hybrid monorepo containing two distinct applications:
 
-1. **EcoVillage** - A browser-based sustainability education game built with React and Express, featuring a lunch-break-friendly resource management experience with accessibility features
-2. **Rural Water Supply MIS** - A Laravel-based Management Information System for rural water infrastructure with multi-tenancy, spatial data support, and comprehensive security features
+1. **EcoVillage** - A browser-based sustainability education game (currently inactive)
+2. **Rural Water Supply MIS** (Active) - A Laravel-based Management Information System for rural water infrastructure with multi-tenancy, spatial data support, and comprehensive security features
+
+**Current Focus**: Rural Water Supply MIS Module 01 - Spatial data features, GIS capabilities, and map console.
 
 The application uses a monorepo structure with separate frontend (React/Vite), backend (Express + Laravel), and shared TypeScript schema definitions.
+
+## Dual-Server Architecture
+
+The MIS requires two servers running simultaneously:
+- **Express server** (port 5000) - Serves React frontend, proxies API requests
+- **Laravel API server** (port 8001) - Handles backend logic, database, spatial queries
+
+**⚠️ Important**: Both servers must be running for full functionality. Laravel must be started manually via:
+```bash
+cd api && php artisan serve --host=0.0.0.0 --port=8001
+```
 
 # User Preferences
 
