@@ -7,6 +7,10 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { CoreRegistryHome } from './pages/core-registry/CoreRegistryHome';
 import { SchemesPage } from './pages/core-registry/SchemesPage';
 import { FacilitiesPage } from './pages/core-registry/FacilitiesPage';
+import { DmasPage } from './pages/core-registry/DmasPage';
+import { PipelinesPage } from './pages/core-registry/PipelinesPage';
+import { ZonesPage } from './pages/core-registry/ZonesPage';
+import { AddressesPage } from './pages/core-registry/AddressesPage';
 import { SecurityLayout } from './components/layouts/SecurityLayout';
 import { AuditPage } from './pages/security/AuditPage';
 import { SecurityAlertsPage } from './pages/security/SecurityAlertsPage';
@@ -50,6 +54,30 @@ export function AppMIS() {
               <Route path="/core/facilities" element={
                 <ProtectedRoute requiredPermission="view facilities">
                   <FacilitiesPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/core/dmas" element={
+                <ProtectedRoute requiredPermission="view dmas">
+                  <DmasPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/core/pipelines" element={
+                <ProtectedRoute requiredPermission="view pipelines">
+                  <PipelinesPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/core/zones" element={
+                <ProtectedRoute requiredPermission="view zones">
+                  <ZonesPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/core/addresses" element={
+                <ProtectedRoute requiredPermission="view addresses">
+                  <AddressesPage />
                 </ProtectedRoute>
               } />
               
