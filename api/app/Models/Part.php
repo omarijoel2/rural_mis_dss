@@ -11,8 +11,9 @@ class Part extends Model
 {
     protected $fillable = [
         'tenant_id',
-        'sku',
+        'code',
         'name',
+        'category',
         'unit',
         'min_qty',
         'reorder_qty',

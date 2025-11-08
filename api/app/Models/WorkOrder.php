@@ -15,30 +15,29 @@ class WorkOrder extends Model
 
     protected $fillable = [
         'tenant_id',
+        'wo_num',
+        'kind',
         'asset_id',
         'title',
-        'type',
+        'description',
         'priority',
         'status',
-        'requester_id',
-        'assignee_id',
-        'opened_at',
-        'due_at',
-        'closed_at',
-        'location',
-        'description',
-        'checklist',
-        'costs',
+        'created_by',
+        'assigned_to',
+        'scheduled_for',
+        'started_at',
+        'completed_at',
+        'completion_notes',
+        'pm_policy_id',
+        'geom',
         'source',
     ];
 
     protected $casts = [
-        'opened_at' => 'datetime',
-        'due_at' => 'datetime',
-        'closed_at' => 'datetime',
-        'checklist' => 'array',
-        'costs' => 'decimal:2',
-        'location' => Point::class,
+        'scheduled_for' => 'datetime',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'geom' => Point::class,
     ];
 
     protected static function booted()
@@ -60,26 +59,31 @@ class WorkOrder extends Model
         return $this->belongsTo(Asset::class);
     }
 
-    public function requester(): BelongsTo
+    public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'requester_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function assignee(): BelongsTo
+    public function assignedTo(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assignee_id');
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+    
+    public function pmPolicy(): BelongsTo
+    {
+        return $this->belongsTo(PmPolicy::class);
     }
 
-    public function parts(): HasMany
+    public function woParts(): HasMany
     {
         return $this->hasMany(WoPart::class);
     }
 
-    public function labor(): HasMany
+    public function woLabor(): HasMany
     {
         return $this->hasMany(WoLabor::class);
     }
-
+    
     public function failures(): HasMany
     {
         return $this->hasMany(Failure::class);

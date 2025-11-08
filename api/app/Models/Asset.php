@@ -19,22 +19,24 @@ class Asset extends Model
         'dma_id',
         'class_id',
         'parent_id',
-        'tag',
+        'code',
         'name',
-        'serial_no',
+        'barcode',
+        'serial',
+        'manufacturer',
+        'model',
         'status',
         'install_date',
         'warranty_expiry',
-        'location',
-        'properties',
-        'barcode',
+        'geom',
+        'specs',
     ];
 
     protected $casts = [
-        'properties' => 'array',
+        'specs' => 'array',
         'install_date' => 'date',
         'warranty_expiry' => 'date',
-        'location' => Point::class,
+        'geom' => Point::class,
     ];
 
     protected static function booted()
