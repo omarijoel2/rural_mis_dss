@@ -26,6 +26,7 @@ import { TwoFactorSetupPage } from './pages/security/TwoFactorSetupPage';
 import { CmmsLayout } from './components/layouts/CmmsLayout';
 import { CmmsDashboard } from './pages/cmms/CmmsDashboard';
 import { AssetsPage } from './pages/cmms/AssetsPage';
+import { AssetDetailPage } from './pages/cmms/AssetDetailPage';
 import { WorkOrdersPage } from './pages/cmms/WorkOrdersPage';
 import { PartsPage } from './pages/cmms/PartsPage';
 import NotFound from './pages/not-found';
@@ -107,6 +108,11 @@ export function AppMIS() {
                 <Route path="assets" element={
                   <ProtectedRoute requiredPermission="view assets">
                     <AssetsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="assets/:id" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <AssetDetailPage />
                   </ProtectedRoute>
                 } />
                 <Route path="work-orders" element={
