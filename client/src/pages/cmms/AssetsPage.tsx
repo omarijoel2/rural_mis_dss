@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { Plus, Search, Settings, MapPin } from 'lucide-react';
-import type { AssetFilters } from '../../types/cmms';
+import { Plus, Search, Settings, MapPin, Edit } from 'lucide-react';
+import type { Asset, AssetFilters } from '../../types/cmms';
+import { AssetFormDialog } from '../../components/cmms/AssetFormDialog';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -44,6 +45,8 @@ export function AssetsPage() {
     per_page: 15,
     page: 1,
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<Asset | undefined>();
 
   const { data: classes } = useQuery({
     queryKey: ['asset-classes'],
@@ -94,7 +97,10 @@ export function AssetsPage() {
           <h1 className="text-3xl font-bold">Assets</h1>
           <p className="text-muted-foreground">Manage infrastructure assets and equipment</p>
         </div>
-        <Button>
+        <Button onClick={() => {
+          setEditingAsset(undefined);
+          setDialogOpen(true);
+        }}>
           <Plus className="mr-2 h-4 w-4" />
           Add Asset
         </Button>
@@ -190,11 +196,23 @@ export function AssetsPage() {
                       }
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link to={`/cmms/assets/${asset.id}`}>
-                        <Button variant="ghost" size="sm">
-                          View
+                      <div className="flex justify-end gap-2">
+                        <Link to={`/cmms/assets/${asset.id}`}>
+                          <Button variant="ghost" size="sm">
+                            View
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingAsset(asset);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
                         </Button>
-                      </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -206,7 +224,10 @@ export function AssetsPage() {
             <div className="flex flex-col items-center justify-center p-12">
               <Settings className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground mb-4">No assets found</p>
-              <Button>
+              <Button onClick={() => {
+                setEditingAsset(undefined);
+                setDialogOpen(true);
+              }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Your First Asset
               </Button>
@@ -240,6 +261,15 @@ export function AssetsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AssetFormDialog 
+        open={dialogOpen} 
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingAsset(undefined);
+        }}
+        asset={editingAsset}
+      />
     </div>
   );
 }
