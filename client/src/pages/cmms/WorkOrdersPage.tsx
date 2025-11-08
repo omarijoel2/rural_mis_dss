@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { Plus, Search, AlertCircle } from 'lucide-react';
-import type { WorkOrderFilters } from '../../types/cmms';
+import { Plus, Search, AlertCircle, Edit } from 'lucide-react';
+import type { WorkOrder, WorkOrderFilters } from '../../types/cmms';
+import { WorkOrderFormDialog } from '../../components/cmms/WorkOrderFormDialog';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -69,6 +70,8 @@ export function WorkOrdersPage() {
     per_page: 15,
     page: 1,
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingWorkOrder, setEditingWorkOrder] = useState<WorkOrder | undefined>();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['work-orders', filters],
@@ -126,7 +129,10 @@ export function WorkOrdersPage() {
           <h1 className="text-3xl font-bold">Work Orders</h1>
           <p className="text-muted-foreground">Track maintenance and repair tasks</p>
         </div>
-        <Button>
+        <Button onClick={() => {
+          setEditingWorkOrder(undefined);
+          setDialogOpen(true);
+        }}>
           <Plus className="mr-2 h-4 w-4" />
           Create Work Order
         </Button>
@@ -237,11 +243,23 @@ export function WorkOrdersPage() {
                       }
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link to={`/cmms/work-orders/${wo.id}`}>
-                        <Button variant="ghost" size="sm">
-                          View
+                      <div className="flex justify-end gap-2">
+                        <Link to={`/cmms/work-orders/${wo.id}`}>
+                          <Button variant="ghost" size="sm">
+                            View
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingWorkOrder(wo);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
                         </Button>
-                      </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -253,7 +271,10 @@ export function WorkOrdersPage() {
             <div className="flex flex-col items-center justify-center p-12">
               <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground mb-4">No work orders found</p>
-              <Button>
+              <Button onClick={() => {
+                setEditingWorkOrder(undefined);
+                setDialogOpen(true);
+              }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Your First Work Order
               </Button>
@@ -287,6 +308,15 @@ export function WorkOrdersPage() {
           )}
         </CardContent>
       </Card>
+
+      <WorkOrderFormDialog 
+        open={dialogOpen} 
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingWorkOrder(undefined);
+        }}
+        workOrder={editingWorkOrder}
+      />
     </div>
   );
 }
