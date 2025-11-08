@@ -60,13 +60,13 @@ class WorkOrderController extends Controller
     {
         $validated = $request->validate([
             'kind' => 'required|in:pm,cm,emergency,project',
-            'asset_id' => 'required|uuid|exists:assets,id',
+            'asset_id' => 'nullable|integer|exists:assets,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'priority' => 'required|in:low,medium,high,critical',
             'scheduled_for' => 'nullable|date',
             'assigned_to' => 'nullable|uuid|exists:users,id',
-            'pm_policy_id' => 'nullable|uuid|exists:pm_policies,id',
+            'pm_policy_id' => 'nullable|integer|exists:pm_policies,id',
             'geom' => 'nullable|array'
         ]);
 
@@ -164,7 +164,7 @@ class WorkOrderController extends Controller
     {
         $validated = $request->validate([
             'parts' => 'required|array',
-            'parts.*.part_id' => 'required|uuid|exists:parts,id',
+            'parts.*.part_id' => 'required|integer|exists:parts,id',
             'parts.*.qty' => 'required|numeric|min:0',
             'parts.*.unit_cost' => 'required|numeric|min:0'
         ]);

@@ -45,7 +45,12 @@ class CmmsSeeder extends Seeder
         $this->seedAssets($tenant, $scheme, $dma, $user);
         $this->seedStockTransactions();
         $this->seedPmPolicies();
-        $this->seedWorkOrders($tenant, $user);
+        
+        if ($user) {
+            $this->seedWorkOrders($tenant, $user);
+        } else {
+            $this->command->warn('No users found. Skipping work order seeding.');
+        }
 
         $this->command->info('CMMS seeder completed successfully!');
     }
@@ -139,7 +144,7 @@ class CmmsSeeder extends Seeder
 
         $assetCount = 0;
 
-        for ($i = 1; $i <= 100; $i++) {
+        for ($i = 1; $i <= 20; $i++) {
             $lat = -1.286389 + (rand(-1000, 1000) / 10000);
             $lng = 36.817223 + (rand(-1000, 1000) / 10000);
 
@@ -159,7 +164,7 @@ class CmmsSeeder extends Seeder
             $assetCount++;
         }
 
-        for ($i = 1; $i <= 50; $i++) {
+        for ($i = 1; $i <= 15; $i++) {
             $lat = -1.286389 + (rand(-1000, 1000) / 10000);
             $lng = 36.817223 + (rand(-1000, 1000) / 10000);
 
@@ -178,7 +183,7 @@ class CmmsSeeder extends Seeder
             $assetCount++;
         }
 
-        for ($i = 1; $i <= 300; $i++) {
+        for ($i = 1; $i <= 30; $i++) {
             $lat = -1.286389 + (rand(-1000, 1000) / 10000);
             $lng = 36.817223 + (rand(-1000, 1000) / 10000);
 
@@ -197,7 +202,7 @@ class CmmsSeeder extends Seeder
             $assetCount++;
         }
 
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 5; $i++) {
             $lat = -1.286389 + (rand(-1000, 1000) / 10000);
             $lng = 36.817223 + (rand(-1000, 1000) / 10000);
 
@@ -209,13 +214,13 @@ class CmmsSeeder extends Seeder
                 'scheme_id' => $scheme?->id,
                 'status' => 'active',
                 'install_date' => now()->subYears(rand(5, 30)),
-                'specs' => ['capacity_m3' => rand(50, 500)],
+                'specs' => json_encode(['capacity_m3' => rand(50, 500)]),
                 'geom' => new Point($lat, $lng)
             ]);
             $assetCount++;
         }
 
-        for ($i = 1; $i <= 150; $i++) {
+        for ($i = 1; $i <= 30; $i++) {
             $lat = -1.286389 + (rand(-1000, 1000) / 10000);
             $lng = 36.817223 + (rand(-1000, 1000) / 10000);
 
