@@ -11,47 +11,32 @@ import type {
 const BASE_URL = '/api/v1';
 
 export const partService = {
-  async getParts(filters?: PartFilters): Promise<PaginatedResponse<Part>> {
-    const params = new URLSearchParams();
+  getParts: (filters?: PartFilters) => {
+    const params: Record<string, string> = {};
     
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.category) params.append('category', filters.category);
-    if (filters?.supplier_id) params.append('supplier_id', filters.supplier_id.toString());
-    if (filters?.per_page) params.append('per_page', filters.per_page.toString());
-    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.search) params.search = filters.search;
+    if (filters?.category) params.category = filters.category;
+    if (filters?.supplier_id) params.supplier_id = filters.supplier_id.toString();
+    if (filters?.per_page) params.per_page = filters.per_page.toString();
+    if (filters?.page) params.page = filters.page.toString();
     
-    const queryString = params.toString();
-    const url = queryString ? `${BASE_URL}/parts?${queryString}` : `${BASE_URL}/parts`;
-    
-    const response = await apiClient.get<PaginatedResponse<Part>>(url);
-    return response.data;
+    return apiClient.get<PaginatedResponse<Part>>(`${BASE_URL}/parts`, params);
   },
 
-  async getPart(id: number): Promise<Part> {
-    const response = await apiClient.get<Part>(`${BASE_URL}/parts/${id}`);
-    return response.data;
-  },
+  getPart: (id: number) =>
+    apiClient.get<Part>(`${BASE_URL}/parts/${id}`),
 
-  async createPart(data: CreatePartDto): Promise<Part> {
-    const response = await apiClient.post<Part>(`${BASE_URL}/parts`, data);
-    return response.data;
-  },
+  createPart: (data: CreatePartDto) =>
+    apiClient.post<Part>(`${BASE_URL}/parts`, data),
 
-  async updatePart(id: number, data: UpdatePartDto): Promise<Part> {
-    const response = await apiClient.put<Part>(`${BASE_URL}/parts/${id}`, data);
-    return response.data;
-  },
+  updatePart: (id: number, data: UpdatePartDto) =>
+    apiClient.put<Part>(`${BASE_URL}/parts/${id}`, data),
 
-  async deletePart(id: number): Promise<void> {
-    await apiClient.delete(`${BASE_URL}/parts/${id}`);
-  },
+  deletePart: (id: number) =>
+    apiClient.delete(`${BASE_URL}/parts/${id}`),
 
-  async getStockTransactions(partId?: number): Promise<StockTxn[]> {
-    const url = partId 
-      ? `${BASE_URL}/stock-txns?part_id=${partId}` 
-      : `${BASE_URL}/stock-txns`;
-    
-    const response = await apiClient.get<StockTxn[]>(url);
-    return response.data;
+  getStockTransactions: (partId?: number) => {
+    const params = partId ? { part_id: partId.toString() } : {};
+    return apiClient.get<StockTxn[]>(`${BASE_URL}/stock-txns`, params);
   }
 };
