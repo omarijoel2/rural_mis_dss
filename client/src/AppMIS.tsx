@@ -23,6 +23,11 @@ import { KmsPage } from './pages/security/KmsPage';
 import { RetentionPage } from './pages/security/RetentionPage';
 import { DataCatalogPage } from './pages/security/DataCatalogPage';
 import { TwoFactorSetupPage } from './pages/security/TwoFactorSetupPage';
+import { CmmsLayout } from './components/layouts/CmmsLayout';
+import { CmmsDashboard } from './pages/cmms/CmmsDashboard';
+import { AssetsPage } from './pages/cmms/AssetsPage';
+import { WorkOrdersPage } from './pages/cmms/WorkOrdersPage';
+import { PartsPage } from './pages/cmms/PartsPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -87,6 +92,34 @@ export function AppMIS() {
                   <MapConsolePage />
                 </ProtectedRoute>
               } />
+              
+              <Route path="/cmms" element={
+                <ProtectedRoute>
+                  <CmmsLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/cmms/dashboard" replace />} />
+                <Route path="dashboard" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <CmmsDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="assets" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <AssetsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="work-orders" element={
+                  <ProtectedRoute requiredPermission="view work orders">
+                    <WorkOrdersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="parts" element={
+                  <ProtectedRoute requiredPermission="view parts inventory">
+                    <PartsPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
               
               <Route path="/security" element={
                 <ProtectedRoute>
