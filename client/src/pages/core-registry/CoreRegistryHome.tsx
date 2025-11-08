@@ -12,6 +12,13 @@ export function CoreRegistryHome() {
       featured: true,
     },
     {
+      title: 'Asset Management',
+      description: 'CMMS for assets, maintenance, and work orders',
+      path: '/cmms/dashboard',
+      icon: '🔧',
+      featured: true,
+    },
+    {
       title: 'Schemes',
       description: 'Water supply schemes and infrastructure',
       path: '/core/schemes',
@@ -33,7 +40,7 @@ export function CoreRegistryHome() {
       title: 'Pipelines',
       description: 'Water distribution network',
       path: '/core/pipelines',
-      icon: '🔧',
+      icon: '⚙️',
     },
     {
       title: 'Zones',
