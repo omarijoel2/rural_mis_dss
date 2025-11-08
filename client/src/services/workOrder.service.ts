@@ -15,68 +15,45 @@ import type {
 const BASE_URL = '/api/v1';
 
 export const workOrderService = {
-  async getWorkOrders(filters?: WorkOrderFilters): Promise<PaginatedResponse<WorkOrder>> {
-    const params = new URLSearchParams();
+  getWorkOrders: (filters?: WorkOrderFilters) => {
+    const params: Record<string, string> = {};
     
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.kind) params.append('kind', filters.kind);
-    if (filters?.priority) params.append('priority', filters.priority);
-    if (filters?.asset_id) params.append('asset_id', filters.asset_id.toString());
-    if (filters?.assigned_to) params.append('assigned_to', filters.assigned_to);
-    if (filters?.per_page) params.append('per_page', filters.per_page.toString());
-    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.search) params.search = filters.search;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.kind) params.kind = filters.kind;
+    if (filters?.priority) params.priority = filters.priority;
+    if (filters?.asset_id) params.asset_id = filters.asset_id.toString();
+    if (filters?.assigned_to) params.assigned_to = filters.assigned_to;
+    if (filters?.per_page) params.per_page = filters.per_page.toString();
+    if (filters?.page) params.page = filters.page.toString();
     
-    const queryString = params.toString();
-    const url = queryString ? `${BASE_URL}/work-orders?${queryString}` : `${BASE_URL}/work-orders`;
-    
-    const response = await apiClient.get<PaginatedResponse<WorkOrder>>(url);
-    return response.data;
+    return apiClient.get<PaginatedResponse<WorkOrder>>(`${BASE_URL}/work-orders`, params);
   },
 
-  async getWorkOrder(id: number): Promise<WorkOrder> {
-    const response = await apiClient.get<WorkOrder>(`${BASE_URL}/work-orders/${id}`);
-    return response.data;
-  },
+  getWorkOrder: (id: number) =>
+    apiClient.get<WorkOrder>(`${BASE_URL}/work-orders/${id}`),
 
-  async createWorkOrder(data: CreateWorkOrderDto): Promise<WorkOrder> {
-    const response = await apiClient.post<WorkOrder>(`${BASE_URL}/work-orders`, data);
-    return response.data;
-  },
+  createWorkOrder: (data: CreateWorkOrderDto) =>
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders`, data),
 
-  async updateWorkOrder(id: number, data: UpdateWorkOrderDto): Promise<WorkOrder> {
-    const response = await apiClient.put<WorkOrder>(`${BASE_URL}/work-orders/${id}`, data);
-    return response.data;
-  },
+  updateWorkOrder: (id: number, data: UpdateWorkOrderDto) =>
+    apiClient.put<WorkOrder>(`${BASE_URL}/work-orders/${id}`, data),
 
-  async deleteWorkOrder(id: number): Promise<void> {
-    await apiClient.delete(`${BASE_URL}/work-orders/${id}`);
-  },
+  deleteWorkOrder: (id: number) =>
+    apiClient.delete(`${BASE_URL}/work-orders/${id}`),
 
-  async addParts(id: number, data: AddPartsToWorkOrderDto): Promise<WoPart[]> {
-    const response = await apiClient.post<WoPart[]>(`${BASE_URL}/work-orders/${id}/parts`, data);
-    return response.data;
-  },
+  addParts: (id: number, data: AddPartsToWorkOrderDto) =>
+    apiClient.post<WoPart[]>(`${BASE_URL}/work-orders/${id}/parts`, data),
 
-  async addLabor(id: number, data: AddLaborToWorkOrderDto): Promise<WoLabor> {
-    const response = await apiClient.post<WoLabor>(`${BASE_URL}/work-orders/${id}/labor`, data);
-    return response.data;
-  },
+  addLabor: (id: number, data: AddLaborToWorkOrderDto) =>
+    apiClient.post<WoLabor>(`${BASE_URL}/work-orders/${id}/labor`, data),
 
-  async assignWorkOrder(id: number, userId: string): Promise<WorkOrder> {
-    const response = await apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/assign`, {
-      user_id: userId
-    });
-    return response.data;
-  },
+  assignWorkOrder: (id: number, userId: string) =>
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/assign`, { user_id: userId }),
 
-  async startWorkOrder(id: number): Promise<WorkOrder> {
-    const response = await apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/start`);
-    return response.data;
-  },
+  startWorkOrder: (id: number) =>
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/start`),
 
-  async completeWorkOrder(id: number, data: CompleteWorkOrderDto): Promise<WorkOrder> {
-    const response = await apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/complete`, data);
-    return response.data;
-  }
+  completeWorkOrder: (id: number, data: CompleteWorkOrderDto) =>
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/complete`, data)
 };
