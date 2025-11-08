@@ -7,7 +7,8 @@ import {
   ClipboardList, 
   BarChart3, 
   Settings,
-  LogOut
+  LogOut,
+  Map
 } from 'lucide-react';
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
   { path: '/cmms/assets', label: 'Assets', icon: Settings, permission: 'view assets' },
   { path: '/cmms/work-orders', label: 'Work Orders', icon: ClipboardList, permission: 'view work orders' },
   { path: '/cmms/parts', label: 'Parts Inventory', icon: Package, permission: 'view parts inventory' },
+  { path: '/cmms/map', label: 'Asset Map', icon: Map, permission: 'view assets' },
 ];
 
 export function CmmsLayout() {

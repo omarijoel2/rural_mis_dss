@@ -29,6 +29,7 @@ import { AssetsPage } from './pages/cmms/AssetsPage';
 import { AssetDetailPage } from './pages/cmms/AssetDetailPage';
 import { WorkOrdersPage } from './pages/cmms/WorkOrdersPage';
 import { PartsPage } from './pages/cmms/PartsPage';
+import { CmmsMapPage } from './pages/cmms/CmmsMapPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -123,6 +124,11 @@ export function AppMIS() {
                 <Route path="parts" element={
                   <ProtectedRoute requiredPermission="view parts inventory">
                     <PartsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="map" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <CmmsMapPage />
                   </ProtectedRoute>
                 } />
               </Route>
