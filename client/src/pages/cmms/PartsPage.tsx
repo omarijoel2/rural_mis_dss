@@ -13,14 +13,17 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
-import { Plus, Search, Package, AlertTriangle } from 'lucide-react';
-import type { PartFilters } from '../../types/cmms';
+import { Plus, Search, Package, AlertTriangle, Edit } from 'lucide-react';
+import type { Part, PartFilters } from '../../types/cmms';
+import { PartFormDialog } from '../../components/cmms/PartFormDialog';
 
 export function PartsPage() {
   const [filters, setFilters] = useState<PartFilters>({
     per_page: 15,
     page: 1,
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPart, setEditingPart] = useState<Part | undefined>();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['parts', filters],
@@ -54,7 +57,10 @@ export function PartsPage() {
           <h1 className="text-3xl font-bold">Parts Inventory</h1>
           <p className="text-muted-foreground">Manage spare parts and supplies</p>
         </div>
-        <Button>
+        <Button onClick={() => {
+          setEditingPart(undefined);
+          setDialogOpen(true);
+        }}>
           <Plus className="mr-2 h-4 w-4" />
           Add Part
         </Button>
@@ -136,9 +142,21 @@ export function PartsPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          View
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm">
+                            View
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingPart(part);
+                              setDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -151,7 +169,10 @@ export function PartsPage() {
             <div className="flex flex-col items-center justify-center p-12">
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground mb-4">No parts found</p>
-              <Button>
+              <Button onClick={() => {
+                setEditingPart(undefined);
+                setDialogOpen(true);
+              }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Your First Part
               </Button>
@@ -185,6 +206,15 @@ export function PartsPage() {
           )}
         </CardContent>
       </Card>
+
+      <PartFormDialog 
+        open={dialogOpen} 
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingPart(undefined);
+        }}
+        part={editingPart}
+      />
     </div>
   );
 }
