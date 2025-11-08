@@ -26,7 +26,7 @@ import type { WorkOrder, WorkOrderFilters } from '../../types/cmms';
 import { WorkOrderFormDialog } from '../../components/cmms/WorkOrderFormDialog';
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All Statuses' },
+  { value: 'none', label: 'All Statuses' },
   { value: 'open', label: 'Open' },
   { value: 'assigned', label: 'Assigned' },
   { value: 'in_progress', label: 'In Progress' },
@@ -35,7 +35,7 @@ const STATUS_OPTIONS = [
 ];
 
 const KIND_OPTIONS = [
-  { value: '', label: 'All Types' },
+  { value: 'none', label: 'All Types' },
   { value: 'pm', label: 'Preventive Maintenance' },
   { value: 'cm', label: 'Corrective Maintenance' },
   { value: 'emergency', label: 'Emergency' },
@@ -43,7 +43,7 @@ const KIND_OPTIONS = [
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: '', label: 'All Priorities' },
+  { value: 'none', label: 'All Priorities' },
   { value: 'low', label: 'Low' },
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' },
@@ -85,7 +85,7 @@ export function WorkOrdersPage() {
   const handleStatusFilter = (status: string) => {
     setFilters({ 
       ...filters, 
-      status: status ? (status as 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled') : undefined, 
+      status: (status && status !== 'none') ? (status as 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled') : undefined, 
       page: 1 
     });
   };
@@ -93,7 +93,7 @@ export function WorkOrdersPage() {
   const handleKindFilter = (kind: string) => {
     setFilters({ 
       ...filters, 
-      kind: kind ? (kind as 'pm' | 'cm' | 'emergency' | 'project') : undefined, 
+      kind: (kind && kind !== 'none') ? (kind as 'pm' | 'cm' | 'emergency' | 'project') : undefined, 
       page: 1 
     });
   };
@@ -101,7 +101,7 @@ export function WorkOrdersPage() {
   const handlePriorityFilter = (priority: string) => {
     setFilters({ 
       ...filters, 
-      priority: priority ? (priority as 'low' | 'medium' | 'high' | 'critical') : undefined, 
+      priority: (priority && priority !== 'none') ? (priority as 'low' | 'medium' | 'high' | 'critical') : undefined, 
       page: 1 
     });
   };

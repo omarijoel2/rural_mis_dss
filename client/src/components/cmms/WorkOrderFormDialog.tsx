@@ -152,14 +152,14 @@ export function WorkOrderFormDialog({ open, onOpenChange, workOrder }: WorkOrder
           <div className="space-y-2">
             <Label htmlFor="asset_id">Related Asset</Label>
             <Select
-              onValueChange={(value) => setValue('asset_id', value ? Number(value) : undefined)}
-              defaultValue={workOrder?.asset_id?.toString()}
+              onValueChange={(value) => setValue('asset_id', (value && value !== 'none') ? Number(value) : undefined)}
+              defaultValue={workOrder?.asset_id?.toString() || 'none'}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select asset (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {assets?.data.map((asset) => (
                   <SelectItem key={asset.id} value={asset.id.toString()}>
                     {asset.code} - {asset.name}

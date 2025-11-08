@@ -142,14 +142,14 @@ export function AssetFormDialog({ open, onOpenChange, asset }: AssetFormDialogPr
             <div className="space-y-2">
               <Label htmlFor="parent_id">Parent Asset</Label>
               <Select
-                onValueChange={(value) => setValue('parent_id', value ? Number(value) : undefined)}
-                defaultValue={asset?.parent_id?.toString()}
+                onValueChange={(value) => setValue('parent_id', (value && value !== 'none') ? Number(value) : undefined)}
+                defaultValue={asset?.parent_id?.toString() || 'none'}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="None" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {assets?.data.filter(a => a.id !== asset?.id).map((a) => (
                     <SelectItem key={a.id} value={a.id.toString()}>
                       {a.code} - {a.name}

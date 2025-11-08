@@ -26,7 +26,7 @@ import type { Asset, AssetFilters } from '../../types/cmms';
 import { AssetFormDialog } from '../../components/cmms/AssetFormDialog';
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All Statuses' },
+  { value: 'none', label: 'All Statuses' },
   { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
   { value: 'retired', label: 'Retired' },
@@ -65,13 +65,13 @@ export function AssetsPage() {
   const handleStatusFilter = (status: string) => {
     setFilters({ 
       ...filters, 
-      status: status ? (status as 'active' | 'inactive' | 'retired' | 'under_maintenance') : undefined, 
+      status: (status && status !== 'none') ? (status as 'active' | 'inactive' | 'retired' | 'under_maintenance') : undefined, 
       page: 1 
     });
   };
 
   const handleClassFilter = (classId: string) => {
-    setFilters({ ...filters, class_id: classId ? Number(classId) : undefined, page: 1 });
+    setFilters({ ...filters, class_id: (classId && classId !== 'none') ? Number(classId) : undefined, page: 1 });
   };
 
   if (isLoading) {
@@ -135,14 +135,14 @@ export function AssetsPage() {
             </Select>
 
             <Select 
-              value={filters.class_id?.toString() || ''} 
+              value={filters.class_id?.toString() || 'none'} 
               onValueChange={handleClassFilter}
             >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by class" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Classes</SelectItem>
+                <SelectItem value="none">All Classes</SelectItem>
                 {classes?.map((cls) => (
                   <SelectItem key={cls.id} value={cls.id.toString()}>
                     {cls.name}

@@ -39,16 +39,10 @@ export function AssetDetailPage() {
     enabled: !!assetId && !isNaN(assetId),
   });
 
-  const { data: workOrders } = useQuery({
-    queryKey: ['asset-work-orders', assetId],
-    queryFn: () => asset?.work_orders || [],
-    enabled: !!asset,
-  });
-
   const { data: maintenanceHistory } = useQuery({
     queryKey: ['asset-maintenance', assetId],
-    queryFn: () => [] as any[],
-    enabled: false,
+    queryFn: () => assetService.getAssetMaintenanceHistory(assetId),
+    enabled: !!assetId && !isNaN(assetId),
   });
 
   if (isLoading) {
@@ -275,9 +269,9 @@ export function AssetDetailPage() {
             <div className="space-y-4">
               {maintenanceHistory.map((record: any) => (
                 <div key={record.id} className="border-l-2 border-gray-200 pl-4 pb-4">
-                  <p className="font-medium">{record.description}</p>
+                  <p className="font-medium">{record.description || record.title}</p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(record.date).toLocaleDateString()}
+                    {new Date(record.completed_at || record.created_at).toLocaleDateString()}
                   </p>
                   {record.notes && (
                     <p className="text-sm mt-2">{record.notes}</p>
