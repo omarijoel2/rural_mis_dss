@@ -224,5 +224,33 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
             Route::post('/{shift}/close', [\App\Http\Controllers\Api\V1\Operations\ShiftController::class, 'close'])->middleware('permission:edit shifts');
             Route::post('/{shift}/entries', [\App\Http\Controllers\Api\V1\Operations\ShiftController::class, 'addEntry'])->middleware('permission:create shift entries');
         });
+
+        Route::prefix('playbooks')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Operations\PlaybookController::class, 'index'])->middleware('permission:view playbooks');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Operations\PlaybookController::class, 'store'])->middleware('permission:create playbooks');
+            Route::get('/find-matching', [\App\Http\Controllers\Api\V1\Operations\PlaybookController::class, 'findMatching'])->middleware('permission:view playbooks');
+            Route::get('/{playbook}', [\App\Http\Controllers\Api\V1\Operations\PlaybookController::class, 'show'])->middleware('permission:view playbooks');
+            Route::patch('/{playbook}', [\App\Http\Controllers\Api\V1\Operations\PlaybookController::class, 'update'])->middleware('permission:edit playbooks');
+            Route::put('/{playbook}', [\App\Http\Controllers\Api\V1\Operations\PlaybookController::class, 'update'])->middleware('permission:edit playbooks');
+            Route::delete('/{playbook}', [\App\Http\Controllers\Api\V1\Operations\PlaybookController::class, 'destroy'])->middleware('permission:delete playbooks');
+        });
+
+        Route::prefix('checklists')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'index'])->middleware('permission:view checklists');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'store'])->middleware('permission:create checklists');
+            Route::get('/{checklist}', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'show'])->middleware('permission:view checklists');
+            Route::patch('/{checklist}', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'update'])->middleware('permission:edit checklists');
+            Route::put('/{checklist}', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'update'])->middleware('permission:edit checklists');
+            Route::delete('/{checklist}', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'destroy'])->middleware('permission:delete checklists');
+            
+            Route::post('/{checklist}/start', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'startRun'])->middleware('permission:create checklist runs');
+        });
+
+        Route::prefix('checklist-runs')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'runs'])->middleware('permission:view checklist runs');
+            Route::patch('/{run}', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'updateRun'])->middleware('permission:edit checklist runs');
+            Route::put('/{run}', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'updateRun'])->middleware('permission:edit checklist runs');
+            Route::post('/{run}/complete', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'completeRun'])->middleware('permission:edit checklist runs');
+        });
     });
 });

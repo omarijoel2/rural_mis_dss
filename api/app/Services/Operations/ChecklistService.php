@@ -167,6 +167,8 @@ class ChecklistService
      */
     public function updateRun(int $runId, array $data, User $user): ChecklistRun
     {
+        $tenantId = $user->currentTenantId();
+
         $validator = Validator::make($data, [
             'data' => 'required|array',
         ]);
@@ -175,7 +177,12 @@ class ChecklistService
             throw new ValidationException($validator);
         }
 
-        $run = ChecklistRun::findOrFail($runId);
+        // Get run with tenant validation through checklist
+        $run = ChecklistRun::with('checklist')
+            ->whereHas('checklist', function ($query) use ($tenantId) {
+                $query->where('tenant_id', $tenantId);
+            })
+            ->findOrFail($runId);
 
         // Verify user owns this run
         if ($run->performed_by !== $user->id) {
@@ -198,7 +205,14 @@ class ChecklistService
      */
     public function completeRun(int $runId, User $user): ChecklistRun
     {
-        $run = ChecklistRun::with('checklist')->findOrFail($runId);
+        $tenantId = $user->currentTenantId();
+
+        // Get run with tenant validation through checklist
+        $run = ChecklistRun::with('checklist')
+            ->whereHas('checklist', function ($query) use ($tenantId) {
+                $query->where('tenant_id', $tenantId);
+            })
+            ->findOrFail($runId);
 
         // Verify user owns this run
         if ($run->performed_by !== $user->id) {
@@ -227,6 +241,7 @@ class ChecklistService
     /**
      * Calculate score for a checklist run.
      * Simple scoring: percentage of required questions answered.
+     * Correctly handles boolean false and numeric 0 as valid answers.
      */
     protected function calculateScore(ChecklistRun $run): float
     {
@@ -244,8 +259,25 @@ class ChecklistService
             $isRequired = $field['required'] ?? false;
             if ($isRequired) {
                 $totalRequired++;
-                if (isset($data[$index]) && !empty($data[$index])) {
-                    $answeredRequired++;
+                
+                // Use array_key_exists to properly detect answered questions
+                // This correctly handles false, 0, empty string as valid answers
+                if (array_key_exists($index, $data)) {
+                    $value = $data[$index];
+                    
+                    // Question is answered if:
+                    // - It's a boolean (true or false)
+                    // - It's a number (including 0)
+                    // - It's a non-empty string
+                    // - It's an array with at least one item
+                    $isAnswered = is_bool($value) 
+                        || is_numeric($value) 
+                        || (is_string($value) && strlen($value) > 0)
+                        || (is_array($value) && count($value) > 0);
+                    
+                    if ($isAnswered) {
+                        $answeredRequired++;
+                    }
                 }
             }
         }
