@@ -5,7 +5,7 @@ This is a hybrid monorepo containing two distinct applications:
 1. **EcoVillage** - A browser-based sustainability education game (currently inactive)
 2. **Rural Water Supply MIS** (Active) - A Laravel-based Management Information System for rural water infrastructure with multi-tenancy, spatial data support, and comprehensive security features
 
-**Current Focus**: Rural Water Supply MIS - Module 05 Backend Foundation Complete! Operations Logbook & Events system with multitenancy and RBAC protections.
+**Current Focus**: Rural Water Supply MIS - Module 05 Shifts & Operations Backend Complete! ShiftService with RBAC endpoints + comprehensive multitenancy security hardening across all modules.
 
 **Recent Completions**:
 - ✅ Module 01: Spatial features, PostGIS integration, MapLibre GL MapConsole
@@ -20,14 +20,21 @@ This is a hybrid monorepo containing two distinct applications:
   - **Testing**: Vitest infrastructure with 12 automated integration tests (all passing)
   - **Data**: 100 assets + 10 parts + demo data seeded
   - **Critical Fix**: Radix UI Select components - replaced empty strings with 'none' sentinel
-- ⚙️ **Module 05 (Backend Foundation - Nov 9, 2024)**: Operations Logbook & Events (Architect-Approved)
+- ✅ **Module 05 (Shifts Backend - Nov 9, 2024)**: ShiftService + ShiftController (Architect-Approved)
   - **Database**: 3 migrations, 10 tables (shifts, events, playbooks, checklists, notifications)
-  - **Models**: 10 Eloquent models with tenant scoping, spatial support, relationships
+  - **Models**: 10 Eloquent models with secure tenant scoping, spatial support, relationships
+  - **ShiftService**: Create/close shifts, add entries, tenant-validated foreign keys (facility/scheme/dma)
+  - **ShiftController**: 5 RBAC-protected endpoints (index, store, show, close, addEntry)
   - **EventService**: De-duplication (partial unique index), correlation (SHA256 hash), SLA timers
   - **EventController**: 6 RBAC-protected, tenant-isolated endpoints (list, ingest, ack, resolve, link)
-  - **Security**: Complete multitenancy protection - all queries scoped by tenant_id, route-bound models validated
-  - **Background Jobs**: actor_id nullable for system/queue contexts
-  - **Pending**: Shift/Playbook/Checklist services & controllers, jobs, frontend (5 pages), tests, seeders
+  - **CRITICAL SECURITY FIX** (Nov 9): Comprehensive multitenancy hardening across ALL modules (Operations + CMMS):
+    - Added `User::currentTenantId()` accessor with null guard (throws RuntimeException)
+    - Fixed 9 model global scopes to call `currentTenantId()` and force empty results on null tenant
+    - ShiftService: All methods use accessor + validateTenantOwnership() for cross-tenant prevention
+    - Verified EventService security (explicit tenant_id validation)
+    - **Impact**: Eliminated null-tenant bypass vulnerability in Shift, Event, Playbook, Checklist, EscalationPolicy, Asset, WorkOrder, Part, Supplier models
+  - **Seeders**: OperationsPermissionSeeder (29 permissions), OperationsSeeder (3 checklists, 4 playbooks, 3 policies, 2 shifts, 5 events)
+  - **Pending**: Playbook/Checklist services & controllers, background jobs, frontend (5 pages), automated tests
 
 The application uses a monorepo structure with separate frontend (React/Vite), backend (Express + Laravel), and shared TypeScript schema definitions.
 
