@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::create('crm_interactions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->string('account_no')->nullable();
             $table->enum('channel', ['walkin', 'call', 'sms', 'email', 'app', 'field'])->default('walkin');
             $table->string('subject');
             $table->text('message');
-            $table->unsignedBigInteger('created_by');
+            $table->uuid('created_by');
             $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
             $table->timestamps();
 

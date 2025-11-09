@@ -67,12 +67,12 @@ return new class extends Migration
         Schema::create('abstraction_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('source_id')->constrained('sources')->cascadeOnDelete();
-            $table->foreignId('scheme_id')->nullable()->constrained('schemes')->nullOnDelete();
+            $table->foreignUuid('scheme_id')->nullable()->constrained('schemes')->nullOnDelete();
             $table->timestampTz('logged_at');
             $table->decimal('volume_m3', 12, 2)->check('volume_m3 >= 0');
             $table->string('method', 20);
             $table->string('quality', 20);
-            $table->foreignId('logged_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('logged_by')->nullable()->constrained('users')->nullOnDelete();
             $table->jsonb('meta')->nullable();
             $table->timestamps();
 

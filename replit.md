@@ -12,6 +12,15 @@ Key capabilities include:
 
 # Recent Changes
 
+## Module 08: Hydro-Meteorological & Water Sources - Database Layer (November 2025)
+- **COMPLETE**: All Module 08 Laravel migrations (4 files, 20+ tables) successfully deployed
+- **Sources Registry**: source_kinds, source_statuses, quality_risk_levels lookup tables; sources table with PostGIS Point geometry
+- **Stations & Sensors**: hydromet_stations with PostGIS Point; station_types, sensor_types, sensor_statuses lookups; hydromet_sensors table
+- **Timeseries Data**: Partitioned timeseries table with 13 monthly partitions (6 past + current + 6 future), BRIN/GIST indexes, quality_flags
+- **Forecasts & Indicators**: forecast_models, forecast_variables, drought_stages lookups; forecast_grids with BYTEA grid_data and PostGIS bbox; hydro_indicators with SPI metrics
+- **Migration Fixes**: Resolved ALL UUID foreign key type mismatches across CRM and Hydro-Met modules (tenant_id, scheme_id, dma_id, user references)
+- **Database Schema**: 39 migrations total (Core + Permissions + CMMS + Operations + WQ + CRM + Hydro-Met) all passing
+
 ## Module 07: CRM & Revenue Assurance Frontend (November 2025)
 - **Customers Page**: Search, filters, sortable table with customer data and quick actions
 - **Account Search Page**: Direct account lookup with navigation to Account 360

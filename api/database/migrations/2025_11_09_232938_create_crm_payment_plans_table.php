@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('crm_payment_plans', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->string('account_no');
             $table->enum('status', ['active', 'completed', 'defaulted'])->default('active');
             $table->jsonb('schedule');

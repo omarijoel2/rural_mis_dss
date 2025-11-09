@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('crm_invoices', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->string('account_no');
             $table->date('period_start');
             $table->date('period_end');

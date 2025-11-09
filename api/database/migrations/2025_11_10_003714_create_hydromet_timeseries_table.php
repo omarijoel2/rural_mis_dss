@@ -36,28 +36,27 @@ return new class extends Migration
         DB::statement("CREATE INDEX timeseries_sensor_observed_idx ON timeseries (sensor_id, observed_at)");
         DB::statement("CREATE INDEX timeseries_quality_idx ON timeseries (quality_id) WHERE quality_id IS NOT NULL");
 
-        $currentYear = date('Y');
-        $currentMonth = date('m');
+        $now = new \DateTime('first day of this month');
         
         for ($monthsBack = 6; $monthsBack >= 0; $monthsBack--) {
-            $date = date('Y-m-01', strtotime("-{$monthsBack} months"));
-            $nextDate = date('Y-m-01', strtotime("-" . ($monthsBack - 1) . " months"));
-            $partitionName = 'timeseries_' . date('Y_m', strtotime($date));
+            $start = (clone $now)->modify("-{$monthsBack} months");
+            $end = (clone $start)->modify('+1 month');
+            $partitionName = 'timeseries_' . $start->format('Y_m');
             
             DB::statement("
                 CREATE TABLE {$partitionName} PARTITION OF timeseries
-                FOR VALUES FROM ('{$date}') TO ('{$nextDate}')
+                FOR VALUES FROM ('{$start->format('Y-m-d')}') TO ('{$end->format('Y-m-d')}')
             ");
         }
 
         for ($monthsAhead = 1; $monthsAhead <= 6; $monthsAhead++) {
-            $date = date('Y-m-01', strtotime("+{$monthsAhead} months"));
-            $nextDate = date('Y-m-01', strtotime("+" . ($monthsAhead + 1) . " months"));
-            $partitionName = 'timeseries_' . date('Y_m', strtotime($date));
+            $start = (clone $now)->modify("+{$monthsAhead} months");
+            $end = (clone $start)->modify('+1 month');
+            $partitionName = 'timeseries_' . $start->format('Y_m');
             
             DB::statement("
                 CREATE TABLE {$partitionName} PARTITION OF timeseries
-                FOR VALUES FROM ('{$date}') TO ('{$nextDate}')
+                FOR VALUES FROM ('{$start->format('Y-m-d')}') TO ('{$end->format('Y-m-d')}')
             ");
         }
 
