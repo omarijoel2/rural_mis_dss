@@ -53,51 +53,51 @@ class OperationsSeeder extends Seeder
 
         $checklists = [
             [
-                'name' => 'Shift Handover Checklist',
-                'description' => 'Standard checklist for shift handover procedures',
-                'category' => 'shift_ops',
-                'items' => [
-                    ['text' => 'Review active events and alarms', 'order' => 1, 'required' => true],
-                    ['text' => 'Check critical asset statuses', 'order' => 2, 'required' => true],
-                    ['text' => 'Review outstanding work orders', 'order' => 3, 'required' => true],
-                    ['text' => 'Brief incoming operator on key issues', 'order' => 4, 'required' => true],
-                    ['text' => 'Sign handover log', 'order' => 5, 'required' => true],
+                'title' => 'Shift Handover Checklist',
+                'frequency' => 'daily',
+                'schema' => [
+                    'items' => [
+                        ['text' => 'Review active events and alarms', 'required' => true],
+                        ['text' => 'Check critical asset statuses', 'required' => true],
+                        ['text' => 'Review outstanding work orders', 'required' => true],
+                        ['text' => 'Brief incoming operator on key issues', 'required' => true],
+                        ['text' => 'Sign handover log', 'required' => true],
+                    ]
                 ],
             ],
             [
-                'name' => 'Daily System Check',
-                'description' => 'Daily operational status verification',
-                'category' => 'daily',
-                'items' => [
-                    ['text' => 'Verify reservoir levels', 'order' => 1, 'required' => true],
-                    ['text' => 'Check pump station pressures', 'order' => 2, 'required' => true],
-                    ['text' => 'Review water quality readings', 'order' => 3, 'required' => true],
-                    ['text' => 'Inspect chlorine residuals', 'order' => 4, 'required' => true],
-                    ['text' => 'Check DMA flow rates', 'order' => 5, 'required' => true],
-                    ['text' => 'Review energy consumption', 'order' => 6, 'required' => false],
+                'title' => 'Daily System Check',
+                'frequency' => 'daily',
+                'schema' => [
+                    'items' => [
+                        ['text' => 'Verify reservoir levels', 'required' => true],
+                        ['text' => 'Check pump station pressures', 'required' => true],
+                        ['text' => 'Review water quality readings', 'required' => true],
+                        ['text' => 'Inspect chlorine residuals', 'required' => true],
+                        ['text' => 'Check DMA flow rates', 'required' => true],
+                        ['text' => 'Review energy consumption', 'required' => false],
+                    ]
                 ],
             ],
             [
-                'name' => 'Emergency Response Checklist',
-                'description' => 'Critical steps for emergency situations',
-                'category' => 'emergency',
-                'items' => [
-                    ['text' => 'Assess situation severity', 'order' => 1, 'required' => true],
-                    ['text' => 'Notify shift supervisor', 'order' => 2, 'required' => true],
-                    ['text' => 'Activate emergency playbook', 'order' => 3, 'required' => true],
-                    ['text' => 'Isolate affected zone if needed', 'order' => 4, 'required' => true],
-                    ['text' => 'Document all actions taken', 'order' => 5, 'required' => true],
-                    ['text' => 'Coordinate with field teams', 'order' => 6, 'required' => true],
+                'title' => 'Emergency Response Checklist',
+                'frequency' => 'custom',
+                'schema' => [
+                    'items' => [
+                        ['text' => 'Assess situation severity', 'required' => true],
+                        ['text' => 'Notify shift supervisor', 'required' => true],
+                        ['text' => 'Activate emergency playbook', 'required' => true],
+                        ['text' => 'Isolate affected zone if needed', 'required' => true],
+                        ['text' => 'Document all actions taken', 'required' => true],
+                        ['text' => 'Coordinate with field teams', 'required' => true],
+                    ]
                 ],
             ],
         ];
 
         foreach ($checklists as $checklistData) {
-            $items = $checklistData['items'];
-            unset($checklistData['items']);
-            
             Checklist::firstOrCreate(
-                ['name' => $checklistData['name'], 'tenant_id' => $tenant->id],
+                ['title' => $checklistData['title'], 'tenant_id' => $tenant->id],
                 array_merge($checklistData, ['tenant_id' => $tenant->id])
             );
         }
@@ -184,24 +184,30 @@ class OperationsSeeder extends Seeder
         $policies = [
             [
                 'name' => 'Critical Event Escalation',
-                'for_severity' => 'critical',
-                'delay_minutes' => 15,
-                'notify_roles' => ['Manager', 'Admin'],
-                'notify_channels' => ['email', 'sms'],
+                'rules' => [
+                    'for_severity' => 'critical',
+                    'delay_minutes' => 15,
+                    'notify_roles' => ['Manager', 'Admin'],
+                    'notify_channels' => ['email', 'sms'],
+                ],
             ],
             [
                 'name' => 'High Priority Escalation',
-                'for_severity' => 'high',
-                'delay_minutes' => 60,
-                'notify_roles' => ['Manager'],
-                'notify_channels' => ['email'],
+                'rules' => [
+                    'for_severity' => 'high',
+                    'delay_minutes' => 60,
+                    'notify_roles' => ['Manager'],
+                    'notify_channels' => ['email'],
+                ],
             ],
             [
                 'name' => 'Medium Priority Escalation',
-                'for_severity' => 'medium',
-                'delay_minutes' => 240,
-                'notify_roles' => ['Manager'],
-                'notify_channels' => ['email'],
+                'rules' => [
+                    'for_severity' => 'medium',
+                    'delay_minutes' => 240,
+                    'notify_roles' => ['Manager'],
+                    'notify_channels' => ['email'],
+                ],
             ],
         ];
 
@@ -227,40 +233,43 @@ class OperationsSeeder extends Seeder
         $activeShift = Shift::create([
             'tenant_id' => $tenant->id,
             'name' => 'Night Shift - Nov 9',
-            'shift_type' => 'night',
-            'started_at' => now()->subHours(3),
-            'scheduled_end' => now()->addHours(5),
-            'started_by' => $user->id,
+            'starts_at' => now()->subHours(3),
+            'ends_at' => now()->addHours(5),
+            'supervisor_id' => $user->id,
             'status' => 'active',
         ]);
 
         ShiftEntry::create([
             'shift_id' => $activeShift->id,
-            'entry_type' => 'log',
-            'description' => 'Shift started. All systems operational. 3 active events.',
-            'logged_by' => $user->id,
-            'occurred_at' => $activeShift->started_at,
+            'kind' => 'note',
+            'title' => 'Shift Started',
+            'body' => 'All systems operational. 3 active events under monitoring.',
+            'created_by' => $user->id,
         ]);
 
         ShiftEntry::create([
             'shift_id' => $activeShift->id,
-            'entry_type' => 'action',
-            'description' => 'Acknowledged high pressure alarm at Westlands DMA. Activated playbook.',
-            'logged_by' => $user->id,
-            'occurred_at' => now()->subHours(2),
+            'kind' => 'note',
+            'title' => 'High Pressure Alarm',
+            'body' => 'Acknowledged high pressure alarm at Westlands DMA. Activated playbook.',
+            'created_by' => $user->id,
         ]);
 
         $pastShift = Shift::create([
             'tenant_id' => $tenant->id,
             'name' => 'Day Shift - Nov 8',
-            'shift_type' => 'day',
-            'started_at' => now()->subDay()->hour(6)->minute(0),
-            'ended_at' => now()->subDay()->hour(18)->minute(0),
-            'scheduled_end' => now()->subDay()->hour(18)->minute(0),
-            'started_by' => $user->id,
-            'ended_by' => $user->id,
+            'starts_at' => now()->subDay()->hour(6)->minute(0),
+            'ends_at' => now()->subDay()->hour(18)->minute(0),
+            'supervisor_id' => $user->id,
             'status' => 'closed',
-            'handover_notes' => 'Routine shift. Resolved 5 events. One pump scheduled for PM tomorrow.',
+        ]);
+
+        ShiftEntry::create([
+            'shift_id' => $pastShift->id,
+            'kind' => 'handover',
+            'title' => 'Shift Handover Report',
+            'body' => 'Routine shift. Resolved 5 events. One pump scheduled for PM tomorrow.',
+            'created_by' => $user->id,
         ]);
 
         $this->command->info('Shifts created.');
