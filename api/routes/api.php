@@ -253,4 +253,55 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
             Route::post('/{run}/complete', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'completeRun'])->middleware('permission:edit checklist runs');
         });
     });
+
+    Route::prefix('water-quality')->group(function () {
+        Route::prefix('parameters')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\WqParameterController::class, 'index'])->middleware('permission:view water quality parameters');
+            Route::post('/', [\App\Http\Controllers\Api\WqParameterController::class, 'store'])->middleware('permission:create water quality parameters');
+            Route::get('/{parameterId}', [\App\Http\Controllers\Api\WqParameterController::class, 'show'])->middleware('permission:view water quality parameters');
+            Route::patch('/{parameterId}', [\App\Http\Controllers\Api\WqParameterController::class, 'update'])->middleware('permission:edit water quality parameters');
+            Route::put('/{parameterId}', [\App\Http\Controllers\Api\WqParameterController::class, 'update'])->middleware('permission:edit water quality parameters');
+            Route::delete('/{parameterId}', [\App\Http\Controllers\Api\WqParameterController::class, 'destroy'])->middleware('permission:delete water quality parameters');
+        });
+
+        Route::prefix('sampling-points')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\WqSamplingPointController::class, 'index'])->middleware('permission:view water quality sampling points');
+            Route::post('/', [\App\Http\Controllers\Api\WqSamplingPointController::class, 'store'])->middleware('permission:create water quality sampling points');
+            Route::get('/{pointId}', [\App\Http\Controllers\Api\WqSamplingPointController::class, 'show'])->middleware('permission:view water quality sampling points');
+            Route::patch('/{pointId}', [\App\Http\Controllers\Api\WqSamplingPointController::class, 'update'])->middleware('permission:edit water quality sampling points');
+            Route::put('/{pointId}', [\App\Http\Controllers\Api\WqSamplingPointController::class, 'update'])->middleware('permission:edit water quality sampling points');
+            Route::delete('/{pointId}', [\App\Http\Controllers\Api\WqSamplingPointController::class, 'destroy'])->middleware('permission:delete water quality sampling points');
+        });
+
+        Route::prefix('plans')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\WqPlanController::class, 'index'])->middleware('permission:view water quality plans');
+            Route::post('/', [\App\Http\Controllers\Api\WqPlanController::class, 'store'])->middleware('permission:create water quality plans');
+            Route::get('/{planId}', [\App\Http\Controllers\Api\WqPlanController::class, 'show'])->middleware('permission:view water quality plans');
+            Route::post('/{planId}/rules', [\App\Http\Controllers\Api\WqPlanController::class, 'addRule'])->middleware('permission:edit water quality plans');
+            Route::post('/{planId}/activate', [\App\Http\Controllers\Api\WqPlanController::class, 'activate'])->middleware('permission:edit water quality plans');
+            Route::post('/{planId}/generate-tasks', [\App\Http\Controllers\Api\WqPlanController::class, 'generateTasks'])->middleware('permission:create water quality samples');
+        });
+
+        Route::prefix('samples')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\WqSampleController::class, 'index'])->middleware('permission:view water quality samples');
+            Route::post('/', [\App\Http\Controllers\Api\WqSampleController::class, 'store'])->middleware('permission:create water quality samples');
+            Route::get('/barcode/{barcode}', [\App\Http\Controllers\Api\WqSampleController::class, 'byBarcode'])->middleware('permission:view water quality samples');
+            Route::get('/{sampleId}', [\App\Http\Controllers\Api\WqSampleController::class, 'show'])->middleware('permission:view water quality samples');
+            Route::post('/{sampleId}/collect', [\App\Http\Controllers\Api\WqSampleController::class, 'collect'])->middleware('permission:edit water quality samples');
+            Route::post('/{sampleId}/receive-lab', [\App\Http\Controllers\Api\WqSampleController::class, 'receiveLab'])->middleware('permission:edit water quality samples');
+        });
+
+        Route::prefix('results')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\WqResultController::class, 'index'])->middleware('permission:view water quality results');
+            Route::post('/', [\App\Http\Controllers\Api\WqResultController::class, 'store'])->middleware('permission:create water quality results');
+            Route::post('/import-csv', [\App\Http\Controllers\Api\WqResultController::class, 'importCsv'])->middleware('permission:import water quality results');
+        });
+
+        Route::prefix('compliance')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\WqComplianceController::class, 'index'])->middleware('permission:view water quality compliance');
+            Route::get('/summary', [\App\Http\Controllers\Api\WqComplianceController::class, 'summary'])->middleware('permission:view water quality compliance');
+            Route::post('/compute', [\App\Http\Controllers\Api\WqComplianceController::class, 'compute'])->middleware('permission:compute water quality compliance');
+            Route::post('/compute-all', [\App\Http\Controllers\Api\WqComplianceController::class, 'computeAll'])->middleware('permission:compute water quality compliance');
+        });
+    });
 });
