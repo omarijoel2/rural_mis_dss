@@ -79,8 +79,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('event_id')->constrained('events')->onDelete('cascade');
             $table->string('action');
-            $table->uuid('actor_id');
-            $table->foreign('actor_id')->references('id')->on('users')->onDelete('cascade');
+            $table->uuid('actor_id')->nullable();
+            $table->foreign('actor_id')->references('id')->on('users')->onDelete('set null');
             $table->jsonb('payload')->nullable();
             $table->timestampTz('occurred_at');
             $table->timestamps();

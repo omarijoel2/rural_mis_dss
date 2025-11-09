@@ -18,10 +18,15 @@ class EventController extends Controller
 
     /**
      * List events with filters
+     * CRITICAL: Scoped by authenticated user's tenant
      */
     public function index(Request $request)
     {
-        $query = Event::with(['facility', 'scheme', 'dma', 'links', 'actions']);
+        // CRITICAL: Enforce tenant scoping to prevent cross-tenant data leaks
+        $tenantId = auth()->user()->tenant_id;
+        
+        $query = Event::where('tenant_id', $tenantId)
+            ->with(['facility', 'scheme', 'dma', 'links', 'actions']);
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -85,36 +90,52 @@ class EventController extends Controller
 
     /**
      * Get single event
+     * CRITICAL: Validates tenant ownership
      */
     public function show(Event $event)
     {
+        // CRITICAL: Verify event belongs to authenticated user's tenant
+        $this->validateTenantOwnership($event);
+        
         $event->load(['facility', 'scheme', 'dma', 'links', 'actions.actor']);
         return response()->json($event);
     }
 
     /**
      * Acknowledge event
+     * CRITICAL: Validates tenant ownership before mutation
      */
     public function acknowledge(Request $request, Event $event)
     {
+        // CRITICAL: Verify event belongs to authenticated user's tenant
+        $this->validateTenantOwnership($event);
+        
         $event = $this->eventService->acknowledgeEvent($event->id, $request->input('note'));
         return response()->json($event);
     }
 
     /**
      * Resolve event
+     * CRITICAL: Validates tenant ownership before mutation
      */
     public function resolve(Request $request, Event $event)
     {
+        // CRITICAL: Verify event belongs to authenticated user's tenant
+        $this->validateTenantOwnership($event);
+        
         $event = $this->eventService->resolveEvent($event->id, $request->input('resolution'));
         return response()->json($event);
     }
 
     /**
      * Link event to entity
+     * CRITICAL: Validates tenant ownership before mutation
      */
     public function link(Request $request, Event $event)
     {
+        // CRITICAL: Verify event belongs to authenticated user's tenant
+        $this->validateTenantOwnership($event);
+        
         $validated = $request->validate([
             'entity_type' => 'required|string',
             'entity_id' => 'required|integer',
@@ -123,5 +144,16 @@ class EventController extends Controller
         $this->eventService->linkEvent($event->id, $validated['entity_type'], $validated['entity_id']);
         
         return response()->json(['message' => 'Event linked successfully']);
+    }
+
+    /**
+     * Validate that event belongs to authenticated user's tenant
+     * Prevents cross-tenant access via direct ID manipulation
+     */
+    protected function validateTenantOwnership(Event $event): void
+    {
+        if ($event->tenant_id !== auth()->user()->tenant_id) {
+            abort(403, 'Access denied: Event does not belong to your organization');
+        }
     }
 }
