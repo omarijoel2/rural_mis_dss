@@ -133,11 +133,10 @@ class WaterQualitySeeder extends Seeder
                     'name' => $pointData['name'],
                     'code' => $pointData['code'],
                     'kind' => $pointData['kind'],
-                    'facility_id' => $facility?->id,
                     'scheme_id' => $scheme?->id,
                     'location' => new Point($pointData['lat'], $pointData['lng']),
                     'elevation_m' => $pointData['elevation_m'],
-                    'description' => 'Sampling point for ' . $pointData['name'],
+                    'meta' => ['description' => 'Sampling point for ' . $pointData['name']],
                     'is_active' => true,
                 ]
             );
