@@ -6,20 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('crm_invoices', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('tenant_id');
+            $table->string('account_no');
+            $table->date('period_start');
+            $table->date('period_end');
+            $table->date('due_date');
+            $table->decimal('total_amount', 12, 2);
+            $table->enum('status', ['open', 'paid', 'part_paid', 'written_off'])->default('open');
+            $table->jsonb('meta')->nullable();
             $table->timestamps();
+
+            $table->foreign('tenant_id')->references('id')->on('organizations')->cascadeOnDelete();
+            $table->index('tenant_id');
+            $table->index('account_no');
+            $table->index(['status', 'due_date']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('crm_invoices');
