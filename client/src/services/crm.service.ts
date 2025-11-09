@@ -13,6 +13,7 @@ export interface Customer {
   customer_type: 'residential' | 'commercial' | 'industrial' | 'public';
   created_at: string;
   updated_at: string;
+  service_connections?: ServiceConnection[];
 }
 
 export interface Premise {

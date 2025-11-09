@@ -38,7 +38,7 @@ import { SamplesPage } from './pages/water-quality/SamplesPage';
 import { ResultsPage } from './pages/water-quality/ResultsPage';
 import { CompliancePage } from './pages/water-quality/CompliancePage';
 import { CrmLayout } from './components/layouts/CrmLayout';
-import { CustomersPage, Account360Page } from './pages/crm';
+import { CustomersPage, Account360Page, AccountSearchPage, RaConsolePage, DunningPage, ImportCenterPage } from './pages/crm';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -249,9 +249,29 @@ export function AppMIS() {
                     <CustomersPage />
                   </ProtectedRoute>
                 } />
+                <Route path="accounts/search" element={
+                  <ProtectedRoute requiredPermission="view service connections">
+                    <AccountSearchPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="accounts/:accountNo" element={
                   <ProtectedRoute requiredPermission="view service connections">
                     <Account360Page />
+                  </ProtectedRoute>
+                } />
+                <Route path="ra" element={
+                  <ProtectedRoute requiredPermission="view ra cases">
+                    <RaConsolePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="dunning" element={
+                  <ProtectedRoute requiredPermission="view service connections">
+                    <DunningPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="import" element={
+                  <ProtectedRoute requiredPermission="manage billing">
+                    <ImportCenterPage />
                   </ProtectedRoute>
                 } />
               </Route>

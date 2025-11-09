@@ -111,11 +111,17 @@ export function CustomersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/crm/customers/${customer.id}`}>
+                      {customer.service_connections && customer.service_connections.length > 0 ? (
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/crm/accounts/${customer.service_connections[0].account_no}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="sm" disabled>
                           <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

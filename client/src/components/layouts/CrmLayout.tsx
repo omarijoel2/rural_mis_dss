@@ -4,7 +4,7 @@ import { Users, Home, Receipt, AlertTriangle, FileText, Upload } from 'lucide-re
 
 const navigation = [
   { name: 'Customers', href: '/crm/customers', icon: Users },
-  { name: 'Account 360', href: '/crm/accounts', icon: Home },
+  { name: 'Account Search', href: '/crm/accounts/search', icon: Home },
   { name: 'Revenue Assurance', href: '/crm/ra', icon: AlertTriangle },
   { name: 'Dunning & Collections', href: '/crm/dunning', icon: Receipt },
   { name: 'Import Center', href: '/crm/import', icon: Upload },
