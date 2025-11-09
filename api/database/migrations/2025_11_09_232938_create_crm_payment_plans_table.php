@@ -6,20 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('crm_payment_plans', function (Blueprint $table) {
             $table->id();
+            $table->string('account_no');
+            $table->enum('status', ['active', 'completed', 'defaulted'])->default('active');
+            $table->jsonb('schedule');
+            $table->date('next_due')->nullable();
             $table->timestamps();
+
+            $table->index('account_no');
+            $table->index(['status', 'next_due']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('crm_payment_plans');
