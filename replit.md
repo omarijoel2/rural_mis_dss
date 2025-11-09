@@ -1,105 +1,14 @@
 # Overview
 
-This is a hybrid monorepo containing two distinct applications:
+This project is a hybrid monorepo featuring two applications: **EcoVillage** (an inactive sustainability education game) and **Rural Water Supply MIS**. The primary focus is the **Rural Water Supply MIS**, a Laravel-based Management Information System designed for rural water infrastructure. It supports multi-tenancy, spatial data, and robust security features, with a core mission to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities.
 
-1. **EcoVillage** - A browser-based sustainability education game (currently inactive)
-2. **Rural Water Supply MIS** (Active) - A Laravel-based Management Information System for rural water infrastructure with multi-tenancy, spatial data support, and comprehensive security features
-
-**Current Focus**: Rural Water Supply MIS - Module 06 Water Quality & Lab QA/QC Backend Complete! Production-ready water quality management system with comprehensive QC auto-flagging and compliance monitoring.
-
-**Recent Completions**:
-- ✅ Module 01: Spatial features, PostGIS integration, MapLibre GL MapConsole
-- ✅ **Module 02 (Complete - Nov 7, 2024)**: All 4 epics architect-verified
-  - Epic 1: Import/Export pipelines (GeoJSON + CSV) for schemes, DMAs, facilities
-  - Epic 2: RBAC enforcement with method-specific permission guards
-  - Epic 3: Audit logging middleware on all mutation routes
-  - Epic 4: OpenAPI/Swagger documentation scaffolding
-- ✅ **Module 04 (Complete - Nov 8, 2024)**: Comprehensive Asset/CMMS System
-  - **Backend**: 15 database tables, 13 Eloquent models, 3 service classes, 20+ RBAC endpoints
-  - **Frontend**: 5 CRUD dialogs (Asset/WorkOrder/Part), Asset detail page, CMMS GIS map
-  - **Testing**: Vitest infrastructure with 12 automated integration tests (all passing)
-  - **Data**: 100 assets + 10 parts + demo data seeded
-  - **Critical Fix**: Radix UI Select components - replaced empty strings with 'none' sentinel
-- ✅ **Module 05 (Shifts Backend - Nov 9, 2024)**: ShiftService + ShiftController (Architect-Approved)
-  - **Database**: 3 migrations, 10 tables (shifts, events, playbooks, checklists, notifications)
-  - **Models**: 10 Eloquent models with secure tenant scoping, spatial support, relationships
-  - **ShiftService**: Create/close shifts, add entries, tenant-validated foreign keys (facility/scheme/dma)
-  - **ShiftController**: 5 RBAC-protected endpoints (index, store, show, close, addEntry)
-  - **EventService**: De-duplication (partial unique index), correlation (SHA256 hash), SLA timers
-  - **EventController**: 6 RBAC-protected, tenant-isolated endpoints (list, ingest, ack, resolve, link)
-  - **CRITICAL SECURITY FIX** (Nov 9): Comprehensive multitenancy hardening across ALL modules (Operations + CMMS):
-    - Added `User::currentTenantId()` accessor with null guard (throws RuntimeException)
-    - Fixed 9 model global scopes to call `currentTenantId()` and force empty results on null tenant
-    - ShiftService: All methods use accessor + validateTenantOwnership() for cross-tenant prevention
-    - Verified EventService security (explicit tenant_id validation)
-    - **Impact**: Eliminated null-tenant bypass vulnerability in Shift, Event, Playbook, Checklist, EscalationPolicy, Asset, WorkOrder, Part, Supplier models
-  - **Seeders**: OperationsPermissionSeeder (29 permissions), OperationsSeeder (3 checklists, 4 playbooks, 3 policies, 2 shifts, 5 events)
-  - **Pending**: Playbook/Checklist services & controllers, background jobs, frontend (5 pages), automated tests
-- ✅ **Module 06 (Water Quality Backend - Nov 9, 2024)**: Complete water quality management with QA/QC (Architect-Approved as Production-Ready)
-  - **Database**: 9 tables (parameters, sampling_points, plans, plan_rules, samples, sample_params, results, qc_controls, compliance)
-  - **Models**: 9 Eloquent models with tenant isolation, PostGIS support, comprehensive relationships
-  - **Services**: 5 service classes with full business logic - PlanService, SamplingService, ResultsService, QcService, ComplianceService
-  - **Controllers**: 6 controllers with 31 RBAC-protected endpoints (Parameter, SamplingPoint, Plan, Sample, Result, Compliance)
-  - **Security**: Comprehensive whereHas() tenant validation for nested relationships, cross-tenant access prevention
-  - **QC Auto-Flagging**: WHO/WASREB/local limit checks, LOD detection, uncertainty flagging (autoFlagResult implemented)
-  - **Business Logic**: Barcode generation with collision prevention, custody chain tracking (JSON), sample status sync, compliance calculation with limit priority
-  - **Demo Data**: 25 WHO/WASREB parameters, 15 PostGIS sampling points (Kenya locations), quarterly plan, 15 samples with custody tracking
-  - **Permissions**: 33 permissions (view/create/edit/delete × 8 entities + import/export/compute), 3 specialized roles (Lab Analyst, Field Sampler, QA/QC Officer)
-  - **API Routes**: All routes under /v1/water-quality prefix with auth:sanctum + audit middleware
-  - **Pending**: Frontend (6 pages: Parameters, Sampling Points, Plans, Samples, Results, Compliance), automated tests, CSV import/export UI
-
-The application uses a monorepo structure with separate frontend (React/Vite), backend (Express + Laravel), and shared TypeScript schema definitions.
-
-## Dual-Server Architecture
-
-The MIS requires two servers running simultaneously:
-- **Express server** (port 5000) - Serves React frontend, proxies API requests to Laravel
-- **Laravel API server** (port 8001) - Handles backend logic, database, spatial queries
-
-### Starting Both Servers
-
-**Step 1**: Click "Run" button (starts Express on port 5000)
-
-**Step 2**: Open Shell and start Laravel manually:
-```bash
-cd api && php artisan serve --host=0.0.0.0 --port=8001
-```
-
-**⚠️ Important**: 
-- Both servers must be running for full MIS functionality
-- Express proxies all `/api/*` requests to Laravel
-- If Laravel isn't running, MapConsole and API endpoints will fail with "Laravel API unavailable" error
-- Proxy automatically adds helpful error messages with startup instructions
-
-### Testing the Servers
-
-```bash
-# Test Express (should always work)
-curl http://localhost:5000/
-
-# Test Laravel health endpoint (requires Laravel running)
-curl http://localhost:5000/api/health
-
-# Test GeoJSON endpoints (requires Laravel + seeded data)
-curl http://localhost:5000/api/v1/gis/schemes/geojson
-```
-
-### Troubleshooting
-
-**"Laravel API unavailable" errors:**
-- Laravel process is not running or has terminated
-- Restart Laravel: `cd api && php artisan serve --host=0.0.0.0 --port=8001`
-- Background processes don't persist in Replit - must keep terminal open
-
-**GeoJSON endpoints return HTML errors:**
-- Check Laravel logs for PHP errors
-- Verify database has seeded data: `cd api && php artisan db:seed`
-- Ensure PostGIS extension is installed
-
-**Map Console shows "Loading..." forever:**
-- Open browser DevTools Console to see React Query errors
-- Verify both Express and Laravel are running
-- Check network tab for failed API requests
+Key capabilities include:
+- Comprehensive spatial features (PostGIS integration, MapLibre GL MapConsole).
+- Role-Based Access Control (RBAC) and audit logging.
+- Asset and CMMS (Computerized Maintenance Management System) functionalities.
+- Shift management and event handling for field operations.
+- Water quality monitoring and compliance dashboards.
+- A production-ready CRM and Revenue Assurance backend with billing, payments, fraud detection, and dunning workflows.
 
 # User Preferences
 
@@ -109,194 +18,77 @@ Preferred communication style: Simple, everyday language.
 
 ## Application Structure
 
-**Monorepo Organization:**
-- `/client` - React frontend application (Vite + TypeScript)
-- `/server` - Express.js backend server
-- `/api` - Laravel API backend
-- `/shared` - Shared TypeScript schemas and types
-- Dual build system: Vite for frontend, esbuild for backend
+The project employs a monorepo structure with distinct components:
+- `/client`: React frontend (Vite + TypeScript).
+- `/server`: Express.js backend for serving the React app and proxying API requests.
+- `/api`: Laravel API backend for core MIS logic.
+- `/shared`: Shared TypeScript schemas and types.
+- Dual build system: Vite for frontend, esbuild for Node.js backend.
 
-**Technology Stack:**
-- Frontend: React 18, TypeScript, Vite, TailwindCSS, Radix UI components
-- Backend: Express.js (Node), Laravel 11 (PHP 8.2+)
-- Database: PostgreSQL with Drizzle ORM (Node side) and Eloquent (Laravel side)
-- 3D Graphics: React Three Fiber, Drei, postprocessing
-- Build Tools: Vite, esbuild, Laravel Mix
+## Technology Stack
+
+- **Frontend**: React 18, TypeScript, Vite, TailwindCSS, Radix UI.
+- **Backend**: Express.js (Node.js), Laravel 11 (PHP 8.2+).
+- **Database**: PostgreSQL (Neon Database for serverless) with Drizzle ORM (Node.js) and Eloquent (Laravel).
+- **3D Graphics**: React Three Fiber, Drei, postprocessing (for EcoVillage, if reactivated).
+
+## Dual-Server Architecture
+
+The MIS operates with two simultaneously running servers:
+- **Express server (port 5000)**: Serves the React frontend and proxies `/api/*` requests to Laravel.
+- **Laravel API server (port 8001)**: Handles backend logic, database interactions, and spatial queries.
 
 ## Database Architecture
 
-**Dual ORM Strategy:**
-- Drizzle ORM configured for PostgreSQL (Node/Express side)
-- Schema defined in `shared/schema.ts` for type safety
-- Laravel Eloquent ORM (PHP side) for MIS features
-- Database migrations managed via Drizzle Kit
-- Neon Database serverless PostgreSQL support
-
-**Multi-tenancy (Laravel side):**
-- Tenant isolation with tenant_id on core tables
-- Organizations, schemes, and facilities scoped per tenant
-- Spatial data support via `matanyadaev/laravel-eloquent-spatial` package
-- GeoJSON support for polygons, points, centroids
+- **Dual ORM Strategy**: Drizzle ORM for Node.js and Eloquent ORM for Laravel, both interacting with PostgreSQL.
+- **Multi-tenancy**: Implemented in Laravel with `tenant_id` scoping on core tables, ensuring data isolation for organizations, schemes, and facilities.
+- **Spatial Data**: PostGIS support via `matanyadaev/laravel-eloquent-spatial` for GeoJSON polygons, points, and centroids.
 
 ## Authentication & Authorization
 
-**Dual Auth System:**
+- **Express (Game)**: Session-based authentication using `connect-pg-simple`.
+- **Laravel (MIS)**:
+    - Laravel Sanctum for API authentication.
+    - Spatie Laravel Permission for granular RBAC with method-specific permission guards.
+    - Two-factor authentication via `pragmarx/google2fa-laravel`.
+    - Secure cookie-based sessions with strict CORS.
+    - Comprehensive multi-tenancy hardening across all modules to prevent cross-tenant data access.
 
-1. **Express Side (Game):**
-   - Session-based authentication with `connect-pg-simple`
-   - In-memory storage layer with `MemStorage` class
-   - User schema with username/password
+## Security Features (Laravel)
 
-2. **Laravel Side (MIS):**
-   - Laravel Sanctum for API authentication
-   - Spatie Laravel Permission for role-based access control (RBAC)
-   - Two-factor authentication via `pragmarx/google2fa-laravel`
-   - Cookie-based sessions with strict CORS policies
-   - Protected routes with permission and role guards
-
-**Security Features (Laravel):**
-- CSRF protection (X-CSRF-TOKEN, X-XSRF-TOKEN headers)
-- Strict CORS configuration with whitelisted origins
-- Secure cookie settings (HttpOnly, SameSite)
-- Method-specific RBAC enforcement (GET=view, POST=create, PATCH/PUT=edit, DELETE=delete)
-- Audit logging on all POST/PUT/PATCH/DELETE operations
-- Comprehensive security scanning workflow (SAST, dependency scanning, secrets detection)
-- PHPStan static analysis for code quality
-
-**Module 02 Implementation Details:**
-
-*Import/Export Features:*
-- GeoJSON import: Max 500 features (schemes/DMAs), 1000 (facilities), 10MB file limit
-- CSV export: Preserves UUIDs, includes centroid coordinates or WKT geometry
-- Validation: Geometry type checks, required field validation, tenant isolation
-- All routes authenticated with permission-based access control
-
-*RBAC Permission Structure:*
-- Granular permissions: view/create/edit/delete for schemes, DMAs, facilities
-- Special permissions: 'import spatial data', 'export spatial data'
-- 7 Roles: Super Admin, Admin, Manager, Operator, Viewer, Security Officer, Privacy Officer
-- Routes split by HTTP method with exact permission requirements (no OR logic)
-
-*Audit Trail:*
-- AuditMiddleware captures: user_id, tenant_id, action, entity_type, entity_id, changes, IP, user_agent
-- Automatic logging of all mutations (POST/PUT/PATCH/DELETE)
-- Entity-level audit service available for fine-grained tracking
-
-*API Documentation:*
-- darkaonline/l5-swagger package installed
-- OpenAPI 3.0 annotations configured
-- Base documentation at /api/documentation
-- Tags: Schemes, DMAs, Facilities, GIS, Auth
-
-## Frontend Architecture
-
-**Component Design:**
-- Radix UI primitives for accessible UI components
-- Custom hooks for authentication (`useAuth`, `useAbility`)
-- Permission-based component rendering (`RequirePerm`, `ProtectedRoute`)
-- Zustand state management for game state (`useSustainability`, `useAudio`)
-- React Query for server state and caching
-
-**Accessibility Features:**
-- Colorblind-friendly palette with CSS custom properties
-- Adjustable font sizes
-- Keyboard navigation support
-- ARIA labels and semantic HTML
-- Screen reader compatible
-- WCAG compliance focus
-
-**3D Rendering:**
-- WebGL-based 3D scenes via React Three Fiber
-- GLTF/GLB model support
-- GLSL shader support via vite-plugin-glsl
-- Post-processing effects
-- Audio file support (MP3, OGG, WAV)
+- CSRF protection, strict CORS, and secure cookie settings.
+- RBAC enforcement for all API endpoints (GET, POST, PATCH/PUT, DELETE).
+- Automatic audit logging for all mutation operations (POST/PUT/PATCH/DELETE).
+- Static analysis (PHPStan) and dependency vulnerability scanning.
 
 ## API Design
 
-**Express Backend:**
-- RESTful API pattern with `/api` prefix
-- Request/response logging middleware
-- JSON body parsing
-- Error handling middleware with status codes
-- Development HMR via Vite middleware
+- **Express Backend**: RESTful API, request/response logging, JSON body parsing, error handling.
+- **Laravel Backend**: API versioning (`/api/v1`), resource-based controllers, service layer pattern, paginated responses, type-safe API client wrapper, structured error responses.
 
-**Laravel Backend:**
-- API versioning (`/api/v1`)
-- Resource-based controllers
-- Service layer pattern (`facilityService`, `schemeService`)
-- Paginated responses for list endpoints
-- Type-safe API client wrapper
-- Structured error responses with validation errors
+## Frontend Architecture
+
+- **Component Design**: Radix UI for accessible components, custom hooks for authentication and abilities.
+- **State Management**: Zustand for game state, React Query for server state and caching.
+- **Accessibility**: Colorblind-friendly palette, adjustable font sizes, keyboard navigation, ARIA labels, WCAG compliance focus.
 
 ## Development Workflow
 
-**Build & Dev Scripts:**
-- `npm run dev` - Runs Express server with TypeScript execution (tsx)
-- `npm run build` - Vite build + esbuild server bundle
-- `npm run start` - Production server execution
-- `npm run db:push` - Apply Drizzle schema migrations
-- Concurrent Laravel/Node development support
-
-**Code Quality:**
-- TypeScript strict mode enabled
-- Path aliases (`@/*` for client, `@shared/*` for shared code)
-- ESM module format throughout
-- Incremental compilation with tsBuildInfoFile
-- PHPStan level 9 static analysis (Laravel)
-- Laravel Pint code style enforcement
-
-**Environment Configuration:**
-- `DATABASE_URL` for Postgres connection
-- `VITE_API_BASE_URL` for API endpoint configuration
-- `CORS_ALLOWED_ORIGINS` for cross-origin requests
-- Separate `.env` files for Laravel and Node environments
+- **Build Scripts**: `npm run dev` (Express), `npm run build`, `npm run start`, `npm run db:push` (Drizzle migrations).
+- **Code Quality**: TypeScript strict mode, path aliases, ESM modules, incremental compilation, PHPStan (level 9), Laravel Pint.
+- **Environment Configuration**: `.env` files for database, API endpoints, and CORS origins.
 
 # External Dependencies
 
 ## Core Infrastructure
 
-**Database:**
-- Neon Database (PostgreSQL serverless)
-- Connection via `@neondatabase/serverless` driver
-- Spatial data extensions (PostGIS compatible via Laravel)
-
-**Package Managers:**
-- npm/composer for dependency management
-- No bundled vendor files in version control
+- **Database**: Neon Database (PostgreSQL serverless).
+- **Package Managers**: npm, Composer.
 
 ## Key Third-Party Services
 
-**Frontend Libraries:**
-- Radix UI - Accessible component primitives
-- TanStack Query - Server state management
-- React Three Fiber/Drei - 3D rendering
-- Fontsource - Web font delivery
-- MapLibre GL - Interactive maps for CMMS asset locations
-
-**Backend Libraries (Node):**
-- Express.js - HTTP server framework
-- Drizzle ORM - Type-safe database queries
-- Zod - Runtime schema validation
-
-**Backend Libraries (PHP):**
-- Laravel Framework 11
-- Laravel Sanctum - API authentication
-- Spatie Laravel Permission - RBAC
-- Google2FA Laravel - Two-factor auth
-- Laravel Eloquent Spatial - Geospatial queries
-
-**Development Tools:**
-- Vite - Frontend build tool and dev server
-- esbuild - Fast JavaScript/TypeScript bundler
-- PostCSS + Autoprefixer - CSS processing
-- TailwindCSS - Utility-first CSS framework
-- Vitest - Unit/integration testing with React Testing Library
-- @testing-library/react - Component testing utilities
-- happy-dom - Lightweight DOM for tests
-
-**Security & Monitoring:**
-- GitHub Actions - CI/CD workflows
-- PHPStan - PHP static analysis
-- Composer audit - Dependency vulnerability scanning
-- Custom security scan workflows
+- **Frontend Libraries**: Radix UI, TanStack Query, React Three Fiber/Drei, Fontsource, MapLibre GL.
+- **Backend Libraries (Node)**: Express.js, Drizzle ORM, Zod.
+- **Backend Libraries (PHP)**: Laravel Framework 11, Laravel Sanctum, Spatie Laravel Permission, Google2FA Laravel, Laravel Eloquent Spatial.
+- **Development Tools**: Vite, esbuild, PostCSS, Autoprefixer, TailwindCSS, Vitest, @testing-library/react, happy-dom.
+- **Security & Monitoring**: GitHub Actions, PHPStan, Composer audit.
