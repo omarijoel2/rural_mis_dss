@@ -8,7 +8,20 @@ Key capabilities include:
 - Asset and CMMS (Computerized Maintenance Management System) functionalities.
 - Shift management and event handling for field operations.
 - Water quality monitoring and compliance dashboards.
-- A production-ready CRM and Revenue Assurance backend with billing, payments, fraud detection, and dunning workflows.
+- **Module 07 COMPLETE**: Production-ready CRM and Revenue Assurance backend with billing, payments, fraud detection, dunning workflows, AND full-featured frontend with 6 pages (Customers, Account360, AccountSearch, RA Console, Dunning, Import Center).
+
+# Recent Changes
+
+## Module 07: CRM & Revenue Assurance Frontend (November 2025)
+- **Customers Page**: Search, filters, sortable table with customer data and quick actions
+- **Account Search Page**: Direct account lookup with navigation to Account 360
+- **Account 360 Page**: Comprehensive customer view with 5 tabs (Summary, Billing, Payments, Meter Reads, RA Cases)
+- **RA Console Page**: Revenue assurance case monitoring, triage board, field investigation workflow
+- **Dunning & Collections Page**: Aging report with breakdown by bucket, notice generation, disconnection list
+- **Import Center Page**: CSV file uploads for billing invoices and M-Pesa transactions with validation
+- **CRM Service Layer**: Comprehensive API client with TanStack Query integration, file upload support
+- **Security**: All pages protected with ProtectedRoute guards, RBAC enforcement via backend
+- **Data Handling**: Defensive rendering with per-field null safety, per-action pending states, loading guards
 
 # User Preferences
 
@@ -69,7 +82,10 @@ The MIS operates with two simultaneously running servers:
 ## Frontend Architecture
 
 - **Component Design**: Radix UI for accessible components, custom hooks for authentication and abilities.
-- **State Management**: Zustand for game state, React Query for server state and caching.
+- **State Management**: Zustand for game state, TanStack Query for server state and caching.
+- **Routing**: React Router with protected routes, nested layouts for module navigation.
+- **CRM Module**: 6 production-ready pages with comprehensive error handling, loading states, and defensive rendering.
+- **Data Patterns**: Per-field null coalescing for API payloads, per-component loading states, optimistic UI updates.
 - **Accessibility**: Colorblind-friendly palette, adjustable font sizes, keyboard navigation, ARIA labels, WCAG compliance focus.
 
 ## Development Workflow
