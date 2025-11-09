@@ -205,32 +205,32 @@ export function AppMIS() {
               }>
                 <Route index element={<Navigate to="/water-quality/parameters" replace />} />
                 <Route path="parameters" element={
-                  <ProtectedRoute requiredPermission="view water quality parameters">
+                  <ProtectedRoute requiredPermission="view wq parameters">
                     <ParametersPage />
                   </ProtectedRoute>
                 } />
                 <Route path="sampling-points" element={
-                  <ProtectedRoute requiredPermission="view water quality sampling points">
+                  <ProtectedRoute requiredPermission="view wq sampling points">
                     <SamplingPointsPage />
                   </ProtectedRoute>
                 } />
                 <Route path="plans" element={
-                  <ProtectedRoute requiredPermission="view water quality plans">
+                  <ProtectedRoute requiredPermission="view wq plans">
                     <PlansPage />
                   </ProtectedRoute>
                 } />
                 <Route path="samples" element={
-                  <ProtectedRoute requiredPermission="view water quality samples">
+                  <ProtectedRoute requiredPermission="view wq samples">
                     <SamplesPage />
                   </ProtectedRoute>
                 } />
                 <Route path="results" element={
-                  <ProtectedRoute requiredPermission="view water quality results">
+                  <ProtectedRoute requiredPermission="view wq results">
                     <ResultsPage />
                   </ProtectedRoute>
                 } />
                 <Route path="compliance" element={
-                  <ProtectedRoute requiredPermission="view water quality compliance">
+                  <ProtectedRoute requiredPermission="view wq compliance">
                     <CompliancePage />
                   </ProtectedRoute>
                 } />

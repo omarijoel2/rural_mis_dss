@@ -12,12 +12,12 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/water-quality/parameters', label: 'Parameters', icon: TestTube, permission: 'view water quality parameters' },
-  { path: '/water-quality/sampling-points', label: 'Sampling Points', icon: MapPin, permission: 'view water quality sampling points' },
-  { path: '/water-quality/plans', label: 'Sampling Plans', icon: Calendar, permission: 'view water quality plans' },
-  { path: '/water-quality/samples', label: 'Samples', icon: Droplet, permission: 'view water quality samples' },
-  { path: '/water-quality/results', label: 'Lab Results', icon: FileText, permission: 'view water quality results' },
-  { path: '/water-quality/compliance', label: 'Compliance', icon: BarChart3, permission: 'view water quality compliance' },
+  { path: '/water-quality/parameters', label: 'Parameters', icon: TestTube, permission: 'view wq parameters' },
+  { path: '/water-quality/sampling-points', label: 'Sampling Points', icon: MapPin, permission: 'view wq sampling points' },
+  { path: '/water-quality/plans', label: 'Sampling Plans', icon: Calendar, permission: 'view wq plans' },
+  { path: '/water-quality/samples', label: 'Samples', icon: Droplet, permission: 'view wq samples' },
+  { path: '/water-quality/results', label: 'Lab Results', icon: FileText, permission: 'view wq results' },
+  { path: '/water-quality/compliance', label: 'Compliance', icon: BarChart3, permission: 'view wq compliance' },
 ];
 
 export function WaterQualityLayout() {
