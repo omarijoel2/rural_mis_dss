@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('crm_complaints', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->string('account_no')->nullable();
             $table->string('category');

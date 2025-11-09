@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('crm_tariffs', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->string('name');
             $table->date('valid_from');
             $table->date('valid_to')->nullable();

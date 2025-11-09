@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('crm_balances', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->string('account_no');
             $table->date('as_of');
             $table->decimal('balance', 12, 2);

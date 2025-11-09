@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('crm_customers', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->string('customer_no')->unique();
             $table->string('name');
             $table->enum('id_type', ['nat_id', 'passport', 'org'])->default('nat_id');

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('crm_meters', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->uuid('tenant_id');
             $table->string('serial_no')->unique();
             $table->string('make')->nullable();
             $table->string('model')->nullable();

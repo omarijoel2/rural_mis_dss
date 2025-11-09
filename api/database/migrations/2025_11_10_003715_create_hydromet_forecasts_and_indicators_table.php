@@ -44,7 +44,7 @@ return new class extends Migration
             $table->timestampTz('valid_from');
             $table->timestampTz('valid_to');
             $table->foreignId('variable_id')->constrained('forecast_variables');
-            $table->bytea('grid_data')->nullable();
+            $table->binary('grid_data')->nullable();
             $table->jsonb('grid_meta')->nullable();
             $table->timestamps();
 

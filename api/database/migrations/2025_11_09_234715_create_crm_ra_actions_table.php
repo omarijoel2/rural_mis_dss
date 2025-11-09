@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('ra_case_id');
             $table->enum('action', ['request_read', 'dispatch_field', 'disconnect', 'reconnect', 'replace_meter', 'tariff_audit', 'write_off', 'bill_adjust']);
             $table->jsonb('payload')->nullable();
-            $table->unsignedBigInteger('actor_id');
+            $table->uuid('actor_id');
             $table->timestampTz('occurred_at');
             $table->timestamps();
 

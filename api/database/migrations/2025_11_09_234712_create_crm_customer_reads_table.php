@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('photo_path')->nullable();
             $table->enum('read_source', ['manual', 'app', 'ami', 'import'])->default('manual');
             $table->enum('quality', ['good', 'estimated', 'bad'])->default('good');
-            $table->unsignedBigInteger('reader_id')->nullable();
+            $table->uuid('reader_id')->nullable();
             $table->jsonb('meta')->nullable();
             $table->timestamps();
 

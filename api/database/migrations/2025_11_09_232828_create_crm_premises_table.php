@@ -11,9 +11,9 @@ return new class extends Migration
     {
         Schema::create('crm_premises', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
-            $table->unsignedBigInteger('scheme_id')->nullable();
-            $table->unsignedBigInteger('dma_id')->nullable();
+            $table->uuid('tenant_id');
+            $table->uuid('scheme_id')->nullable();
+            $table->uuid('dma_id')->nullable();
             $table->string('premise_id')->unique();
             $table->text('address')->nullable();
             $table->enum('occupancy', ['residential', 'commercial', 'institutional', 'mixed'])->default('residential');
