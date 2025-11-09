@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PipelineController;
 use App\Http\Controllers\Api\RbacController;
 use App\Http\Controllers\Api\SchemeController;
 use App\Http\Controllers\Api\SecurityAlertController;
+use App\Http\Controllers\Api\V1\Operations\EventController;
 use App\Http\Controllers\Api\ZoneController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -204,5 +205,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
         Route::post('/{workOrder}/cancel', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'cancel'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/parts', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addParts'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/labor', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addLabor'])->middleware('permission:edit work orders');
+    });
+
+    Route::prefix('operations')->group(function () {
+        Route::prefix('events')->group(function () {
+            Route::get('/', [EventController::class, 'index'])->middleware('permission:view events');
+            Route::post('/ingest', [EventController::class, 'ingest'])->middleware('permission:ingest events');
+            Route::get('/{event}', [EventController::class, 'show'])->middleware('permission:view events');
+            Route::post('/{event}/acknowledge', [EventController::class, 'acknowledge'])->middleware('permission:acknowledge events');
+            Route::post('/{event}/resolve', [EventController::class, 'resolve'])->middleware('permission:resolve events');
+            Route::post('/{event}/link', [EventController::class, 'link'])->middleware('permission:edit events');
+        });
     });
 });

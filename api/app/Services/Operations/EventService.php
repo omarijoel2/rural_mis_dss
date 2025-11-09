@@ -24,11 +24,20 @@ class EventService
      */
     public function ingestEvent(array $data): Event
     {
+        // Require tenant_id to prevent cross-tenant corruption
+        if (empty($data['tenant_id'])) {
+            throw new \InvalidArgumentException('tenant_id is required for event ingestion');
+        }
+
         DB::beginTransaction();
         try {
+            $tenantId = $data['tenant_id'];
+
             // Check for existing event by external_id (unique constraint path)
+            // CRITICAL: Scope by tenant_id to prevent cross-tenant data corruption
             if (!empty($data['external_id']) && !empty($data['source'])) {
-                $existing = Event::where('source', $data['source'])
+                $existing = Event::where('tenant_id', $tenantId)
+                    ->where('source', $data['source'])
                     ->where('external_id', $data['external_id'])
                     ->first();
                 
@@ -43,13 +52,13 @@ class EventService
 
             // Check for correlation with existing events
             $correlationKey = $this->generateCorrelationKey(
-                $data['tenant_id'],
+                $tenantId,
                 $data['facility_id'] ?? $data['scheme_id'] ?? $data['dma_id'] ?? null,
                 $data['category'],
                 $data['detected_at'] ?? now()
             );
 
-            $correlated = $this->findCorrelatedEvent($correlationKey);
+            $correlated = $this->findCorrelatedEvent($correlationKey, $tenantId);
             
             if ($correlated) {
                 // Merge into existing correlated event
@@ -98,10 +107,12 @@ class EventService
 
     /**
      * Find correlated event within window
+     * CRITICAL: Requires tenant_id to prevent cross-tenant correlation
      */
-    protected function findCorrelatedEvent(string $correlationKey): ?Event
+    protected function findCorrelatedEvent(string $correlationKey, string $tenantId): ?Event
     {
-        return Event::where('correlation_key', $correlationKey)
+        return Event::where('tenant_id', $tenantId)
+            ->where('correlation_key', $correlationKey)
             ->whereIn('status', ['new', 'ack', 'in_progress'])
             ->orderBy('detected_at', 'desc')
             ->first();
@@ -170,13 +181,17 @@ class EventService
 
     /**
      * Log event action
+     * Handles both authenticated users and system/background contexts
      */
     protected function logAction(int $eventId, string $action, ?string $actorId = null, array $payload = []): void
     {
+        // Resolve actor: explicit parameter, auth user, or null for system actions
+        $resolvedActor = $actorId ?? (auth()->check() ? auth()->id() : null);
+
         EventAction::create([
             'event_id' => $eventId,
             'action' => $action,
-            'actor_id' => $actorId ?? auth()->id(),
+            'actor_id' => $resolvedActor,
             'payload' => $payload,
             'occurred_at' => now(),
         ]);
