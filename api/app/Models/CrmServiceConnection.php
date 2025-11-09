@@ -37,6 +37,8 @@ class CrmServiceConnection extends Model
                 } catch (\RuntimeException $e) {
                     $query->whereRaw('1 = 0');
                 }
+            } else {
+                $query->whereRaw('1 = 0');
             }
         });
     }
