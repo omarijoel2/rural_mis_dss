@@ -19,6 +19,13 @@ export function CoreRegistryHome() {
       featured: true,
     },
     {
+      title: 'Water Quality',
+      description: 'Lab testing, sampling, and compliance monitoring',
+      path: '/water-quality/parameters',
+      icon: '💧',
+      featured: true,
+    },
+    {
       title: 'Schemes',
       description: 'Water supply schemes and infrastructure',
       path: '/core/schemes',

@@ -30,6 +30,13 @@ import { AssetDetailPage } from './pages/cmms/AssetDetailPage';
 import { WorkOrdersPage } from './pages/cmms/WorkOrdersPage';
 import { PartsPage } from './pages/cmms/PartsPage';
 import { CmmsMapPage } from './pages/cmms/CmmsMapPage';
+import { WaterQualityLayout } from './components/layouts/WaterQualityLayout';
+import { ParametersPage } from './pages/water-quality/ParametersPage';
+import { SamplingPointsPage } from './pages/water-quality/SamplingPointsPage';
+import { PlansPage } from './pages/water-quality/PlansPage';
+import { SamplesPage } from './pages/water-quality/SamplesPage';
+import { ResultsPage } from './pages/water-quality/ResultsPage';
+import { CompliancePage } from './pages/water-quality/CompliancePage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -187,6 +194,44 @@ export function AppMIS() {
                 <Route path="2fa" element={
                   <ProtectedRoute>
                     <TwoFactorSetupPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/water-quality" element={
+                <ProtectedRoute>
+                  <WaterQualityLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/water-quality/parameters" replace />} />
+                <Route path="parameters" element={
+                  <ProtectedRoute requiredPermission="view water quality parameters">
+                    <ParametersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="sampling-points" element={
+                  <ProtectedRoute requiredPermission="view water quality sampling points">
+                    <SamplingPointsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="plans" element={
+                  <ProtectedRoute requiredPermission="view water quality plans">
+                    <PlansPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="samples" element={
+                  <ProtectedRoute requiredPermission="view water quality samples">
+                    <SamplesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="results" element={
+                  <ProtectedRoute requiredPermission="view water quality results">
+                    <ResultsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="compliance" element={
+                  <ProtectedRoute requiredPermission="view water quality compliance">
+                    <CompliancePage />
                   </ProtectedRoute>
                 } />
               </Route>
