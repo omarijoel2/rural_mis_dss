@@ -10,12 +10,15 @@ return new class extends Migration
     {
         Schema::create('crm_payment_plans', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('tenant_id');
             $table->string('account_no');
             $table->enum('status', ['active', 'completed', 'defaulted'])->default('active');
             $table->jsonb('schedule');
             $table->date('next_due')->nullable();
             $table->timestamps();
 
+            $table->foreign('tenant_id')->references('id')->on('organizations')->cascadeOnDelete();
+            $table->index('tenant_id');
             $table->index('account_no');
             $table->index(['status', 'next_due']);
         });
