@@ -7,10 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
+import { CollectSampleDialog } from '@/components/water-quality/CollectSampleDialog';
+import { ReceiveSampleDialog } from '@/components/water-quality/ReceiveSampleDialog';
 
 export function SamplesPage() {
   const [page, setPage] = useState(1);
   const [barcodeSearch, setBarcodeSearch] = useState('');
+  const [collectDialogOpen, setCollectDialogOpen] = useState(false);
+  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
+  const [selectedSample, setSelectedSample] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-samples', page],
@@ -26,6 +31,11 @@ export function SamplesPage() {
     in_analysis: 'bg-yellow-100 text-yellow-800',
     reported: 'bg-green-100 text-green-800',
     rejected: 'bg-red-100 text-red-800',
+  };
+
+  const handleReceiveInLab = (sample: any) => {
+    setSelectedSample(sample);
+    setReceiveDialogOpen(true);
   };
 
   return (
@@ -84,7 +94,7 @@ export function SamplesPage() {
                       {sample.custody_state?.replace('_', ' ') || 'scheduled'}
                     </Badge>
                     {sample.custody_state === 'collected' && (
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleReceiveInLab(sample)}>
                         <FlaskConical className="h-4 w-4 mr-1" />
                         Receive in Lab
                       </Button>
@@ -156,6 +166,21 @@ export function SamplesPage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {selectedSample && (
+        <>
+          <CollectSampleDialog 
+            open={collectDialogOpen}
+            onOpenChange={setCollectDialogOpen}
+            sample={selectedSample}
+          />
+          <ReceiveSampleDialog 
+            open={receiveDialogOpen}
+            onOpenChange={setReceiveDialogOpen}
+            sample={selectedSample}
+          />
+        </>
       )}
     </div>
   );

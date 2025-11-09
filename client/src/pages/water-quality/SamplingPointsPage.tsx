@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Pencil, Trash2, MapPin, Map } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api-client';
+import { SamplingPointFormDialog } from '@/components/water-quality/SamplingPointFormDialog';
+import { toast } from 'sonner';
 
 export function SamplingPointsPage() {
   const [page, setPage] = useState(1);
   const [showMap, setShowMap] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPoint, setEditingPoint] = useState<any>(undefined);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-sampling-points', page],
@@ -26,6 +31,33 @@ export function SamplingPointsPage() {
     household: 'bg-pink-100 text-pink-800',
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiClient.delete(`/v1/water-quality/sampling-points/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['water-quality-sampling-points'] });
+      toast.success('Sampling point deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete sampling point');
+    },
+  });
+
+  const handleEdit = (point: any) => {
+    setEditingPoint(point);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm('Are you sure you want to delete this sampling point?')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleAddNew = () => {
+    setEditingPoint(undefined);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -40,12 +72,18 @@ export function SamplingPointsPage() {
             <Map className="h-4 w-4 mr-2" />
             {showMap ? 'Hide Map' : 'Show Map'}
           </Button>
-          <Button>
+          <Button onClick={handleAddNew}>
             <Plus className="h-4 w-4 mr-2" />
             Add Sampling Point
           </Button>
         </div>
       </div>
+
+      <SamplingPointFormDialog 
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        point={editingPoint}
+      />
 
       {showMap && (
         <Card>
@@ -68,10 +106,10 @@ export function SamplingPointsPage() {
                     <p className="text-sm text-muted-foreground">Code: {point.code}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(point)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(point.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
