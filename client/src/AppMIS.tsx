@@ -37,6 +37,8 @@ import { PlansPage } from './pages/water-quality/PlansPage';
 import { SamplesPage } from './pages/water-quality/SamplesPage';
 import { ResultsPage } from './pages/water-quality/ResultsPage';
 import { CompliancePage } from './pages/water-quality/CompliancePage';
+import { CrmLayout } from './components/layouts/CrmLayout';
+import { CustomersPage, Account360Page } from './pages/crm';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -232,6 +234,24 @@ export function AppMIS() {
                 <Route path="compliance" element={
                   <ProtectedRoute requiredPermission="view wq compliance">
                     <CompliancePage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/crm" element={
+                <ProtectedRoute>
+                  <CrmLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/crm/customers" replace />} />
+                <Route path="customers" element={
+                  <ProtectedRoute requiredPermission="view customers">
+                    <CustomersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="accounts/:accountNo" element={
+                  <ProtectedRoute requiredPermission="view service connections">
+                    <Account360Page />
                   </ProtectedRoute>
                 } />
               </Route>

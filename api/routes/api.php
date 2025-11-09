@@ -13,6 +13,16 @@ use App\Http\Controllers\Api\RbacController;
 use App\Http\Controllers\Api\SchemeController;
 use App\Http\Controllers\Api\SecurityAlertController;
 use App\Http\Controllers\Api\V1\Operations\EventController;
+use App\Http\Controllers\Api\Crm\CustomerController;
+use App\Http\Controllers\Api\Crm\PremiseController;
+use App\Http\Controllers\Api\Crm\MeterController;
+use App\Http\Controllers\Api\Crm\Account360Controller;
+use App\Http\Controllers\Api\Crm\RaCaseController;
+use App\Http\Controllers\Api\Crm\RaRuleController;
+use App\Http\Controllers\Api\Crm\DunningController;
+use App\Http\Controllers\Api\Crm\ImportController;
+use App\Http\Controllers\Api\Crm\InteractionController;
+use App\Http\Controllers\Api\Crm\ComplaintController;
 use App\Http\Controllers\Api\ZoneController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -302,6 +312,85 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
             Route::get('/summary', [\App\Http\Controllers\Api\WqComplianceController::class, 'summary'])->middleware('permission:view water quality compliance');
             Route::post('/compute', [\App\Http\Controllers\Api\WqComplianceController::class, 'compute'])->middleware('permission:compute water quality compliance');
             Route::post('/compute-all', [\App\Http\Controllers\Api\WqComplianceController::class, 'computeAll'])->middleware('permission:compute water quality compliance');
+        });
+    });
+
+    Route::prefix('crm')->group(function () {
+        Route::prefix('customers')->group(function () {
+            Route::get('/', [CustomerController::class, 'index'])->middleware('permission:view customers');
+            Route::post('/', [CustomerController::class, 'store'])->middleware('permission:create customers');
+            Route::get('/{id}', [CustomerController::class, 'show'])->middleware('permission:view customers');
+            Route::patch('/{id}', [CustomerController::class, 'update'])->middleware('permission:edit customers');
+            Route::put('/{id}', [CustomerController::class, 'update'])->middleware('permission:edit customers');
+            Route::delete('/{id}', [CustomerController::class, 'destroy'])->middleware('permission:delete customers');
+        });
+
+        Route::prefix('premises')->group(function () {
+            Route::get('/', [PremiseController::class, 'index'])->middleware('permission:view premises');
+            Route::post('/', [PremiseController::class, 'store'])->middleware('permission:create premises');
+            Route::get('/nearby', [PremiseController::class, 'nearby'])->middleware('permission:view premises');
+            Route::get('/{id}', [PremiseController::class, 'show'])->middleware('permission:view premises');
+            Route::patch('/{id}', [PremiseController::class, 'update'])->middleware('permission:edit premises');
+            Route::put('/{id}', [PremiseController::class, 'update'])->middleware('permission:edit premises');
+        });
+
+        Route::prefix('meters')->group(function () {
+            Route::post('/', [MeterController::class, 'store'])->middleware('permission:create meters');
+            Route::get('/{meterId}/reads', [MeterController::class, 'reads'])->middleware('permission:view meters');
+            Route::post('/reads', [MeterController::class, 'recordRead'])->middleware('permission:record meter reads');
+            Route::get('/{meterId}/anomalies', [MeterController::class, 'anomalies'])->middleware('permission:view meters');
+            Route::post('/{meterId}/replace', [MeterController::class, 'replace'])->middleware('permission:create meters');
+        });
+
+        Route::prefix('accounts')->group(function () {
+            Route::get('/{accountNo}/overview', [Account360Controller::class, 'overview'])->middleware('permission:view service connections');
+            Route::get('/{accountNo}/billing', [Account360Controller::class, 'billingHistory'])->middleware('permission:view invoices');
+            Route::get('/{accountNo}/analytics', [Account360Controller::class, 'consumptionAnalytics'])->middleware('permission:view service connections');
+        });
+
+        Route::prefix('ra')->group(function () {
+            Route::get('/cases', [RaCaseController::class, 'index'])->middleware('permission:view ra cases');
+            Route::get('/cases/high-priority', [RaCaseController::class, 'highPriority'])->middleware('permission:view ra cases');
+            Route::post('/cases/run-rules', [RaCaseController::class, 'runRules'])->middleware('permission:run ra rules');
+            Route::post('/cases/{caseId}/triage', [RaCaseController::class, 'triage'])->middleware('permission:triage ra cases');
+            Route::post('/cases/{caseId}/dispatch', [RaCaseController::class, 'dispatchField'])->middleware('permission:dispatch ra cases');
+            Route::post('/cases/{caseId}/resolve', [RaCaseController::class, 'resolve'])->middleware('permission:resolve ra cases');
+            Route::post('/cases/{caseId}/close', [RaCaseController::class, 'close'])->middleware('permission:close ra cases');
+
+            Route::get('/rules', [RaRuleController::class, 'index'])->middleware('permission:view ra rules');
+            Route::post('/rules', [RaRuleController::class, 'store'])->middleware('permission:create ra rules');
+            Route::patch('/rules/{id}', [RaRuleController::class, 'update'])->middleware('permission:edit ra rules');
+            Route::put('/rules/{id}', [RaRuleController::class, 'update'])->middleware('permission:edit ra rules');
+            Route::delete('/rules/{id}', [RaRuleController::class, 'destroy'])->middleware('permission:delete ra rules');
+        });
+
+        Route::prefix('dunning')->group(function () {
+            Route::get('/aging', [DunningController::class, 'agingReport'])->middleware('permission:view dunning reports');
+            Route::get('/disconnection-list', [DunningController::class, 'disconnectionList'])->middleware('permission:view dunning reports');
+            Route::post('/notices', [DunningController::class, 'generateNotices'])->middleware('permission:generate dunning notices');
+            Route::post('/mark-disconnect', [DunningController::class, 'markForDisconnection'])->middleware('permission:mark for disconnection');
+            Route::post('/disconnect', [DunningController::class, 'disconnect'])->middleware('permission:disconnect accounts');
+            Route::post('/reconnect', [DunningController::class, 'reconnect'])->middleware('permission:reconnect accounts');
+            Route::get('/payments/{accountNo}', [DunningController::class, 'paymentHistory'])->middleware('permission:view payments');
+        });
+
+        Route::prefix('import')->group(function () {
+            Route::post('/billing', [ImportController::class, 'importBilling'])->middleware('permission:import billing data');
+            Route::post('/mpesa', [ImportController::class, 'importMpesa'])->middleware('permission:import mpesa data');
+        });
+
+        Route::prefix('interactions')->group(function () {
+            Route::get('/', [InteractionController::class, 'index'])->middleware('permission:view interactions');
+            Route::post('/', [InteractionController::class, 'store'])->middleware('permission:create interactions');
+            Route::get('/{id}', [InteractionController::class, 'show'])->middleware('permission:view interactions');
+        });
+
+        Route::prefix('complaints')->group(function () {
+            Route::get('/', [ComplaintController::class, 'index'])->middleware('permission:view complaints');
+            Route::post('/', [ComplaintController::class, 'store'])->middleware('permission:create complaints');
+            Route::get('/{id}', [ComplaintController::class, 'show'])->middleware('permission:view complaints');
+            Route::patch('/{id}', [ComplaintController::class, 'update'])->middleware('permission:assign complaints');
+            Route::put('/{id}', [ComplaintController::class, 'update'])->middleware('permission:assign complaints');
         });
     });
 });
