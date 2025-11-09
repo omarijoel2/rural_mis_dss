@@ -6,9 +6,11 @@ import { Plus, Upload, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
+import { CsvImportDialog } from '@/components/water-quality/CsvImportDialog';
 
 export function ResultsPage() {
   const [page, setPage] = useState(1);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-results', page],
@@ -35,7 +37,7 @@ export function ResultsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Import CSV
           </Button>
@@ -45,6 +47,11 @@ export function ResultsPage() {
           </Button>
         </div>
       </div>
+
+      <CsvImportDialog 
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+      />
 
       {isLoading ? (
         <div className="text-center py-12">Loading results...</div>
