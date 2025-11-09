@@ -27,8 +27,10 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             CoreRegistrySeeder::class,
+            OperationsPermissionSeeder::class,
+            OperationsSeeder::class,
         ]);
 
-        $this->command->info('Database seeded successfully with Kenya spatial data');
+        $this->command->info('Database seeded successfully with Kenya spatial data and Operations demo data');
     }
 }
