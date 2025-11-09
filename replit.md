@@ -5,7 +5,7 @@ This is a hybrid monorepo containing two distinct applications:
 1. **EcoVillage** - A browser-based sustainability education game (currently inactive)
 2. **Rural Water Supply MIS** (Active) - A Laravel-based Management Information System for rural water infrastructure with multi-tenancy, spatial data support, and comprehensive security features
 
-**Current Focus**: Rural Water Supply MIS - Module 04 Complete! Full-stack CMMS system with automated testing.
+**Current Focus**: Rural Water Supply MIS - Module 05 Backend Foundation Complete! Operations Logbook & Events system with multitenancy and RBAC protections.
 
 **Recent Completions**:
 - ✅ Module 01: Spatial features, PostGIS integration, MapLibre GL MapConsole
@@ -20,6 +20,14 @@ This is a hybrid monorepo containing two distinct applications:
   - **Testing**: Vitest infrastructure with 12 automated integration tests (all passing)
   - **Data**: 100 assets + 10 parts + demo data seeded
   - **Critical Fix**: Radix UI Select components - replaced empty strings with 'none' sentinel
+- ⚙️ **Module 05 (Backend Foundation - Nov 9, 2024)**: Operations Logbook & Events (Architect-Approved)
+  - **Database**: 3 migrations, 10 tables (shifts, events, playbooks, checklists, notifications)
+  - **Models**: 10 Eloquent models with tenant scoping, spatial support, relationships
+  - **EventService**: De-duplication (partial unique index), correlation (SHA256 hash), SLA timers
+  - **EventController**: 6 RBAC-protected, tenant-isolated endpoints (list, ingest, ack, resolve, link)
+  - **Security**: Complete multitenancy protection - all queries scoped by tenant_id, route-bound models validated
+  - **Background Jobs**: actor_id nullable for system/queue contexts
+  - **Pending**: Shift/Playbook/Checklist services & controllers, jobs, frontend (5 pages), tests, seeders
 
 The application uses a monorepo structure with separate frontend (React/Vite), backend (Express + Laravel), and shared TypeScript schema definitions.
 
