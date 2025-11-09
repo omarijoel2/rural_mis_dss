@@ -216,5 +216,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
             Route::post('/{event}/resolve', [EventController::class, 'resolve'])->middleware('permission:resolve events');
             Route::post('/{event}/link', [EventController::class, 'link'])->middleware('permission:edit events');
         });
+
+        Route::prefix('shifts')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Operations\ShiftController::class, 'index'])->middleware('permission:view shifts');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Operations\ShiftController::class, 'store'])->middleware('permission:create shifts');
+            Route::get('/{shift}', [\App\Http\Controllers\Api\V1\Operations\ShiftController::class, 'show'])->middleware('permission:view shifts');
+            Route::post('/{shift}/close', [\App\Http\Controllers\Api\V1\Operations\ShiftController::class, 'close'])->middleware('permission:edit shifts');
+            Route::post('/{shift}/entries', [\App\Http\Controllers\Api\V1\Operations\ShiftController::class, 'addEntry'])->middleware('permission:create shift entries');
+        });
     });
 });
