@@ -46,8 +46,13 @@ class Event extends Model
     protected static function booted()
     {
         static::addGlobalScope('tenant', function (Builder $query) {
-            if (auth()->check() && auth()->user()->tenant_id) {
-                $query->where('tenant_id', auth()->user()->tenant_id);
+            if (auth()->check()) {
+                try {
+                    $query->where('tenant_id', auth()->user()->currentTenantId());
+                } catch (\RuntimeException $e) {
+                    // Tenant not selected - force empty results to prevent cross-tenant access
+                    $query->whereRaw('1 = 0');
+                }
             }
         });
     }

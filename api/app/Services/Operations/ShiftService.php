@@ -19,6 +19,8 @@ class ShiftService
      */
     public function createShift(array $data, User $user): Shift
     {
+        $tenantId = $user->currentTenantId();
+
         $validator = Validator::make($data, [
             'name' => 'required|string|max:255',
             'facility_id' => 'nullable|uuid|exists:facilities,id',
@@ -33,8 +35,11 @@ class ShiftService
             throw new ValidationException($validator);
         }
 
+        // Validate tenant ownership of foreign keys
+        $this->validateTenantOwnership($tenantId, $data);
+
         // Check if there's already an active shift
-        $activeShift = Shift::where('tenant_id', $user->tenant_id)
+        $activeShift = Shift::where('tenant_id', $tenantId)
             ->where('status', 'active')
             ->first();
 
@@ -44,9 +49,9 @@ class ShiftService
             ]);
         }
 
-        return DB::transaction(function () use ($data, $user) {
+        return DB::transaction(function () use ($data, $user, $tenantId) {
             $shift = Shift::create([
-                'tenant_id' => $user->tenant_id,
+                'tenant_id' => $tenantId,
                 'facility_id' => $data['facility_id'] ?? null,
                 'scheme_id' => $data['scheme_id'] ?? null,
                 'dma_id' => $data['dma_id'] ?? null,
@@ -73,12 +78,59 @@ class ShiftService
     }
 
     /**
+     * Validate that facility/scheme/dma belong to the current tenant.
+     */
+    protected function validateTenantOwnership(string $tenantId, array $data): void
+    {
+        if (!empty($data['facility_id'])) {
+            $exists = DB::table('facilities')
+                ->where('id', $data['facility_id'])
+                ->where('tenant_id', $tenantId)
+                ->exists();
+
+            if (!$exists) {
+                throw ValidationException::withMessages([
+                    'facility_id' => ['The selected facility does not belong to your organization.']
+                ]);
+            }
+        }
+
+        if (!empty($data['scheme_id'])) {
+            $exists = DB::table('schemes')
+                ->where('id', $data['scheme_id'])
+                ->where('tenant_id', $tenantId)
+                ->exists();
+
+            if (!$exists) {
+                throw ValidationException::withMessages([
+                    'scheme_id' => ['The selected scheme does not belong to your organization.']
+                ]);
+            }
+        }
+
+        if (!empty($data['dma_id'])) {
+            $exists = DB::table('dmas')
+                ->where('id', $data['dma_id'])
+                ->where('tenant_id', $tenantId)
+                ->exists();
+
+            if (!$exists) {
+                throw ValidationException::withMessages([
+                    'dma_id' => ['The selected DMA does not belong to your organization.']
+                ]);
+            }
+        }
+    }
+
+    /**
      * Close an active shift.
      *
      * @throws ValidationException
      */
     public function closeShift(string $shiftId, array $data, User $user): Shift
     {
+        $tenantId = $user->currentTenantId();
+
         $validator = Validator::make($data, [
             'handover_notes' => 'nullable|string',
             'ends_at' => 'nullable|date',
@@ -89,7 +141,7 @@ class ShiftService
         }
 
         $shift = Shift::where('id', $shiftId)
-            ->where('tenant_id', $user->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->firstOrFail();
 
         if ($shift->status !== 'active') {
@@ -126,6 +178,8 @@ class ShiftService
      */
     public function addEntry(string $shiftId, array $data, User $user): ShiftEntry
     {
+        $tenantId = $user->currentTenantId();
+
         $validator = Validator::make($data, [
             'kind' => 'required|in:note,handover,incident,checklist,event',
             'title' => 'required|string|max:255',
@@ -142,7 +196,7 @@ class ShiftService
         }
 
         $shift = Shift::where('id', $shiftId)
-            ->where('tenant_id', $user->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->firstOrFail();
 
         $entryData = [
@@ -168,7 +222,9 @@ class ShiftService
      */
     public function getActiveShift(User $user): ?Shift
     {
-        return Shift::where('tenant_id', $user->tenant_id)
+        $tenantId = $user->currentTenantId();
+
+        return Shift::where('tenant_id', $tenantId)
             ->where('status', 'active')
             ->with(['supervisor', 'facility', 'scheme', 'dma', 'entries.creator'])
             ->first();
@@ -179,7 +235,9 @@ class ShiftService
      */
     public function getShiftHistory(User $user, array $filters = [], int $perPage = 15)
     {
-        $query = Shift::where('tenant_id', $user->tenant_id)
+        $tenantId = $user->currentTenantId();
+
+        $query = Shift::where('tenant_id', $tenantId)
             ->with(['supervisor', 'facility', 'scheme', 'dma']);
 
         // Apply filters
@@ -211,8 +269,10 @@ class ShiftService
      */
     public function getShiftById(string $shiftId, User $user): Shift
     {
+        $tenantId = $user->currentTenantId();
+
         return Shift::where('id', $shiftId)
-            ->where('tenant_id', $user->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->with([
                 'supervisor',
                 'facility',

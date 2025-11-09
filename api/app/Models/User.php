@@ -41,6 +41,21 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * Get the current tenant ID for multitenancy scoping.
+     * Guards against null tenant context.
+     *
+     * @throws \RuntimeException if no tenant is selected
+     */
+    public function currentTenantId(): string
+    {
+        if (!$this->current_tenant_id) {
+            throw new \RuntimeException('No tenant selected for current user session');
+        }
+        
+        return $this->current_tenant_id;
+    }
+
+    /**
      * Get the current tenant context
      */
     public function currentTenant()
