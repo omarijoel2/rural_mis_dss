@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, MapPin, Map } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api-client';
 import { SamplingPointFormDialog } from '@/components/water-quality/SamplingPointFormDialog';
+import { SamplingPointsMap } from '@/components/water-quality/SamplingPointsMap';
 import { toast } from 'sonner';
 
 export function SamplingPointsPage() {
@@ -87,8 +88,15 @@ export function SamplingPointsPage() {
 
       {showMap && (
         <Card>
-          <CardContent className="p-0 h-96 bg-muted flex items-center justify-center">
-            <p className="text-muted-foreground">Map view will be implemented with MapLibre GL</p>
+          <CardContent className="p-0">
+            <SamplingPointsMap 
+              points={data?.data || []} 
+              onPointSelect={(point) => {
+                if (point) {
+                  console.log('Selected point:', point);
+                }
+              }}
+            />
           </CardContent>
         </Card>
       )}
