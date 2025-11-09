@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Calendar, CheckCircle, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
+import { PlanFormDialog } from '@/components/water-quality/PlanFormDialog';
+import { toast } from 'sonner';
 
 export function PlansPage() {
   const [page, setPage] = useState(1);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<any>(undefined);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-plans', page],
@@ -16,6 +21,41 @@ export function PlansPage() {
       return apiClient.get<any>('/v1/water-quality/plans', { page, per_page: 20 });
     }
   });
+
+  const activateMutation = useMutation({
+    mutationFn: (planId: number) => apiClient.post(`/v1/water-quality/plans/${planId}/activate`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['water-quality-plans'] });
+      toast.success('Plan activated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to activate plan');
+    },
+  });
+
+  const generateSamplesMutation = useMutation({
+    mutationFn: (planId: number) => apiClient.post(`/v1/water-quality/plans/${planId}/generate-samples`, {}),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['water-quality-samples'] });
+      toast.success(`Generated ${data.generated || 0} samples successfully`);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to generate samples');
+    },
+  });
+
+  const handleActivate = (planId: number) => {
+    activateMutation.mutate(planId);
+  };
+
+  const handleGenerateSamples = (planId: number) => {
+    generateSamplesMutation.mutate(planId);
+  };
+
+  const handleAddNew = () => {
+    setEditingPlan(undefined);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -26,11 +66,17 @@ export function PlansPage() {
             Manage quarterly and annual water quality monitoring plans
           </p>
         </div>
-        <Button>
+        <Button onClick={handleAddNew}>
           <Plus className="h-4 w-4 mr-2" />
           Create Plan
         </Button>
       </div>
+
+      <PlanFormDialog 
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        plan={editingPlan}
+      />
 
       {isLoading ? (
         <div className="text-center py-12">Loading plans...</div>
@@ -54,12 +100,22 @@ export function PlansPage() {
                   </div>
                   <div className="flex gap-2">
                     {!plan.is_active && (
-                      <Button size="sm" variant="default">
+                      <Button 
+                        size="sm" 
+                        variant="default"
+                        onClick={() => handleActivate(plan.id)}
+                        disabled={activateMutation.isPending}
+                      >
                         <PlayCircle className="h-4 w-4 mr-1" />
                         Activate
                       </Button>
                     )}
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleGenerateSamples(plan.id)}
+                      disabled={generateSamplesMutation.isPending}
+                    >
                       Generate Samples
                     </Button>
                   </div>
