@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -12,18 +12,19 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
-import { Plus, Search, FileText, Check, Clock, Archive } from 'lucide-react';
+import { Plus, Search, FileText, Check, Clock, Archive, Loader2 } from 'lucide-react';
+import { useBudgetVersions } from '../../hooks/useCosting';
 
 export function BudgetListPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  const budgets = [
-    { id: 1, name: 'FY 2025 Operating Budget', fiscal_year: 2025, status: 'approved', total_amount: 2500000, created_at: '2024-09-15' },
-    { id: 2, name: 'FY 2025 Capital Budget', fiscal_year: 2025, status: 'approved', total_amount: 5000000, created_at: '2024-09-20' },
-    { id: 3, name: 'FY 2026 Draft Budget', fiscal_year: 2026, status: 'draft', total_amount: 2750000, created_at: '2024-11-01' },
-  ];
+  const filters = useMemo(() => {
+    return selectedYear === 'all' ? {} : { fiscal_year: parseInt(selectedYear) };
+  }, [selectedYear]);
+
+  const { data: budgetsData, isLoading, error } = useBudgetVersions(filters);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'outline'; icon: any }> = {
@@ -42,11 +43,20 @@ export function BudgetListPage() {
     );
   };
 
+  const budgets = budgetsData?.data || [];
+
   const filteredBudgets = budgets.filter(budget => {
     const matchesSearch = budget.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesYear = selectedYear === 'all' || budget.fiscal_year.toString() === selectedYear;
-    return matchesSearch && matchesYear;
+    return matchesSearch;
   });
+
+  const stats = useMemo(() => {
+    const total = budgets.length;
+    const approved = budgets.filter(b => b.status === 'approved').length;
+    const pending = budgets.filter(b => b.status === 'submitted').length;
+    const draft = budgets.filter(b => b.status === 'draft').length;
+    return { total, approved, pending, draft };
+  }, [budgets]);
 
   return (
     <div className="space-y-6">
@@ -86,58 +96,70 @@ export function BudgetListPage() {
           </select>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Budget Name</TableHead>
-              <TableHead>Fiscal Year</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Total Amount</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBudgets.length === 0 ? (
+        {error && (
+          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md mb-4">
+            Error loading budgets: {error instanceof Error ? error.message : 'Unknown error'}
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  No budgets found
-                </TableCell>
+                <TableHead>Budget Name</TableHead>
+                <TableHead>Fiscal Year</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead></TableHead>
               </TableRow>
-            ) : (
-              filteredBudgets.map((budget) => (
-                <TableRow key={budget.id}>
-                  <TableCell className="font-medium">{budget.name}</TableCell>
-                  <TableCell>{budget.fiscal_year}</TableCell>
-                  <TableCell>{getStatusBadge(budget.status)}</TableCell>
-                  <TableCell className="text-right font-mono">
-                    ${budget.total_amount.toLocaleString()}
-                  </TableCell>
-                  <TableCell>{new Date(budget.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/costing/budgets/${budget.id}`)}>
-                      View
-                    </Button>
+            </TableHeader>
+            <TableBody>
+              {filteredBudgets.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    No budgets found
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredBudgets.map((budget) => (
+                  <TableRow key={budget.id}>
+                    <TableCell className="font-medium">{budget.name}</TableCell>
+                    <TableCell>{budget.fiscal_year}</TableCell>
+                    <TableCell>{getStatusBadge(budget.status)}</TableCell>
+                    <TableCell>{new Date(budget.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/costing/budgets/${budget.id}`)}>
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
       </Card>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <Card className="p-6">
           <div className="text-sm text-muted-foreground">Total Budgets</div>
-          <div className="text-3xl font-bold mt-2">{budgets.length}</div>
+          <div className="text-3xl font-bold mt-2">{stats.total}</div>
         </Card>
         <Card className="p-6">
-          <div className="text-sm text-muted-foreground">Approved Budget (FY 2025)</div>
-          <div className="text-3xl font-bold mt-2">$7.5M</div>
+          <div className="text-sm text-muted-foreground">Approved</div>
+          <div className="text-3xl font-bold mt-2">{stats.approved}</div>
         </Card>
         <Card className="p-6">
           <div className="text-sm text-muted-foreground">Pending Approval</div>
-          <div className="text-3xl font-bold mt-2">1</div>
+          <div className="text-3xl font-bold mt-2">{stats.pending}</div>
+        </Card>
+        <Card className="p-6">
+          <div className="text-sm text-muted-foreground">Draft</div>
+          <div className="text-3xl font-bold mt-2">{stats.draft}</div>
         </Card>
       </div>
     </div>
