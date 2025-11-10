@@ -14,6 +14,23 @@ Key capabilities include:
 
 # Recent Changes
 
+## VPS Deployment Documentation - COMPLETE (November 2025)
+- **COMPLETE**: Production-ready VPS deployment guide and database export
+- **Deployment Guide**: Comprehensive 60+ section guide covering Ubuntu 22.04/24.04 deployment (DEPLOYMENT_GUIDE.md)
+  - Stack: Nginx + PHP-FPM 8.2 + PostgreSQL 16 + PostGIS + Node.js 20 + PM2 + Redis
+  - Complete server setup, configuration, and optimization instructions
+  - Process management for Laravel API, Express frontend, and queue workers
+  - SSL certificate setup with Let's Encrypt
+  - Automated backup strategies (database + application files)
+  - Zero-downtime deployment script
+  - Comprehensive monitoring and troubleshooting guide
+- **Database Export**: Full PostgreSQL schema exported (database_schema.sql, 172KB, 6,276 lines)
+  - Includes all 17 Module 11 tables (GL accounts, budgets, allocations, cost-to-serve)
+  - Includes Module 07 CRM tables and Module 08 Hydro-Met tables
+  - PostGIS extensions and spatial data structures
+  - Ready for direct import into production database
+- **Quick Checklist**: Step-by-step deployment verification (DEPLOYMENT_CHECKLIST.md)
+
 ## Module 11: Costing, Budgeting & Forecasts - COMPLETE (November 2025)
 - **COMPLETE**: Full-stack production-ready costing module with backend, service layer, AND React service layer
 - **Database Layer**: 4 Laravel migrations successfully deployed (17 tables)
