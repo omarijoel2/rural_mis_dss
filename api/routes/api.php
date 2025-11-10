@@ -29,6 +29,9 @@ use App\Http\Controllers\Api\V1\Costing\BudgetController;
 use App\Http\Controllers\Api\V1\Costing\AllocationController;
 use App\Http\Controllers\Api\V1\Costing\CostingKpiController;
 use App\Http\Controllers\Api\ZoneController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\LandController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -468,6 +471,60 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
             Route::get('/summary', [CostingKpiController::class, 'summary'])->middleware('permission:view cost to serve');
             Route::get('/dma-league/{period}', [CostingKpiController::class, 'dmaLeague'])->middleware('permission:view cost to serve');
             Route::get('/trends', [CostingKpiController::class, 'trends'])->middleware('permission:view cost to serve');
+        });
+    });
+
+    Route::prefix('projects')->group(function () {
+        Route::get('/', [ProjectController::class, 'index'])->middleware('permission:view projects');
+        Route::post('/', [ProjectController::class, 'store'])->middleware('permission:create projects');
+        Route::get('/dashboard', [ProjectController::class, 'dashboard'])->middleware('permission:view projects');
+        Route::get('/{id}', [ProjectController::class, 'show'])->middleware('permission:view projects');
+        Route::patch('/{id}', [ProjectController::class, 'update'])->middleware('permission:edit projects');
+        Route::put('/{id}', [ProjectController::class, 'update'])->middleware('permission:edit projects');
+        Route::delete('/{id}', [ProjectController::class, 'destroy'])->middleware('permission:delete projects');
+    });
+
+    Route::prefix('investments')->group(function () {
+        Route::get('/', [InvestmentController::class, 'index'])->middleware('permission:view investments');
+        Route::post('/', [InvestmentController::class, 'store'])->middleware('permission:create investments');
+        Route::get('/{id}', [InvestmentController::class, 'show'])->middleware('permission:view investments');
+        Route::patch('/{id}', [InvestmentController::class, 'update'])->middleware('permission:edit investments');
+        Route::put('/{id}', [InvestmentController::class, 'update'])->middleware('permission:edit investments');
+        Route::delete('/{id}', [InvestmentController::class, 'destroy'])->middleware('permission:delete investments');
+        Route::post('/{id}/score', [InvestmentController::class, 'score'])->middleware('permission:score investments');
+        Route::get('/{id}/scores', [InvestmentController::class, 'scores'])->middleware('permission:view investments');
+        Route::post('/{id}/appraisal', [InvestmentController::class, 'appraisal'])->middleware('permission:appraise investments');
+        Route::get('/{id}/appraisals', [InvestmentController::class, 'appraisals'])->middleware('permission:view investments');
+        Route::post('/{id}/convert', [InvestmentController::class, 'convert'])->middleware('permission:convert investments');
+    });
+
+    Route::prefix('land')->group(function () {
+        Route::get('/', [LandController::class, 'index'])->middleware('permission:view land parcels');
+        Route::post('/', [LandController::class, 'store'])->middleware('permission:create land parcels');
+        Route::get('/in-bounds', [LandController::class, 'inBounds'])->middleware('permission:view land parcels');
+        Route::get('/dashboard', [LandController::class, 'dashboard'])->middleware('permission:view land parcels');
+        Route::get('/{id}', [LandController::class, 'show'])->middleware('permission:view land parcels');
+        Route::patch('/{id}', [LandController::class, 'update'])->middleware('permission:edit land parcels');
+        Route::put('/{id}', [LandController::class, 'update'])->middleware('permission:edit land parcels');
+        Route::delete('/{id}', [LandController::class, 'destroy'])->middleware('permission:delete land parcels');
+        
+        Route::prefix('{parcelId}')->group(function () {
+            Route::post('/wayleaves', [LandController::class, 'storeWayleave'])->middleware('permission:create wayleaves');
+            Route::patch('/wayleaves/{id}', [LandController::class, 'updateWayleave'])->middleware('permission:edit wayleaves');
+            Route::put('/wayleaves/{id}', [LandController::class, 'updateWayleave'])->middleware('permission:edit wayleaves');
+            Route::delete('/wayleaves/{id}', [LandController::class, 'destroyWayleave'])->middleware('permission:delete wayleaves');
+            
+            Route::post('/compensations', [LandController::class, 'storeCompensation'])->middleware('permission:create compensations');
+            Route::patch('/compensations/{id}', [LandController::class, 'updateCompensation'])->middleware('permission:edit compensations');
+            Route::put('/compensations/{id}', [LandController::class, 'updateCompensation'])->middleware('permission:edit compensations');
+            Route::patch('/compensations/{id}/payment', [LandController::class, 'updatePayment'])->middleware('permission:edit compensations');
+            Route::put('/compensations/{id}/payment', [LandController::class, 'updatePayment'])->middleware('permission:edit compensations');
+            Route::delete('/compensations/{id}', [LandController::class, 'destroyCompensation'])->middleware('permission:delete compensations');
+            
+            Route::post('/disputes', [LandController::class, 'storeDispute'])->middleware('permission:create disputes');
+            Route::patch('/disputes/{id}', [LandController::class, 'updateDispute'])->middleware('permission:edit disputes');
+            Route::put('/disputes/{id}', [LandController::class, 'updateDispute'])->middleware('permission:edit disputes');
+            Route::delete('/disputes/{id}', [LandController::class, 'destroyDispute'])->middleware('permission:delete disputes');
         });
     });
 });
