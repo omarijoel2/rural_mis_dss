@@ -25,6 +25,9 @@ use App\Http\Controllers\Api\Crm\InteractionController;
 use App\Http\Controllers\Api\Crm\ComplaintController;
 use App\Http\Controllers\Api\Hydromet\SourceController;
 use App\Http\Controllers\Api\Hydromet\StationController;
+use App\Http\Controllers\Api\V1\Costing\BudgetController;
+use App\Http\Controllers\Api\V1\Costing\AllocationController;
+use App\Http\Controllers\Api\V1\Costing\CostingKpiController;
 use App\Http\Controllers\Api\ZoneController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -427,6 +430,44 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
             Route::patch('/{stationId}/sensors/{sensorId}', [StationController::class, 'updateSensor'])->middleware('permission:edit sensors');
             Route::put('/{stationId}/sensors/{sensorId}', [StationController::class, 'updateSensor'])->middleware('permission:edit sensors');
             Route::delete('/{stationId}/sensors/{sensorId}', [StationController::class, 'deleteSensor'])->middleware('permission:delete sensors');
+        });
+    });
+
+    Route::prefix('costing')->group(function () {
+        Route::prefix('budgets')->group(function () {
+            Route::get('/', [BudgetController::class, 'index'])->middleware('permission:view budgets');
+            Route::post('/', [BudgetController::class, 'store'])->middleware('permission:create budgets');
+            Route::get('/{id}', [BudgetController::class, 'show'])->middleware('permission:view budgets');
+            Route::patch('/{id}', [BudgetController::class, 'update'])->middleware('permission:edit budgets');
+            Route::put('/{id}', [BudgetController::class, 'update'])->middleware('permission:edit budgets');
+            Route::delete('/{id}', [BudgetController::class, 'destroy'])->middleware('permission:delete budgets');
+            Route::post('/{id}/approve', [BudgetController::class, 'approve'])->middleware('permission:approve budgets');
+            Route::get('/{id}/lines', [BudgetController::class, 'getLines'])->middleware('permission:view budgets');
+            Route::post('/{id}/lines', [BudgetController::class, 'upsertLines'])->middleware('permission:edit budgets');
+            Route::get('/{id}/summary', [BudgetController::class, 'getSummary'])->middleware('permission:view budgets');
+        });
+
+        Route::prefix('allocation-rules')->group(function () {
+            Route::get('/', [AllocationController::class, 'indexRules'])->middleware('permission:view allocations');
+            Route::post('/', [AllocationController::class, 'storeRule'])->middleware('permission:create allocations');
+            Route::patch('/{id}', [AllocationController::class, 'updateRule'])->middleware('permission:edit allocations');
+            Route::put('/{id}', [AllocationController::class, 'updateRule'])->middleware('permission:edit allocations');
+            Route::delete('/{id}', [AllocationController::class, 'destroyRule'])->middleware('permission:delete allocations');
+        });
+
+        Route::prefix('allocation-runs')->group(function () {
+            Route::get('/', [AllocationController::class, 'indexRuns'])->middleware('permission:view allocations');
+            Route::post('/', [AllocationController::class, 'executeRun'])->middleware('permission:execute allocations');
+            Route::get('/{id}', [AllocationController::class, 'showRun'])->middleware('permission:view allocations');
+            Route::delete('/{id}', [AllocationController::class, 'destroyRun'])->middleware('permission:delete allocations');
+        });
+
+        Route::prefix('cost-to-serve')->group(function () {
+            Route::get('/', [CostingKpiController::class, 'index'])->middleware('permission:view cost to serve');
+            Route::post('/', [CostingKpiController::class, 'calculate'])->middleware('permission:edit cost to serve');
+            Route::get('/summary', [CostingKpiController::class, 'summary'])->middleware('permission:view cost to serve');
+            Route::get('/dma-league/{period}', [CostingKpiController::class, 'dmaLeague'])->middleware('permission:view cost to serve');
+            Route::get('/trends', [CostingKpiController::class, 'trends'])->middleware('permission:view cost to serve');
         });
     });
 });
