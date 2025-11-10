@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('investment_pipelines', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('code', 50)->index();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->foreignId('program_id')->nullable()->constrained('programs')->nullOnDelete();
-            $table->foreignId('category_id')->constrained('project_categories')->cascadeOnDelete();
+            $table->foreignUuid('program_id')->nullable()->constrained('programs')->nullOnDelete();
+            $table->foreignUuid('category_id')->constrained('project_categories')->cascadeOnDelete();
             $table->decimal('estimated_cost', 20, 2);
             $table->string('currency', 3)->default('KES');
             $table->integer('connections_added')->nullable();
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('irr', 10, 4)->nullable();
             $table->decimal('risk_reduction_score', 10, 2)->nullable();
             $table->decimal('priority_score', 10, 2)->nullable();
-            $table->enum('status', ['concept', 'appraised', 'approved', 'rejected', 'converted'])->default('concept');
+            $table->enum('status', ['active', 'shortlisted', 'approved', 'rejected', 'converted'])->default('active');
             $table->geography('location', 'polygon')->nullable();
             $table->foreignUuid('created_by')->constrained('users')->nullOnDelete();
             $table->foreignUuid('approved_by')->nullable()->constrained('users')->nullOnDelete();
@@ -43,9 +43,9 @@ return new class extends Migration
         });
 
         Schema::create('pipeline_scores', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('pipeline_id')->constrained('investment_pipelines')->cascadeOnDelete();
-            $table->foreignId('criterion_id')->constrained('investment_criteria')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('pipeline_id')->constrained('investment_pipelines')->cascadeOnDelete();
+            $table->foreignUuid('criterion_id')->constrained('investment_criteria')->cascadeOnDelete();
             $table->decimal('raw_score', 10, 2);
             $table->decimal('weighted_score', 10, 2);
             $table->text('rationale')->nullable();
@@ -57,8 +57,8 @@ return new class extends Migration
         });
 
         Schema::create('investment_appraisals', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('pipeline_id')->constrained('investment_pipelines')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('pipeline_id')->constrained('investment_pipelines')->cascadeOnDelete();
             $table->string('appraisal_no', 50)->index();
             $table->foreignUuid('appraiser_id')->constrained('users')->nullOnDelete();
             $table->date('appraisal_date');
@@ -85,7 +85,7 @@ return new class extends Migration
         });
 
         Schema::create('portfolio_scenarios', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('name');
             $table->decimal('budget_constraint', 20, 2);

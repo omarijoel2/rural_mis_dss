@@ -6,6 +6,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
@@ -13,7 +14,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class InvestmentPipeline extends Model
 {
-    use HasFactory, SoftDeletes, HasSpatial;
+    use HasFactory, HasUuids, SoftDeletes, HasSpatial;
 
     protected $fillable = [
         'tenant_id',

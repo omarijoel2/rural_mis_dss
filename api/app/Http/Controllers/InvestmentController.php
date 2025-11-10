@@ -21,7 +21,7 @@ class InvestmentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['status', 'category', 'priority']);
+        $filters = $request->only(['status', 'category_id']);
         $pipelines = $this->investmentService->getAllPipelines($filters);
 
         return response()->json($pipelines);
@@ -77,9 +77,10 @@ class InvestmentController extends Controller
         $data = $request->validated();
         $score = $this->investmentService->scorePipeline(
             $id,
-            $data['criteria_id'],
-            $data['score'],
-            $data['notes'] ?? null
+            $data['criterion_id'],
+            $data['raw_score'],
+            $data['weighted_score'],
+            $data['rationale'] ?? null
         );
 
         return response()->json($score, 201);
@@ -101,13 +102,7 @@ class InvestmentController extends Controller
     public function appraisal(CreateAppraisalRequest $request, string $id): JsonResponse
     {
         $data = $request->validated();
-        $appraisal = $this->investmentService->createAppraisal(
-            $id,
-            $data['costs'],
-            $data['benefits'],
-            $data['discount_rate'],
-            $data['project_life']
-        );
+        $appraisal = $this->investmentService->createAppraisal($id, $data);
 
         return response()->json($appraisal, 201);
     }

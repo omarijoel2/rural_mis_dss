@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('projects', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('code', 50)->index();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->foreignId('program_id')->nullable()->constrained('programs')->nullOnDelete();
-            $table->foreignId('category_id')->constrained('project_categories')->cascadeOnDelete();
-            $table->foreignId('pipeline_id')->nullable()->constrained('investment_pipelines')->nullOnDelete();
+            $table->foreignUuid('program_id')->nullable()->constrained('programs')->nullOnDelete();
+            $table->foreignUuid('category_id')->constrained('project_categories')->cascadeOnDelete();
+            $table->foreignUuid('pipeline_id')->nullable()->constrained('investment_pipelines')->nullOnDelete();
             $table->foreignUuid('pm_id')->nullable()->constrained('users')->nullOnDelete();
             $table->decimal('baseline_budget', 20, 2);
             $table->decimal('revised_budget', 20, 2)->nullable();
@@ -42,8 +42,8 @@ return new class extends Migration
         });
 
         Schema::create('project_milestones', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('project_id')->constrained('projects')->cascadeOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
             $table->date('planned_date');
@@ -57,9 +57,9 @@ return new class extends Migration
         });
 
         Schema::create('contracts', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->foreignUuid('project_id')->constrained('projects')->cascadeOnDelete();
             $table->string('contract_no', 50)->index();
             $table->string('contractor_name');
             $table->string('contractor_contact')->nullable();
@@ -82,8 +82,8 @@ return new class extends Migration
         });
 
         Schema::create('change_orders', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('contract_id')->constrained('contracts')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('contract_id')->constrained('contracts')->cascadeOnDelete();
             $table->string('vo_no', 50)->index(); // Variation Order Number
             $table->text('description');
             $table->decimal('amount', 20, 2);
@@ -100,8 +100,8 @@ return new class extends Migration
         });
 
         Schema::create('contractor_claims', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('contract_id')->constrained('contracts')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('contract_id')->constrained('contracts')->cascadeOnDelete();
             $table->string('claim_no', 50)->index();
             $table->text('description');
             $table->decimal('claimed_amount', 20, 2);
@@ -118,9 +118,9 @@ return new class extends Migration
         });
 
         Schema::create('project_defects', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
-            $table->foreignId('contract_id')->nullable()->constrained('contracts')->nullOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->foreignUuid('contract_id')->nullable()->constrained('contracts')->nullOnDelete();
             $table->string('defect_no', 50)->index();
             $table->text('description');
             $table->enum('severity', ['minor', 'major', 'critical'])->default('minor');
@@ -139,8 +139,8 @@ return new class extends Migration
         });
 
         Schema::create('progress_reports', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('project_id')->constrained('projects')->cascadeOnDelete();
             $table->date('report_date');
             $table->decimal('physical_progress', 5, 2);
             $table->decimal('financial_progress', 5, 2);

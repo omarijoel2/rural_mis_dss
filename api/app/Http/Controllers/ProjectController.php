@@ -19,7 +19,7 @@ class ProjectController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['status', 'category', 'budget_year', 'search']);
+        $filters = $request->only(['status', 'category_id', 'program_id', 'search']);
         $projects = $this->projectService->getAllProjects($filters);
 
         return response()->json($projects);
