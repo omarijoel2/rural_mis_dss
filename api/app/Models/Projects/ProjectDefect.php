@@ -5,12 +5,13 @@ namespace App\Models\Projects;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class ProjectDefect extends Model
 {
-    use HasFactory, HasSpatial;
+    use HasFactory, HasUuids, HasSpatial;
 
     protected $fillable = [
         'project_id',

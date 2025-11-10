@@ -7,16 +7,21 @@ const BASE_URL = '/api/v1';
 // ===================================
 
 export interface Project {
-  id: number;
+  id: string;
   tenant_id: string;
   code: string;
-  name: string;
+  title: string;
   description: string | null;
-  category: 'new_scheme' | 'extension' | 'rehabilitation' | 'upgrade' | 'emergency';
-  estimated_cost: number;
-  budget_year: number;
-  start_date: string | null;
-  end_date: string | null;
+  program_id: string | null;
+  category_id: string | null;
+  pipeline_id: string | null;
+  pm_id: string | null;
+  baseline_budget: number;
+  revised_budget: number | null;
+  baseline_start_date: string | null;
+  baseline_end_date: string | null;
+  revised_start_date: string | null;
+  revised_end_date: string | null;
   actual_start_date: string | null;
   actual_end_date: string | null;
   physical_progress: number;
@@ -32,8 +37,8 @@ export interface Project {
 
 export interface ProjectFilters {
   status?: string;
-  category?: string;
-  budget_year?: number;
+  category_id?: string;
+  program_id?: string;
   search?: string;
 }
 
@@ -42,55 +47,75 @@ export interface ProjectFilters {
 // ===================================
 
 export interface InvestmentPipeline {
-  id: number;
+  id: string;
   tenant_id: string;
-  name: string;
+  code: string | null;
+  title: string;
   description: string | null;
-  category: 'new_scheme' | 'extension' | 'rehabilitation' | 'upgrade' | 'emergency';
-  priority: 'high' | 'medium' | 'low';
+  program_id: string | null;
+  category_id: string | null;
   estimated_cost: number;
-  estimated_benefits: number | null;
-  discount_rate: number | null;
-  project_life_years: number | null;
-  location: { type: string; coordinates: [number, number] } | null;
-  beneficiaries: number | null;
+  currency: string | null;
+  connections_added: number | null;
+  energy_savings: number | null;
+  nrw_reduction: number | null;
+  revenue_increase: number | null;
+  bcr: number | null;
+  npv: number | null;
+  irr: number | null;
+  risk_reduction_score: number | null;
+  priority_score: number | null;
   status: 'active' | 'shortlisted' | 'approved' | 'rejected' | 'converted';
+  location: { type: string; coordinates: any } | null;
+  created_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
   meta: Record<string, any> | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface PipelineScore {
-  id: number;
-  pipeline_id: number;
-  criteria_id: number;
-  score: number;
+  id: string;
+  pipeline_id: string;
+  criterion_id: string;
+  raw_score: number;
+  weighted_score: number;
+  rationale: string | null;
   scored_by: string | null;
-  scored_at: string;
-  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Appraisal {
-  id: number;
-  pipeline_id: number;
-  costs: Record<string, any>;
-  benefits: Record<string, any>;
-  discount_rate: number;
-  project_life: number;
-  npv: number;
-  bcr: number;
-  irr: number | null;
-  payback_period: number | null;
-  appraiser_id: string | null;
+export interface InvestmentAppraisal {
+  id: string;
+  pipeline_id: string;
+  appraisal_no: string;
+  appraiser_id: string;
   appraisal_date: string;
-  notes: string | null;
+  executive_summary: string | null;
+  capex: number;
+  opex_annual: number | null;
+  project_life_years: number;
+  discount_rate: number;
+  calculated_npv: number | null;
+  calculated_bcr: number | null;
+  calculated_irr: number | null;
+  risks: string | null;
+  assumptions: string | null;
+  recommendation: 'approve' | 'reject' | 'defer' | 'revise' | null;
+  recommendation_notes: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  cash_flows: Record<string, any> | null;
+  meta: Record<string, any> | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface InvestmentFilters {
   status?: string;
-  category?: string;
-  priority?: string;
+  category_id?: string;
 }
 
 // ===================================
@@ -98,10 +123,11 @@ export interface InvestmentFilters {
 // ===================================
 
 export interface LandParcel {
-  id: number;
+  id: string;
   tenant_id: string;
   ref_no: string;
-  title_deed_no: string | null;
+  title_number: string | null;
+  title_status: string | null;
   area_ha: number;
   owner_name: string;
   owner_contact: string | null;
@@ -109,8 +135,8 @@ export interface LandParcel {
   county: string | null;
   sub_county: string | null;
   ward: string | null;
-  category_id: number | null;
-  project_id: number | null;
+  category_id: string | null;
+  project_id: string | null;
   acquisition_status: 'identified' | 'valuation' | 'negotiation' | 'acquired' | 'disputed';
   notes: string | null;
   created_by: string;
@@ -121,9 +147,9 @@ export interface LandParcel {
 }
 
 export interface Wayleave {
-  id: number;
+  id: string;
   tenant_id: string;
-  parcel_id: number;
+  parcel_id: string;
   wayleave_no: string;
   type: 'pipeline' | 'power_line' | 'access_road' | 'temporary' | 'other';
   width_m: number | null;
@@ -139,9 +165,9 @@ export interface Wayleave {
 }
 
 export interface Compensation {
-  id: number;
+  id: string;
   tenant_id: string;
-  parcel_id: number;
+  parcel_id: string;
   comp_no: string;
   valuation_amount: number;
   negotiated_amount: number | null;
@@ -161,9 +187,9 @@ export interface Compensation {
 }
 
 export interface LandDispute {
-  id: number;
+  id: string;
   tenant_id: string;
-  parcel_id: number;
+  parcel_id: string;
   dispute_no: string;
   description: string;
   type: 'ownership' | 'boundary' | 'compensation' | 'wayleave' | 'other';
@@ -181,8 +207,8 @@ export interface LandDispute {
 
 export interface LandFilters {
   status?: string;
-  category_id?: number;
-  project_id?: number;
+  category_id?: string;
+  project_id?: string;
   search?: string;
 }
 
@@ -197,7 +223,7 @@ export const projectsService = {
     return response.data;
   },
 
-  async getProject(id: number): Promise<Project> {
+  async getProject(id: string): Promise<Project> {
     const response = await apiClient.get(`${BASE_URL}/projects/${id}`);
     return response.data;
   },
@@ -207,12 +233,12 @@ export const projectsService = {
     return response.data;
   },
 
-  async updateProject(id: number, data: Partial<Project>): Promise<Project> {
+  async updateProject(id: string, data: Partial<Project>): Promise<Project> {
     const response = await apiClient.patch(`${BASE_URL}/projects/${id}`, data);
     return response.data;
   },
 
-  async deleteProject(id: number): Promise<void> {
+  async deleteProject(id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/projects/${id}`);
   },
 
@@ -227,7 +253,7 @@ export const projectsService = {
     return response.data;
   },
 
-  async getPipeline(id: number): Promise<InvestmentPipeline> {
+  async getPipeline(id: string): Promise<InvestmentPipeline> {
     const response = await apiClient.get(`${BASE_URL}/investments/${id}`);
     return response.data;
   },
@@ -237,51 +263,56 @@ export const projectsService = {
     return response.data;
   },
 
-  async updatePipeline(id: number, data: Partial<InvestmentPipeline>): Promise<InvestmentPipeline> {
+  async updatePipeline(id: string, data: Partial<InvestmentPipeline>): Promise<InvestmentPipeline> {
     const response = await apiClient.patch(`${BASE_URL}/investments/${id}`, data);
     return response.data;
   },
 
-  async deletePipeline(id: number): Promise<void> {
+  async deletePipeline(id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/investments/${id}`);
   },
 
-  async scorePipeline(id: number, criteria_id: number, score: number, notes?: string): Promise<PipelineScore> {
+  async scorePipeline(id: string, criterion_id: string, raw_score: number, weighted_score: number, rationale?: string): Promise<PipelineScore> {
     const response = await apiClient.post(`${BASE_URL}/investments/${id}/score`, {
-      criteria_id,
-      score,
-      notes,
+      criterion_id,
+      raw_score,
+      weighted_score,
+      rationale,
     });
     return response.data;
   },
 
-  async getPipelineScores(id: number): Promise<PipelineScore[]> {
+  async getPipelineScores(id: string): Promise<PipelineScore[]> {
     const response = await apiClient.get(`${BASE_URL}/investments/${id}/scores`);
     return response.data;
   },
 
   async createAppraisal(
-    id: number,
-    costs: Record<string, any>,
-    benefits: Record<string, any>,
-    discount_rate: number,
-    project_life: number
-  ): Promise<Appraisal> {
-    const response = await apiClient.post(`${BASE_URL}/investments/${id}/appraisal`, {
-      costs,
-      benefits,
-      discount_rate,
-      project_life,
-    });
+    id: string,
+    data: {
+      appraisal_no: string;
+      capex: number;
+      opex_annual?: number;
+      project_life_years: number;
+      discount_rate: number;
+      executive_summary?: string;
+      risks?: string;
+      assumptions?: string;
+      recommendation?: 'approve' | 'reject' | 'defer' | 'revise';
+      recommendation_notes?: string;
+      cash_flows?: Record<string, any>;
+    }
+  ): Promise<InvestmentAppraisal> {
+    const response = await apiClient.post(`${BASE_URL}/investments/${id}/appraisal`, data);
     return response.data;
   },
 
-  async getPipelineAppraisals(id: number): Promise<Appraisal[]> {
+  async getPipelineAppraisals(id: string): Promise<InvestmentAppraisal[]> {
     const response = await apiClient.get(`${BASE_URL}/investments/${id}/appraisals`);
     return response.data;
   },
 
-  async convertToProject(id: number): Promise<Project> {
+  async convertToProject(id: string): Promise<Project> {
     const response = await apiClient.post(`${BASE_URL}/investments/${id}/convert`);
     return response.data;
   },
@@ -292,7 +323,7 @@ export const projectsService = {
     return response.data;
   },
 
-  async getLandParcel(id: number): Promise<LandParcel> {
+  async getLandParcel(id: string): Promise<LandParcel> {
     const response = await apiClient.get(`${BASE_URL}/land/${id}`);
     return response.data;
   },
@@ -302,12 +333,12 @@ export const projectsService = {
     return response.data;
   },
 
-  async updateLandParcel(id: number, data: Partial<LandParcel>): Promise<LandParcel> {
+  async updateLandParcel(id: string, data: Partial<LandParcel>): Promise<LandParcel> {
     const response = await apiClient.patch(`${BASE_URL}/land/${id}`, data);
     return response.data;
   },
 
-  async deleteLandParcel(id: number): Promise<void> {
+  async deleteLandParcel(id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/land/${id}`);
   },
 
@@ -327,56 +358,56 @@ export const projectsService = {
   },
 
   // Wayleaves
-  async createWayleave(parcelId: number, data: Partial<Wayleave>): Promise<Wayleave> {
+  async createWayleave(parcelId: string, data: Partial<Wayleave>): Promise<Wayleave> {
     const response = await apiClient.post(`${BASE_URL}/land/${parcelId}/wayleaves`, data);
     return response.data;
   },
 
-  async updateWayleave(parcelId: number, id: number, data: Partial<Wayleave>): Promise<Wayleave> {
+  async updateWayleave(parcelId: string, id: string, data: Partial<Wayleave>): Promise<Wayleave> {
     const response = await apiClient.patch(`${BASE_URL}/land/${parcelId}/wayleaves/${id}`, data);
     return response.data;
   },
 
-  async deleteWayleave(parcelId: number, id: number): Promise<void> {
+  async deleteWayleave(parcelId: string, id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/land/${parcelId}/wayleaves/${id}`);
   },
 
   // Compensations
-  async createCompensation(parcelId: number, data: Partial<Compensation>): Promise<Compensation> {
+  async createCompensation(parcelId: string, data: Partial<Compensation>): Promise<Compensation> {
     const response = await apiClient.post(`${BASE_URL}/land/${parcelId}/compensations`, data);
     return response.data;
   },
 
-  async updateCompensation(parcelId: number, id: number, data: Partial<Compensation>): Promise<Compensation> {
+  async updateCompensation(parcelId: string, id: string, data: Partial<Compensation>): Promise<Compensation> {
     const response = await apiClient.patch(`${BASE_URL}/land/${parcelId}/compensations/${id}`, data);
     return response.data;
   },
 
   async updateCompensationPayment(
-    parcelId: number,
-    id: number,
+    parcelId: string,
+    id: string,
     payment: { amount: number; payment_date: string; payment_reference: string }
   ): Promise<Compensation> {
     const response = await apiClient.patch(`${BASE_URL}/land/${parcelId}/compensations/${id}/payment`, payment);
     return response.data;
   },
 
-  async deleteCompensation(parcelId: number, id: number): Promise<void> {
+  async deleteCompensation(parcelId: string, id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/land/${parcelId}/compensations/${id}`);
   },
 
   // Disputes
-  async createDispute(parcelId: number, data: Partial<LandDispute>): Promise<LandDispute> {
+  async createDispute(parcelId: string, data: Partial<LandDispute>): Promise<LandDispute> {
     const response = await apiClient.post(`${BASE_URL}/land/${parcelId}/disputes`, data);
     return response.data;
   },
 
-  async updateDispute(parcelId: number, id: number, data: Partial<LandDispute>): Promise<LandDispute> {
+  async updateDispute(parcelId: string, id: string, data: Partial<LandDispute>): Promise<LandDispute> {
     const response = await apiClient.patch(`${BASE_URL}/land/${parcelId}/disputes/${id}`, data);
     return response.data;
   },
 
-  async deleteDispute(parcelId: number, id: number): Promise<void> {
+  async deleteDispute(parcelId: string, id: string): Promise<void> {
     await apiClient.delete(`${BASE_URL}/land/${parcelId}/disputes/${id}`);
   },
 };

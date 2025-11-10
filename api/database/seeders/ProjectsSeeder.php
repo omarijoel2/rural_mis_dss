@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Projects\Project;
+use App\Models\Projects\ProjectCategory;
 use App\Models\Projects\InvestmentPipeline;
-use App\Models\Projects\Appraisal;
+use App\Models\Projects\InvestmentAppraisal;
 use App\Models\Projects\LandCategory;
 use App\Models\Projects\LandParcel;
 use App\Models\Projects\Wayleave;
@@ -33,6 +34,7 @@ class ProjectsSeeder extends Seeder
             return;
         }
 
+        $this->seedProjectCategories($tenant);
         $this->seedProjects($tenant, $user);
         $this->seedInvestmentPipelines($tenant, $user);
         $this->seedLandCategories($tenant);
@@ -41,18 +43,41 @@ class ProjectsSeeder extends Seeder
         $this->command->info('Module 9: Projects & Capital Planning seeded successfully with demo data');
     }
 
+    private function seedProjectCategories(Tenant $tenant): void
+    {
+        $categories = [
+            ['code' => 'NEW', 'name' => 'New Scheme', 'description' => 'New water supply infrastructure'],
+            ['code' => 'EXT', 'name' => 'Extension', 'description' => 'Extension of existing infrastructure'],
+            ['code' => 'REH', 'name' => 'Rehabilitation', 'description' => 'Rehabilitation of existing assets'],
+            ['code' => 'UPG', 'name' => 'Upgrade', 'description' => 'Upgrade and modernization projects'],
+            ['code' => 'EMG', 'name' => 'Emergency', 'description' => 'Emergency response projects'],
+        ];
+
+        foreach ($categories as $data) {
+            ProjectCategory::firstOrCreate(
+                ['tenant_id' => $tenant->id, 'code' => $data['code']],
+                ['name' => $data['name'], 'description' => $data['description'], 'active' => true]
+            );
+        }
+
+        $this->command->info('  - Project Categories created');
+    }
+
     private function seedProjects(Tenant $tenant, User $user): void
     {
+        $newCategory = ProjectCategory::where('tenant_id', $tenant->id)->where('code', 'NEW')->first();
+        $extCategory = ProjectCategory::where('tenant_id', $tenant->id)->where('code', 'EXT')->first();
+        $rehCategory = ProjectCategory::where('tenant_id', $tenant->id)->where('code', 'REH')->first();
+
         $projects = [
             [
                 'code' => 'PROJ-2025-001',
-                'name' => 'New Water Treatment Plant - Nyamira',
+                'title' => 'New Water Treatment Plant - Nyamira',
                 'description' => 'Construction of a 5,000 m³/day water treatment plant to serve Nyamira town',
-                'category' => 'new_scheme',
-                'estimated_cost' => 85000000,
-                'budget_year' => 2025,
-                'start_date' => '2025-03-01',
-                'end_date' => '2026-06-30',
+                'category_id' => $newCategory?->id,
+                'baseline_budget' => 85000000,
+                'baseline_start_date' => '2025-03-01',
+                'baseline_end_date' => '2026-06-30',
                 'status' => 'planning',
                 'location' => new Polygon([
                     new LineString([
@@ -66,13 +91,12 @@ class ProjectsSeeder extends Seeder
             ],
             [
                 'code' => 'PROJ-2025-002',
-                'name' => 'Distribution Network Extension - Keroka',
+                'title' => 'Distribution Network Extension - Keroka',
                 'description' => 'Extension of distribution network to serve 500 new connections',
-                'category' => 'extension',
-                'estimated_cost' => 12500000,
-                'budget_year' => 2025,
-                'start_date' => '2025-04-15',
-                'end_date' => '2025-12-31',
+                'category_id' => $extCategory?->id,
+                'baseline_budget' => 12500000,
+                'baseline_start_date' => '2025-04-15',
+                'baseline_end_date' => '2025-12-31',
                 'actual_start_date' => '2025-04-20',
                 'physical_progress' => 35.00,
                 'financial_progress' => 28.00,
@@ -89,13 +113,12 @@ class ProjectsSeeder extends Seeder
             ],
             [
                 'code' => 'PROJ-2024-015',
-                'name' => 'Borehole Rehabilitation - Magwagwa',
+                'title' => 'Borehole Rehabilitation - Magwagwa',
                 'description' => 'Rehabilitation of 3 boreholes including pump replacement and casing repair',
-                'category' => 'rehabilitation',
-                'estimated_cost' => 4200000,
-                'budget_year' => 2024,
-                'start_date' => '2024-10-01',
-                'end_date' => '2025-02-28',
+                'category_id' => $rehCategory?->id,
+                'baseline_budget' => 4200000,
+                'baseline_start_date' => '2024-10-01',
+                'baseline_end_date' => '2025-02-28',
                 'actual_start_date' => '2024-10-05',
                 'actual_end_date' => '2025-02-10',
                 'physical_progress' => 100.00,
@@ -125,77 +148,94 @@ class ProjectsSeeder extends Seeder
 
     private function seedInvestmentPipelines(Tenant $tenant, User $user): void
     {
+        $upgCategory = ProjectCategory::where('tenant_id', $tenant->id)->where('code', 'UPG')->first();
+        $emgCategory = ProjectCategory::where('tenant_id', $tenant->id)->where('code', 'EMG')->first();
+
         $pipelines = [
             [
-                'name' => 'Solar-Powered Pumping Station - Rioma',
+                'code' => 'INV-2025-001',
+                'title' => 'Solar-Powered Pumping Station - Rioma',
                 'description' => 'Installation of 50kW solar-powered pumping station to reduce energy costs',
-                'category' => 'upgrade',
-                'priority' => 'high',
+                'category_id' => $upgCategory?->id,
                 'estimated_cost' => 8500000,
-                'estimated_benefits' => 2400000,
-                'discount_rate' => 12.0,
-                'project_life_years' => 20,
+                'currency' => 'KES',
+                'connections_added' => 850,
+                'energy_savings' => 2400000,
+                'nrw_reduction' => 5.0,
+                'revenue_increase' => 1200000,
+                'priority_score' => 85.5,
                 'location' => new Point(-0.782, 34.721),
-                'beneficiaries' => 850,
                 'status' => 'active',
+                'created_by' => $user->id,
             ],
             [
-                'name' => 'Leak Detection System Deployment',
+                'code' => 'INV-2025-002',
+                'title' => 'Leak Detection System Deployment',
                 'description' => 'Installation of smart leak detection sensors across 5 DMAs',
-                'category' => 'upgrade',
-                'priority' => 'medium',
+                'category_id' => $upgCategory?->id,
                 'estimated_cost' => 6200000,
-                'estimated_benefits' => 1800000,
-                'discount_rate' => 12.0,
-                'project_life_years' => 10,
+                'currency' => 'KES',
+                'connections_added' => 0,
+                'energy_savings' => 0,
+                'nrw_reduction' => 15.0,
+                'revenue_increase' => 1800000,
+                'npv' => 3800000,
+                'bcr' => 1.85,
+                'irr' => 18.5,
+                'priority_score' => 72.3,
                 'location' => new Point(-0.567, 34.933),
-                'beneficiaries' => 2400,
                 'status' => 'shortlisted',
+                'created_by' => $user->id,
             ],
             [
-                'name' => 'Emergency Tanker Supply - Drought Mitigation',
+                'code' => 'INV-2025-003',
+                'title' => 'Emergency Tanker Supply - Drought Mitigation',
                 'description' => 'Emergency water supply via tankers for drought-affected areas',
-                'category' => 'emergency',
-                'priority' => 'high',
+                'category_id' => $emgCategory?->id,
                 'estimated_cost' => 3500000,
-                'estimated_benefits' => null,
-                'discount_rate' => null,
-                'project_life_years' => 1,
+                'currency' => 'KES',
+                'connections_added' => 0,
+                'priority_score' => 95.0,
                 'location' => new Point(-0.645, 34.965),
-                'beneficiaries' => 1200,
                 'status' => 'approved',
+                'created_by' => $user->id,
+                'approved_by' => $user->id,
+                'approved_at' => now()->subDays(5),
             ],
         ];
 
         foreach ($pipelines as $data) {
             $pipeline = InvestmentPipeline::firstOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => $data['name']],
+                ['tenant_id' => $tenant->id, 'code' => $data['code']],
                 $data
             );
 
             // Create appraisal for shortlisted pipelines
-            if ($data['status'] === 'shortlisted' && $data['discount_rate']) {
-                Appraisal::firstOrCreate(
+            if ($data['status'] === 'shortlisted') {
+                InvestmentAppraisal::firstOrCreate(
                     ['pipeline_id' => $pipeline->id],
                     [
-                        'costs' => json_encode([
-                            'year_0' => $data['estimated_cost'] * 0.3,
-                            'year_1' => $data['estimated_cost'] * 0.5,
-                            'year_2' => $data['estimated_cost'] * 0.2,
-                        ]),
-                        'benefits' => json_encode([
-                            'year_1' => $data['estimated_benefits'] * 0.6,
-                            'year_2' => $data['estimated_benefits'] * 0.8,
-                            'year_3' => $data['estimated_benefits'],
-                        ]),
-                        'discount_rate' => $data['discount_rate'],
-                        'project_life' => $data['project_life_years'],
-                        'npv' => ($data['estimated_benefits'] * 5) - $data['estimated_cost'],
-                        'bcr' => ($data['estimated_benefits'] * 5) / $data['estimated_cost'],
-                        'irr' => 18.5,
-                        'payback_period' => 3.5,
+                        'appraisal_no' => 'APP-2025-' . str_pad($pipeline->id, 3, '0', STR_PAD_LEFT),
                         'appraiser_id' => $user->id,
                         'appraisal_date' => now()->subDays(15),
+                        'executive_summary' => 'Financial appraisal for ' . $data['title'],
+                        'capex' => $data['estimated_cost'],
+                        'opex_annual' => $data['estimated_cost'] * 0.05,
+                        'project_life_years' => 10,
+                        'discount_rate' => 0.12,
+                        'calculated_npv' => 3800000,
+                        'calculated_bcr' => 1.85,
+                        'calculated_irr' => 0.185,
+                        'cash_flows' => json_encode([
+                            'year_0' => ['cost' => $data['estimated_cost'] * 0.3, 'benefit' => 0],
+                            'year_1' => ['cost' => $data['estimated_cost'] * 0.5, 'benefit' => 1800000 * 0.6],
+                            'year_2' => ['cost' => $data['estimated_cost'] * 0.2, 'benefit' => 1800000 * 0.8],
+                            'year_3' => ['cost' => 0, 'benefit' => 1800000],
+                        ]),
+                        'risks' => 'Market risk, implementation delay risk',
+                        'assumptions' => 'Stable market conditions, timely implementation',
+                        'recommendation' => 'approve',
+                        'recommendation_notes' => 'Project shows strong financial viability with positive NPV and acceptable BCR',
                     ]
                 );
             }
@@ -231,7 +271,8 @@ class ProjectsSeeder extends Seeder
         $parcels = [
             [
                 'ref_no' => 'NYAM/2025/001',
-                'title_deed_no' => 'NYAMIRA/NYAMIRA/12345',
+                'title_number' => 'NYAMIRA/NYAMIRA/12345',
+                'title_status' => 'freehold',
                 'area_ha' => 2.5,
                 'owner_name' => 'John Mwangi',
                 'owner_contact' => '+254722123456',
@@ -251,7 +292,8 @@ class ProjectsSeeder extends Seeder
             ],
             [
                 'ref_no' => 'NYAM/2025/002',
-                'title_deed_no' => 'NYAMIRA/NYAMIRA/12346',
+                'title_number' => 'NYAMIRA/NYAMIRA/12346',
+                'title_status' => 'freehold',
                 'area_ha' => 1.8,
                 'owner_name' => 'Mary Nyanchama',
                 'owner_contact' => '+254733234567',

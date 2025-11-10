@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('programs', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('code', 50)->index();
             $table->string('name');
@@ -29,7 +29,7 @@ return new class extends Migration
         });
 
         Schema::create('project_categories', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('code', 50)->index();
             $table->string('name');
@@ -43,7 +43,7 @@ return new class extends Migration
         });
 
         Schema::create('investment_criteria', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('code', 50)->index();
             $table->string('name');
@@ -59,7 +59,7 @@ return new class extends Migration
         });
 
         Schema::create('land_categories', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('code', 50)->index();
             $table->string('name');
@@ -71,7 +71,7 @@ return new class extends Migration
         });
 
         Schema::create('model_engines', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('name');
             $table->string('version')->nullable();

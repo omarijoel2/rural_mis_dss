@@ -9,12 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('design_models', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('model_name');
-            $table->foreignId('engine_id')->constrained('model_engines')->cascadeOnDelete();
+            $table->foreignUuid('engine_id')->constrained('model_engines')->cascadeOnDelete();
             $table->string('version')->nullable();
-            $table->foreignId('project_id')->nullable()->constrained('projects')->nullOnDelete();
+            $table->foreignUuid('project_id')->nullable()->constrained('projects')->nullOnDelete();
             $table->text('description')->nullable();
             $table->string('file_path')->nullable();
             $table->string('file_format', 50)->nullable();
@@ -28,8 +28,8 @@ return new class extends Migration
         });
 
         Schema::create('model_runs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('model_id')->constrained('design_models')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('model_id')->constrained('design_models')->cascadeOnDelete();
             $table->string('scenario_name');
             $table->text('description')->nullable();
             $table->jsonb('parameters')->nullable();
@@ -45,8 +45,8 @@ return new class extends Migration
         });
 
         Schema::create('model_calibrations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('model_id')->constrained('design_models')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('model_id')->constrained('design_models')->cascadeOnDelete();
             $table->string('calibration_name');
             $table->date('calibration_date');
             $table->jsonb('field_measurements')->nullable();
@@ -61,9 +61,9 @@ return new class extends Migration
         });
 
         Schema::create('handover_packages', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->foreignUuid('project_id')->constrained('projects')->cascadeOnDelete();
             $table->string('package_no', 50)->index();
             $table->date('commissioning_date');
             $table->date('handover_date')->nullable();
@@ -85,10 +85,10 @@ return new class extends Migration
         });
 
         Schema::create('capitalization_entries', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
-            $table->foreignId('handover_package_id')->nullable()->constrained('handover_packages')->nullOnDelete();
+            $table->foreignUuid('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->foreignUuid('handover_package_id')->nullable()->constrained('handover_packages')->nullOnDelete();
             $table->string('entry_no', 50)->index();
             $table->string('asset_class');
             $table->decimal('amount', 20, 2);
@@ -96,7 +96,7 @@ return new class extends Migration
             $table->integer('useful_life_years');
             $table->decimal('salvage_value', 20, 2)->nullable();
             $table->date('capitalization_date');
-            $table->foreignId('gl_account_id')->nullable()->constrained('gl_accounts')->nullOnDelete();
+            $table->foreignUuid('gl_account_id')->nullable()->constrained('gl_accounts')->nullOnDelete();
             $table->unsignedBigInteger('linked_asset_id')->nullable(); // Foreign key to asset_register (when available)
             $table->enum('status', ['draft', 'posted', 'reversed'])->default('draft');
             $table->foreignUuid('posted_by')->nullable()->constrained('users')->nullOnDelete();

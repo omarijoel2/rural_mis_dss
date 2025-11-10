@@ -14,9 +14,10 @@ class ScorePipelineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'criteria_id' => 'required|exists:scoring_criteria,id',
-            'score' => 'required|numeric|min:0|max:100',
-            'notes' => 'nullable|string',
+            'criterion_id' => 'required|exists:investment_criteria,id',
+            'raw_score' => 'required|numeric|min:0|max:100',
+            'weighted_score' => 'required|numeric|min:0|max:100',
+            'rationale' => 'nullable|string',
         ];
     }
 }

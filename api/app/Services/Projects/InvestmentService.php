@@ -52,6 +52,14 @@ class InvestmentService
     }
 
     /**
+     * Get pipeline details (alias for getPipeline with details)
+     */
+    public function getPipelineDetails(string $id)
+    {
+        return $this->getPipeline($id, true);
+    }
+
+    /**
      * Create a new investment pipeline
      */
     public function createPipeline(array $data): InvestmentPipeline
@@ -71,7 +79,7 @@ class InvestmentService
                 'energy_savings' => $data['energy_savings'] ?? null,
                 'nrw_reduction' => $data['nrw_reduction'] ?? null,
                 'revenue_increase' => $data['revenue_increase'] ?? null,
-                'status' => $data['status'] ?? 'concept',
+                'status' => $data['status'] ?? 'active',
                 'location' => $data['location'] ?? null,
                 'created_by' => auth()->id(),
                 'meta' => $data['meta'] ?? null,
@@ -114,8 +122,8 @@ class InvestmentService
     {
         $pipeline = InvestmentPipeline::findOrFail($id);
 
-        if (!in_array($pipeline->status, ['concept', 'rejected'])) {
-            throw new \Exception('Only concept or rejected pipelines can be deleted.');
+        if (!in_array($pipeline->status, ['active', 'rejected'])) {
+            throw new \Exception('Only active or rejected pipelines can be deleted.');
         }
 
         $pipeline->delete();
@@ -148,6 +156,28 @@ class InvestmentService
         Log::info('Pipeline score added/updated', ['pipeline_id' => $pipeline->id, 'criterion_id' => $data['criterion_id']]);
 
         return $score;
+    }
+
+    /**
+     * Score a pipeline (wrapper for addScore)
+     */
+    public function scorePipeline(string $pipelineId, string $criterionId, float $rawScore, float $weightedScore, ?string $rationale = null): PipelineScore
+    {
+        return $this->addScore($pipelineId, [
+            'criterion_id' => $criterionId,
+            'raw_score' => $rawScore,
+            'weighted_score' => $weightedScore,
+            'rationale' => $rationale,
+        ]);
+    }
+
+    /**
+     * Get all scores for a pipeline
+     */
+    public function getPipelineScores(string $pipelineId)
+    {
+        $pipeline = InvestmentPipeline::findOrFail($pipelineId);
+        return $pipeline->scores()->with('criterion')->get();
     }
 
     /**
@@ -203,7 +233,7 @@ class InvestmentService
             'bcr' => $calculations['bcr'],
             'npv' => $calculations['npv'],
             'irr' => $calculations['irr'],
-            'status' => 'appraised',
+            'status' => 'shortlisted',
         ]);
 
         Log::info('Investment appraisal created', [
@@ -305,6 +335,15 @@ class InvestmentService
     }
 
     /**
+     * Get all appraisals for a pipeline
+     */
+    public function getPipelineAppraisals(string $pipelineId)
+    {
+        $pipeline = InvestmentPipeline::findOrFail($pipelineId);
+        return $pipeline->appraisals()->with('appraiser')->get();
+    }
+
+    /**
      * Approve an appraisal and mark pipeline as approved
      */
     public function approveAppraisal(string $appraisalId): InvestmentAppraisal
@@ -330,6 +369,34 @@ class InvestmentService
         Log::info('Investment appraisal approved', ['appraisal_id' => $appraisal->id]);
 
         return $appraisal;
+    }
+
+    /**
+     * Convert a pipeline to a project
+     */
+    public function convertToProject(string $pipelineId)
+    {
+        $pipeline = InvestmentPipeline::findOrFail($pipelineId);
+
+        if ($pipeline->status !== 'approved') {
+            throw new \Exception('Only approved pipelines can be converted to projects.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $pipeline->update([
+                'status' => 'converted',
+            ]);
+
+            Log::info('Pipeline converted to project', ['pipeline_id' => $pipelineId]);
+
+            DB::commit();
+            return $pipeline->fresh();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to convert pipeline to project', ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**
@@ -384,10 +451,11 @@ class InvestmentService
 
         return [
             'total_pipelines' => $pipelines->count(),
-            'concept_count' => $pipelines->where('status', 'concept')->count(),
-            'appraised_count' => $pipelines->where('status', 'appraised')->count(),
+            'active_count' => $pipelines->where('status', 'active')->count(),
+            'shortlisted_count' => $pipelines->where('status', 'shortlisted')->count(),
             'approved_count' => $pipelines->where('status', 'approved')->count(),
             'rejected_count' => $pipelines->where('status', 'rejected')->count(),
+            'converted_count' => $pipelines->where('status', 'converted')->count(),
             'total_estimated_cost' => $pipelines->sum('estimated_cost'),
             'average_bcr' => round($pipelines->avg('bcr'), 2),
             'average_npv' => round($pipelines->avg('npv'), 2),

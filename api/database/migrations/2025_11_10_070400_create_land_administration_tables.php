@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('land_parcels', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('ref_no', 50)->index();
             $table->string('title_number')->nullable();
@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('county')->nullable();
             $table->string('sub_county')->nullable();
             $table->string('ward')->nullable();
-            $table->foreignId('category_id')->nullable()->constrained('land_categories')->nullOnDelete();
-            $table->foreignId('project_id')->nullable()->constrained('projects')->nullOnDelete();
+            $table->foreignUuid('category_id')->nullable()->constrained('land_categories')->nullOnDelete();
+            $table->foreignUuid('project_id')->nullable()->constrained('projects')->nullOnDelete();
             $table->enum('acquisition_status', ['identified', 'valuation', 'negotiation', 'acquired', 'disputed'])->default('identified');
             $table->text('notes')->nullable();
             $table->foreignUuid('created_by')->constrained('users')->nullOnDelete();
@@ -37,9 +37,9 @@ return new class extends Migration
         });
 
         Schema::create('wayleaves', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
+            $table->foreignUuid('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
             $table->string('wayleave_no', 50)->index();
             $table->enum('type', ['pipeline', 'power_line', 'access_road', 'temporary', 'other']);
             $table->decimal('width_m', 10, 2)->nullable();
@@ -57,9 +57,9 @@ return new class extends Migration
         });
 
         Schema::create('compensations', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
+            $table->foreignUuid('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
             $table->string('comp_no', 50)->index();
             $table->decimal('valuation_amount', 20, 2);
             $table->decimal('negotiated_amount', 20, 2)->nullable();
@@ -81,9 +81,9 @@ return new class extends Migration
         });
 
         Schema::create('land_disputes', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
+            $table->foreignUuid('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
             $table->string('dispute_no', 50)->index();
             $table->text('description');
             $table->enum('type', ['ownership', 'boundary', 'compensation', 'wayleave', 'other']);
@@ -102,8 +102,8 @@ return new class extends Migration
         });
 
         Schema::create('land_documents', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('parcel_id')->constrained('land_parcels')->cascadeOnDelete();
             $table->enum('doc_type', ['title_deed', 'valuation_report', 'agreement', 'payment_receipt', 'court_order', 'other']);
             $table->string('file_name');
             $table->string('file_path');
