@@ -11,22 +11,17 @@ import {
 } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Plus, Play, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Plus, Play, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
+import { useAllocationRules, useAllocationRuns } from '../../hooks/useCosting';
 
 export function AllocationConsolePage() {
   const [activeTab, setActiveTab] = useState('rules');
 
-  const rules = [
-    { id: 1, name: 'Power Cost Allocation', basis: 'driver', driver: 'kWh consumed', active: true, applies_to: 'Electricity expenses' },
-    { id: 2, name: 'Admin Cost Split', basis: 'percentage', percentage: 25, active: true, applies_to: 'Administrative overhead' },
-    { id: 3, name: 'Equal Scheme Split', basis: 'equal', active: true, applies_to: 'Corporate costs' },
-  ];
+  const { data: rulesData, isLoading: rulesLoading, error: rulesError } = useAllocationRules({ active: true });
+  const { data: runsData, isLoading: runsLoading, error: runsError } = useAllocationRuns();
 
-  const runs = [
-    { id: 1, period: '2025-01', status: 'completed', started_at: '2025-01-15 08:30', completed_at: '2025-01-15 08:35', results_count: 245 },
-    { id: 2, period: '2024-12', status: 'completed', started_at: '2024-12-15 09:15', completed_at: '2024-12-15 09:18', results_count: 238 },
-    { id: 3, period: '2024-11', status: 'failed', started_at: '2024-11-15 10:00', completed_at: '2024-11-15 10:02', results_count: 0 },
-  ];
+  const rules = rulesData?.data || [];
+  const runs = runsData?.data || [];
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive'; icon: any }> = {
@@ -75,7 +70,22 @@ export function AllocationConsolePage() {
               </Button>
             </div>
 
-            <Table>
+            {rulesError && (
+              <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md mb-4">
+                Error loading rules: {rulesError instanceof Error ? rulesError.message : 'Unknown error'}
+              </div>
+            )}
+
+            {rulesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : rules.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No allocation rules configured. Click "New Rule" to create one.
+              </div>
+            ) : (
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Rule Name</TableHead>
@@ -96,7 +106,9 @@ export function AllocationConsolePage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {'driver' in rule ? rule.driver : rule.percentage ? `${rule.percentage}%` : 'Equal'}
+                      {rule.basis === 'driver' && rule.driver ? `Driver: ${rule.driver.name}` : 
+                       rule.basis === 'percentage' && rule.percentage ? `${rule.percentage}%` : 
+                       'Equal Split'}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{rule.applies_to}</TableCell>
                     <TableCell>
@@ -111,6 +123,7 @@ export function AllocationConsolePage() {
                 ))}
               </TableBody>
             </Table>
+            )}
           </Card>
         </TabsContent>
 
@@ -118,7 +131,22 @@ export function AllocationConsolePage() {
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">Allocation Run History</h3>
 
-            <Table>
+            {runsError && (
+              <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md mb-4">
+                Error loading runs: {runsError instanceof Error ? runsError.message : 'Unknown error'}
+              </div>
+            )}
+
+            {runsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : runs.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No allocation runs executed yet. Click "Execute Allocation" to run one.
+              </div>
+            ) : (
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Period</TableHead>
@@ -132,11 +160,11 @@ export function AllocationConsolePage() {
               <TableBody>
                 {runs.map((run) => (
                   <TableRow key={run.id}>
-                    <TableCell className="font-medium">{run.period}</TableCell>
+                    <TableCell className="font-medium">{run.period_from} to {run.period_to}</TableCell>
                     <TableCell>{getStatusBadge(run.status)}</TableCell>
-                    <TableCell className="text-sm">{run.started_at}</TableCell>
-                    <TableCell className="text-sm">{run.completed_at || '-'}</TableCell>
-                    <TableCell className="text-right font-mono">{run.results_count}</TableCell>
+                    <TableCell className="text-sm">{new Date(run.started_at).toLocaleString()}</TableCell>
+                    <TableCell className="text-sm">{run.completed_at ? new Date(run.completed_at).toLocaleString() : '-'}</TableCell>
+                    <TableCell className="text-right font-mono">{(run.meta as { results_count?: number })?.results_count ?? 0}</TableCell>
                     <TableCell>
                       {run.status === 'completed' && (
                         <Button variant="ghost" size="sm">View Results</Button>
@@ -149,6 +177,7 @@ export function AllocationConsolePage() {
                 ))}
               </TableBody>
             </Table>
+            )}
           </Card>
         </TabsContent>
       </Tabs>
