@@ -41,6 +41,8 @@ import { CrmLayout } from './components/layouts/CrmLayout';
 import { CustomersPage, Account360Page, AccountSearchPage, RaConsolePage, DunningPage, ImportCenterPage } from './pages/crm';
 import { SourcesPage } from './pages/hydromet/SourcesPage';
 import { StationsPage } from './pages/hydromet/StationsPage';
+import { CostingLayout } from './components/layouts/CostingLayout';
+import { BudgetListPage, BudgetDetailPage, AllocationConsolePage, CostToServeDashboard, GlAccountsPage, CostCentersPage } from './pages/costing';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -289,6 +291,44 @@ export function AppMIS() {
                   <StationsPage />
                 </ProtectedRoute>
               } />
+              
+              <Route path="/costing" element={
+                <ProtectedRoute>
+                  <CostingLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/costing/budgets" replace />} />
+                <Route path="budgets" element={
+                  <ProtectedRoute requiredPermission="view budgets">
+                    <BudgetListPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="budgets/:id" element={
+                  <ProtectedRoute requiredPermission="view budgets">
+                    <BudgetDetailPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="allocations" element={
+                  <ProtectedRoute requiredPermission="view allocations">
+                    <AllocationConsolePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="cost-to-serve" element={
+                  <ProtectedRoute requiredPermission="view cost to serve">
+                    <CostToServeDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="gl-accounts" element={
+                  <ProtectedRoute requiredPermission="view budgets">
+                    <GlAccountsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="cost-centers" element={
+                  <ProtectedRoute requiredPermission="view budgets">
+                    <CostCentersPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
               
               <Route path="*" element={<NotFound />} />
             </Routes>
