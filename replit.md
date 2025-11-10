@@ -9,11 +9,12 @@ Key capabilities include:
 - Shift management and event handling for field operations.
 - Water quality monitoring and compliance dashboards.
 - **Module 07 COMPLETE**: Production-ready CRM and Revenue Assurance backend with billing, payments, fraud detection, dunning workflows, AND full-featured frontend with 6 pages (Customers, Account360, AccountSearch, RA Console, Dunning, Import Center).
+- **Module 08 COMPLETE**: Production-ready Hydro-Meteorological & Water Sources module with 2 frontend pages (Sources Registry, Stations Registry) featuring MapLibre GL integration, PostGIS location pickers, and sensor management.
 
 # Recent Changes
 
-## Module 08: Hydro-Meteorological & Water Sources - Backend & Service Layer (November 2025)
-- **COMPLETE**: Production-ready backend with Laravel models, services, controllers, validation, and React service layer
+## Module 08: Hydro-Meteorological & Water Sources - COMPLETE (November 2025)
+- **COMPLETE**: Full-stack production-ready module with backend, service layer, AND frontend pages
 - **Database Layer**: All Laravel migrations (4 files, 20+ tables) successfully deployed with PostGIS support
   - Sources Registry: source_kinds, source_statuses, quality_risk_levels lookups; sources table with PostGIS Point
   - Stations & Sensors: hydromet_stations with PostGIS Point; station_types, sensor_types, sensor_statuses lookups; hydromet_sensors table
@@ -30,8 +31,14 @@ Key capabilities include:
   - hydrometService: CRUD operations for sources, stations, and sensors; spatial queries; abstraction logging
   - Query hooks with proper caching, invalidation, and enabled/disabled control
   - Mutation hooks with automatic query invalidation on success
-- **RBAC Integration**: All routes protected with permission middleware (view/create/edit/delete for sources, stations, sensors; log abstraction permission)
-- **Status**: Backend and service layer production-ready; frontend pages (Sources Registry, Stations Registry) pending implementation
+- **Frontend Pages**: 2 production-ready pages with full GIS integration
+  - **Sources Registry** (`/hydromet/sources`): List view with collapsible MapLibre GL map, search/filters, CRUD dialogs with PostGIS location picker
+  - **Stations Registry** (`/hydromet/stations`): List view with collapsible map, activation/deactivation, sensor management dialog
+- **Map Components**: Reusable GIS components with zero-coordinate handling
+  - **HydrometMap**: GeoJSON layer rendering, interactive selection, status-based color coding
+  - **LocationPicker**: Click-to-place marker, manual coordinate input, equator/prime meridian support (lat/lon=0 bug fix)
+- **RBAC Integration**: All routes protected with permission middleware (view/create/edit/delete for sources, stations, sensors)
+- **Known Limitation**: Lookup dropdowns use hard-coded values matching migration seed data; API endpoints for dynamic lookups planned as future enhancement
 
 ## Module 07: CRM & Revenue Assurance Frontend (November 2025)
 - **Customers Page**: Search, filters, sortable table with customer data and quick actions
@@ -106,6 +113,7 @@ The MIS operates with two simultaneously running servers:
 - **State Management**: Zustand for game state, TanStack Query for server state and caching.
 - **Routing**: React Router with protected routes, nested layouts for module navigation.
 - **CRM Module**: 6 production-ready pages with comprehensive error handling, loading states, and defensive rendering.
+- **Hydromet Module**: 2 production-ready pages with MapLibre GL maps, PostGIS location pickers, sensor management, and spatial data visualization.
 - **Data Patterns**: Per-field null coalescing for API payloads, per-component loading states, optimistic UI updates.
 - **Accessibility**: Colorblind-friendly palette, adjustable font sizes, keyboard navigation, ARIA labels, WCAG compliance focus.
 
