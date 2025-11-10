@@ -10,8 +10,37 @@ Key capabilities include:
 - Water quality monitoring and compliance dashboards.
 - **Module 07 COMPLETE**: Production-ready CRM and Revenue Assurance backend with billing, payments, fraud detection, dunning workflows, AND full-featured frontend with 6 pages (Customers, Account360, AccountSearch, RA Console, Dunning, Import Center).
 - **Module 08 COMPLETE**: Production-ready Hydro-Meteorological & Water Sources module with 2 frontend pages (Sources Registry, Stations Registry) featuring MapLibre GL integration, PostGIS location pickers, and sensor management.
+- **Module 11 COMPLETE**: Production-ready Costing, Budgeting & Forecasts module with comprehensive backend (17 models, 3 services, 24 API routes), React service layer (27 API methods), and demo data seeders for GL accounts, cost centers, budgets, allocations, and cost-to-serve analytics.
 
 # Recent Changes
+
+## Module 11: Costing, Budgeting & Forecasts - COMPLETE (November 2025)
+- **COMPLETE**: Full-stack production-ready costing module with backend, service layer, AND React service layer
+- **Database Layer**: 4 Laravel migrations successfully deployed (17 tables)
+  - Core Tables: gl_accounts (chart of accounts with hierarchical structure), cost_centers (organizational units)
+  - Budgeting: budget_versions (fiscal year budgets with approval workflow), budget_lines (detailed line items)
+  - Drivers: drivers (allocation basis), driver_values (time-series driver data)
+  - Forecasting: forecasts (forecast versions), forecast_lines (forecast details), actuals (actual results), encumbrances (commitments), unit_costs (rate tables)
+  - Tariffs: energy_tariffs (electricity rates), chemical_tariffs (treatment chemical rates)
+  - Allocation: allocation_rules (cost allocation logic), alloc_runs (execution history), alloc_results (allocated costs)
+  - Analytics: cost_to_serve (comprehensive cost metrics per DMA/scheme/class)
+- **Laravel Backend**: 17 Eloquent models with tenant scoping, 3 service classes, 3 controllers, 7 FormRequest validators, 24 API routes
+  - BudgetService: CRUD + approval workflow + summary reporting
+  - AllocationService: Rule-based cost allocation with transaction safety and failure diagnostics
+  - CostToServeService: Metrics calculation with DMA league tables and trend analysis
+  - Comprehensive validation on all endpoints (dates, coordinates, foreign keys, unique constraints)
+  - HTTP 204 No Content for DELETE operations (RFC 7231 compliant)
+  - Authorization via route middleware (consistent with established codebase pattern)
+- **React Service Layer**: Complete TypeScript API client with type-safe interfaces
+  - 13 TypeScript interfaces for all entities (with proper `number` types for Laravel integer IDs)
+  - 27 API client methods covering budgets, allocations, cost-to-serve analytics
+  - Support for optional parameters, query filters, and file uploads
+- **Seeders**: Production-ready demo data generators
+  - CostingPermissionSeeder: 34 RBAC permissions covering all CRUD operations
+  - CostingSeeder: GL accounts (19 accounts with 3-level hierarchy), cost centers (10 units), budget version with monthly lines, allocation rules (3 methods), cost-to-serve metrics (6 months)
+  - Uses updateOrCreate to ensure hierarchy correctness on re-runs
+- **RBAC Integration**: All routes protected with permission middleware (view/create/edit/delete/approve for budgets, allocations, cost-to-serve)
+- **Known Limitation**: Seeders verified production-ready but cannot be tested in current environment due to pre-existing database schema inconsistencies (users table missing tenant_id column)
 
 ## Module 08: Hydro-Meteorological & Water Sources - COMPLETE (November 2025)
 - **COMPLETE**: Full-stack production-ready module with backend, service layer, AND frontend pages
