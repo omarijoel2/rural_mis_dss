@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\Crm\DunningController;
 use App\Http\Controllers\Api\Crm\ImportController;
 use App\Http\Controllers\Api\Crm\InteractionController;
 use App\Http\Controllers\Api\Crm\ComplaintController;
+use App\Http\Controllers\Api\Hydromet\SourceController;
+use App\Http\Controllers\Api\Hydromet\StationController;
 use App\Http\Controllers\Api\ZoneController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -391,6 +393,40 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
             Route::get('/{id}', [ComplaintController::class, 'show'])->middleware('permission:view complaints');
             Route::patch('/{id}', [ComplaintController::class, 'update'])->middleware('permission:assign complaints');
             Route::put('/{id}', [ComplaintController::class, 'update'])->middleware('permission:assign complaints');
+        });
+    });
+
+    Route::prefix('hydromet')->group(function () {
+        Route::prefix('sources')->group(function () {
+            Route::get('/', [SourceController::class, 'index'])->middleware('permission:view sources');
+            Route::post('/', [SourceController::class, 'store'])->middleware('permission:create sources');
+            Route::get('/nearby', [SourceController::class, 'nearby'])->middleware('permission:view sources');
+            Route::get('/in-bounds', [SourceController::class, 'inBounds'])->middleware('permission:view sources');
+            Route::get('/{id}', [SourceController::class, 'show'])->middleware('permission:view sources');
+            Route::patch('/{id}', [SourceController::class, 'update'])->middleware('permission:edit sources');
+            Route::put('/{id}', [SourceController::class, 'update'])->middleware('permission:edit sources');
+            Route::delete('/{id}', [SourceController::class, 'destroy'])->middleware('permission:delete sources');
+            Route::post('/{id}/abstraction', [SourceController::class, 'logAbstraction'])->middleware('permission:log abstraction');
+            Route::get('/{id}/abstraction/history', [SourceController::class, 'abstractionHistory'])->middleware('permission:view sources');
+            Route::get('/{id}/abstraction/total', [SourceController::class, 'totalAbstraction'])->middleware('permission:view sources');
+        });
+
+        Route::prefix('stations')->group(function () {
+            Route::get('/', [StationController::class, 'index'])->middleware('permission:view stations');
+            Route::post('/', [StationController::class, 'store'])->middleware('permission:create stations');
+            Route::get('/nearby', [StationController::class, 'nearby'])->middleware('permission:view stations');
+            Route::get('/in-bounds', [StationController::class, 'inBounds'])->middleware('permission:view stations');
+            Route::get('/{id}', [StationController::class, 'show'])->middleware('permission:view stations');
+            Route::patch('/{id}', [StationController::class, 'update'])->middleware('permission:edit stations');
+            Route::put('/{id}', [StationController::class, 'update'])->middleware('permission:edit stations');
+            Route::delete('/{id}', [StationController::class, 'destroy'])->middleware('permission:delete stations');
+            Route::post('/{id}/activate', [StationController::class, 'activate'])->middleware('permission:edit stations');
+            Route::post('/{id}/deactivate', [StationController::class, 'deactivate'])->middleware('permission:edit stations');
+            Route::get('/{id}/sensors', [StationController::class, 'sensors'])->middleware('permission:view sensors');
+            Route::post('/{id}/sensors', [StationController::class, 'addSensor'])->middleware('permission:create sensors');
+            Route::patch('/{stationId}/sensors/{sensorId}', [StationController::class, 'updateSensor'])->middleware('permission:edit sensors');
+            Route::put('/{stationId}/sensors/{sensorId}', [StationController::class, 'updateSensor'])->middleware('permission:edit sensors');
+            Route::delete('/{stationId}/sensors/{sensorId}', [StationController::class, 'deleteSensor'])->middleware('permission:delete sensors');
         });
     });
 });
