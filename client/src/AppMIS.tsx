@@ -39,6 +39,8 @@ import { ResultsPage } from './pages/water-quality/ResultsPage';
 import { CompliancePage } from './pages/water-quality/CompliancePage';
 import { CrmLayout } from './components/layouts/CrmLayout';
 import { CustomersPage, Account360Page, AccountSearchPage, RaConsolePage, DunningPage, ImportCenterPage } from './pages/crm';
+import { SourcesPage } from './pages/hydromet/SourcesPage';
+import { StationsPage } from './pages/hydromet/StationsPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -275,6 +277,18 @@ export function AppMIS() {
                   </ProtectedRoute>
                 } />
               </Route>
+              
+              <Route path="/hydromet/sources" element={
+                <ProtectedRoute requiredPermission="view sources">
+                  <SourcesPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/hydromet/stations" element={
+                <ProtectedRoute requiredPermission="view stations">
+                  <StationsPage />
+                </ProtectedRoute>
+              } />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

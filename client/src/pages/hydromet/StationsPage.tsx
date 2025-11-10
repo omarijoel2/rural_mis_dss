@@ -18,10 +18,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
-import { Search, Plus, MoreVertical, MapPin, Radio, Edit, Trash2, Power, PowerOff } from 'lucide-react';
+import { Search, Plus, MoreVertical, MapPin, Radio, Edit, Trash2, Power, PowerOff, Map as MapIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { StationFormDialog } from '../../components/hydromet/StationFormDialog';
 import { SensorManagementDialog } from '../../components/hydromet/SensorManagementDialog';
+import { HydrometMap } from '../../components/hydromet/HydrometMap';
 import type { HydrometStation } from '../../services/hydromet.service';
 
 export function StationsPage() {
@@ -30,6 +31,7 @@ export function StationsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [sensorManagementStation, setSensorManagementStation] = useState<HydrometStation | null>(null);
+  const [showMap, setShowMap] = useState(true);
 
   const { data: stationsData, isLoading } = useHydrometStations({ search, per_page: 100 });
   const deleteMutation = useDeleteStation();
@@ -104,6 +106,25 @@ export function StationsPage() {
         </Button>
       </div>
 
+      {showMap && stations.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Stations Map</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HydrometMap
+              stations={stations}
+              selectedId={selectedStation?.id}
+              onSelect={(id) => {
+                const station = stations.find(s => s.id === id);
+                if (station) setSelectedStation(station);
+              }}
+              height="400px"
+            />
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
@@ -116,6 +137,14 @@ export function StationsPage() {
                 className="pl-10"
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMap(!showMap)}
+            >
+              <MapIcon className="mr-2 h-4 w-4" />
+              {showMap ? 'Hide' : 'Show'} Map
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { toast } from 'sonner';
+import { LocationPicker } from './LocationPicker';
 import type { Source, CreateSourceData } from '../../services/hydromet.service';
 
 interface SourceFormDialogProps {
@@ -229,30 +230,13 @@ export function SourceFormDialog({ open, onClose, source, isCreating }: SourceFo
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude</Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="0.000001"
-                value={formData.latitude || ''}
-                onChange={(e) => setFormData({ ...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined })}
-                placeholder="-1.286389"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude</Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="0.000001"
-                value={formData.longitude || ''}
-                onChange={(e) => setFormData({ ...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined })}
-                placeholder="36.817223"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Location (PostGIS)</Label>
+            <LocationPicker
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onLocationChange={(lat, lon) => setFormData({ ...formData, latitude: lat, longitude: lon })}
+            />
           </div>
 
           <DialogFooter>
