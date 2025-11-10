@@ -18,9 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
-import { Search, Plus, MoreVertical, MapPin, Droplets, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, MoreVertical, MapPin, Droplets, Edit, Trash2, Map as MapIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { SourceFormDialog } from '../../components/hydromet/SourceFormDialog';
+import { HydrometMap } from '../../components/hydromet/HydrometMap';
 import type { Source } from '../../services/hydromet.service';
 
 export function SourcesPage() {
@@ -28,6 +29,7 @@ export function SourcesPage() {
   const [selectedSource, setSelectedSource] = useState<Source | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [showMap, setShowMap] = useState(true);
 
   const { data: sourcesData, isLoading } = useHydrometSources({ search, per_page: 100 });
   const deleteMutation = useDeleteSource();
@@ -106,6 +108,25 @@ export function SourcesPage() {
         </Button>
       </div>
 
+      {showMap && sources.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Sources Map</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HydrometMap
+              sources={sources}
+              selectedId={selectedSource?.id}
+              onSelect={(id) => {
+                const source = sources.find(s => s.id === id);
+                if (source) setSelectedSource(source);
+              }}
+              height="400px"
+            />
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
@@ -118,6 +139,14 @@ export function SourcesPage() {
                 className="pl-10"
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMap(!showMap)}
+            >
+              <MapIcon className="mr-2 h-4 w-4" />
+              {showMap ? 'Hide' : 'Show'} Map
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

@@ -19,6 +19,7 @@ import {
 } from '../ui/select';
 import { Checkbox } from '../ui/checkbox';
 import { toast } from 'sonner';
+import { LocationPicker } from './LocationPicker';
 import type { HydrometStation, CreateStationData } from '../../services/hydromet.service';
 
 interface StationFormDialogProps {
@@ -174,30 +175,13 @@ export function StationFormDialog({ open, onClose, station, isCreating }: Statio
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude</Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="0.000001"
-                value={formData.latitude || ''}
-                onChange={(e) => setFormData({ ...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined })}
-                placeholder="-1.286389"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude</Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="0.000001"
-                value={formData.longitude || ''}
-                onChange={(e) => setFormData({ ...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined })}
-                placeholder="36.817223"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Location (PostGIS)</Label>
+            <LocationPicker
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onLocationChange={(lat, lon) => setFormData({ ...formData, latitude: lat, longitude: lon })}
+            />
           </div>
 
           <div className="flex items-center space-x-2">
