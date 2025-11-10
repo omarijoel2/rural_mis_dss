@@ -48,12 +48,15 @@ class Source extends Model
     protected static function booted()
     {
         static::addGlobalScope('tenant', function (Builder $query) {
-            if (auth()->check()) {
-                try {
-                    $query->where('tenant_id', auth()->user()->currentTenantId());
-                } catch (\RuntimeException $e) {
-                    $query->whereRaw('1 = 0');
-                }
+            if (!auth()->check()) {
+                $query->whereRaw('1 = 0');
+                return;
+            }
+
+            try {
+                $query->where('tenant_id', auth()->user()->currentTenantId());
+            } catch (\RuntimeException $e) {
+                $query->whereRaw('1 = 0');
             }
         });
     }
