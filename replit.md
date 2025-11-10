@@ -12,14 +12,26 @@ Key capabilities include:
 
 # Recent Changes
 
-## Module 08: Hydro-Meteorological & Water Sources - Database Layer (November 2025)
-- **COMPLETE**: All Module 08 Laravel migrations (4 files, 20+ tables) successfully deployed
-- **Sources Registry**: source_kinds, source_statuses, quality_risk_levels lookup tables; sources table with PostGIS Point geometry
-- **Stations & Sensors**: hydromet_stations with PostGIS Point; station_types, sensor_types, sensor_statuses lookups; hydromet_sensors table
-- **Timeseries Data**: Partitioned timeseries table with 13 monthly partitions (6 past + current + 6 future), BRIN/GIST indexes, quality_flags
-- **Forecasts & Indicators**: forecast_models, forecast_variables, drought_stages lookups; forecast_grids with BYTEA grid_data and PostGIS bbox; hydro_indicators with SPI metrics
-- **Migration Fixes**: Resolved ALL UUID foreign key type mismatches across CRM and Hydro-Met modules (tenant_id, scheme_id, dma_id, user references)
-- **Database Schema**: 39 migrations total (Core + Permissions + CMMS + Operations + WQ + CRM + Hydro-Met) all passing
+## Module 08: Hydro-Meteorological & Water Sources - Backend & Service Layer (November 2025)
+- **COMPLETE**: Production-ready backend with Laravel models, services, controllers, validation, and React service layer
+- **Database Layer**: All Laravel migrations (4 files, 20+ tables) successfully deployed with PostGIS support
+  - Sources Registry: source_kinds, source_statuses, quality_risk_levels lookups; sources table with PostGIS Point
+  - Stations & Sensors: hydromet_stations with PostGIS Point; station_types, sensor_types, sensor_statuses lookups; hydromet_sensors table
+  - Timeseries Data: Partitioned timeseries table with 13 monthly partitions (6 past + current + 6 future), BRIN/GIST indexes
+  - Forecasts & Indicators: forecast_models, forecast_variables, drought_stages lookups; forecast_grids with BYTEA grid_data and PostGIS bbox; hydro_indicators with SPI metrics
+  - Migration Fixes: Resolved ALL UUID foreign key type mismatches across CRM and Hydro-Met modules
+- **Laravel Backend**: 10 Eloquent models with secure tenant scoping, 2 service classes (SourceService, StationService), 2 API controllers, 6 FormRequest validation classes
+  - Comprehensive validation on all 24 endpoints (coordinates, dates, foreign keys, unique constraints)
+  - HTTP 204 No Content for DELETE operations (RFC 7231 compliant)
+  - Spatial queries (nearby, in-bounds) with validated coordinate bounds
+  - Abstraction logging with date range validation
+  - Station activation/deactivation and sensor management
+- **React Service Layer**: Complete TypeScript API client with 30+ interfaces, 24 API methods, 21 TanStack Query hooks
+  - hydrometService: CRUD operations for sources, stations, and sensors; spatial queries; abstraction logging
+  - Query hooks with proper caching, invalidation, and enabled/disabled control
+  - Mutation hooks with automatic query invalidation on success
+- **RBAC Integration**: All routes protected with permission middleware (view/create/edit/delete for sources, stations, sensors; log abstraction permission)
+- **Status**: Backend and service layer production-ready; frontend pages (Sources Registry, Stations Registry) pending implementation
 
 ## Module 07: CRM & Revenue Assurance Frontend (November 2025)
 - **Customers Page**: Search, filters, sortable table with customer data and quick actions
