@@ -55,5 +55,35 @@ export const workOrderService = {
     apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/start`),
 
   completeWorkOrder: (id: number, data: CompleteWorkOrderDto) =>
-    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/complete`, data)
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/complete`, data),
+
+  cancelWorkOrder: (id: number, notes?: string) =>
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/cancel`, { notes }),
+
+  approveWorkOrder: (id: number, notes?: string) =>
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/approve`, { notes }),
+
+  qaWorkOrder: (id: number, data: { result: 'pass' | 'fail'; notes?: string }) =>
+    apiClient.post<WorkOrder>(`${BASE_URL}/work-orders/${id}/qa`, data),
+
+  addChecklist: (id: number, data: { checklist: Array<{ step: string }> }) =>
+    apiClient.post(`${BASE_URL}/work-orders/${id}/checklist`, data),
+
+  updateChecklistItem: (itemId: number, data: { result: 'pass' | 'fail' | 'na'; notes?: string }) =>
+    apiClient.patch(`${BASE_URL}/work-orders/checklist-items/${itemId}`, data),
+
+  addAttachment: (id: number, data: FormData) =>
+    apiClient.post(`${BASE_URL}/work-orders/${id}/attachments`, data),
+
+  addAssignment: (id: number, data: { user_id: string; role: 'primary' | 'secondary' | 'supervisor' | 'observer' }) =>
+    apiClient.post(`${BASE_URL}/work-orders/${id}/assignments`, data),
+
+  addComment: (id: number, data: { comment: string }) =>
+    apiClient.post(`${BASE_URL}/work-orders/${id}/comments`, data),
+
+  getOverdue: () =>
+    apiClient.get<WorkOrder[]>(`${BASE_URL}/work-orders/overdue`),
+
+  getStats: () =>
+    apiClient.get<any>(`${BASE_URL}/work-orders/stats`)
 };
