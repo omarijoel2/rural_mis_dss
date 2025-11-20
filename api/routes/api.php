@@ -70,30 +70,30 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
     Route::apiResource('organizations', OrganizationController::class);
     
     Route::prefix('schemes')->group(function () {
-        Route::get('/', [SchemeController::class, 'index'])->middleware('permission:view schemes');
-        Route::post('/', [SchemeController::class, 'store'])->middleware('permission:create schemes');
-        Route::get('/{scheme}', [SchemeController::class, 'show'])->middleware('permission:view schemes');
-        Route::patch('/{scheme}', [SchemeController::class, 'update'])->middleware('permission:edit schemes');
-        Route::put('/{scheme}', [SchemeController::class, 'update'])->middleware('permission:edit schemes');
-        Route::delete('/{scheme}', [SchemeController::class, 'destroy'])->middleware('permission:delete schemes');
+        Route::get('/', [SchemeController::class, 'index']);
+        Route::post('/', [SchemeController::class, 'store']);
+        Route::get('/{scheme}', [SchemeController::class, 'show']);
+        Route::patch('/{scheme}', [SchemeController::class, 'update']);
+        Route::put('/{scheme}', [SchemeController::class, 'update']);
+        Route::delete('/{scheme}', [SchemeController::class, 'destroy']);
     });
     
     Route::prefix('facilities')->group(function () {
-        Route::get('/', [FacilityController::class, 'index'])->middleware('permission:view facilities');
-        Route::post('/', [FacilityController::class, 'store'])->middleware('permission:create facilities');
-        Route::get('/{facility}', [FacilityController::class, 'show'])->middleware('permission:view facilities');
-        Route::patch('/{facility}', [FacilityController::class, 'update'])->middleware('permission:edit facilities');
-        Route::put('/{facility}', [FacilityController::class, 'update'])->middleware('permission:edit facilities');
-        Route::delete('/{facility}', [FacilityController::class, 'destroy'])->middleware('permission:delete facilities');
+        Route::get('/', [FacilityController::class, 'index']);
+        Route::post('/', [FacilityController::class, 'store']);
+        Route::get('/{facility}', [FacilityController::class, 'show']);
+        Route::patch('/{facility}', [FacilityController::class, 'update']);
+        Route::put('/{facility}', [FacilityController::class, 'update']);
+        Route::delete('/{facility}', [FacilityController::class, 'destroy']);
     });
     
     Route::prefix('dmas')->group(function () {
-        Route::get('/', [DmaController::class, 'index'])->middleware('permission:view dmas');
-        Route::post('/', [DmaController::class, 'store'])->middleware('permission:create dmas');
-        Route::get('/{dma}', [DmaController::class, 'show'])->middleware('permission:view dmas');
-        Route::patch('/{dma}', [DmaController::class, 'update'])->middleware('permission:edit dmas');
-        Route::put('/{dma}', [DmaController::class, 'update'])->middleware('permission:edit dmas');
-        Route::delete('/{dma}', [DmaController::class, 'destroy'])->middleware('permission:delete dmas');
+        Route::get('/', [DmaController::class, 'index']);
+        Route::post('/', [DmaController::class, 'store']);
+        Route::get('/{dma}', [DmaController::class, 'show']);
+        Route::patch('/{dma}', [DmaController::class, 'update']);
+        Route::put('/{dma}', [DmaController::class, 'update']);
+        Route::delete('/{dma}', [DmaController::class, 'destroy']);
     });
     
     Route::apiResource('pipelines', PipelineController::class);
