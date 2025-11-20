@@ -6,6 +6,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { NetworkLayersPanel } from './NetworkLayersPanel';
+import { Layers } from 'lucide-react';
 
 interface MapLayer {
   id: string;
@@ -13,6 +16,7 @@ interface MapLayer {
   tileUrl: string;
   sourceLayer: string;
   type: 'fill' | 'circle' | 'line';
+  category: 'coverage' | 'infrastructure' | 'network';
   paint: any;
   minZoom?: number;
   maxZoom?: number;
@@ -45,6 +49,7 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'schemes',
     name: 'Water Supply Schemes',
+    category: 'coverage',
     tileUrl: '/api/v1/gis/tiles/schemes/{z}/{x}/{y}.mvt',
     sourceLayer: 'schemes',
     type: 'fill',
@@ -66,6 +71,7 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'dmas',
     name: 'District Metered Areas',
+    category: 'coverage',
     tileUrl: '/api/v1/gis/tiles/dmas/{z}/{x}/{y}.mvt',
     sourceLayer: 'dmas',
     type: 'fill',
@@ -87,6 +93,7 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'facilities',
     name: 'Facilities',
+    category: 'infrastructure',
     tileUrl: '/api/v1/gis/tiles/facilities/{z}/{x}/{y}.mvt',
     sourceLayer: 'facilities',
     type: 'circle',
@@ -110,6 +117,7 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'pipelines',
     name: 'Pipelines',
+    category: 'network',
     tileUrl: '/api/v1/gis/tiles/pipelines/{z}/{x}/{y}.mvt',
     sourceLayer: 'pipelines',
     type: 'line',
@@ -139,6 +147,7 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'network-nodes',
     name: 'Network Nodes',
+    category: 'network',
     tileUrl: '/api/v1/gis/tiles/network-nodes/{z}/{x}/{y}.mvt',
     sourceLayer: 'network_nodes',
     type: 'circle',
@@ -186,6 +195,10 @@ export function MapConsole({ className }: MapConsoleProps) {
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(
     new Set(['schemes', 'dmas', 'facilities', 'pipelines'])
   );
+  const [showLayersPanel, setShowLayersPanel] = useState(false);
+  const [layerOpacity, setLayerOpacity] = useState(80);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const toggleLayer = useCallback((layerId: string) => {
     setEnabledLayers((prev) => {
@@ -197,6 +210,18 @@ export function MapConsole({ className }: MapConsoleProps) {
       }
       return next;
     });
+  }, []);
+
+  const handleCategoryFilterChange = useCallback((category: string) => {
+    setCategoryFilter(category);
+    if (category === 'all') {
+      setEnabledLayers(new Set(['schemes', 'dmas', 'facilities', 'pipelines']));
+    } else {
+      const categoryLayers = MAP_LAYERS
+        .filter(layer => layer.category === category)
+        .map(layer => layer.id);
+      setEnabledLayers(new Set(categoryLayers));
+    }
   }, []);
 
   const selectedBasemap = BASEMAP_STYLES.find((style) => style.id === basemapId) || BASEMAP_STYLES[0];
@@ -215,6 +240,17 @@ export function MapConsole({ className }: MapConsoleProps) {
 
         {MAP_LAYERS.map((layer) => {
           if (!enabledLayers.has(layer.id)) return null;
+          if (categoryFilter !== 'all' && layer.category !== categoryFilter) return null;
+
+          const adjustedPaint = { ...layer.paint };
+          
+          if (layer.type === 'fill') {
+            adjustedPaint['fill-opacity'] = (layer.paint['fill-opacity'] || 0.6) * (layerOpacity / 100);
+          } else if (layer.type === 'circle') {
+            adjustedPaint['circle-opacity'] = layerOpacity / 100;
+          } else if (layer.type === 'line') {
+            adjustedPaint['line-opacity'] = (layer.paint['line-opacity'] || 0.8) * (layerOpacity / 100);
+          }
 
           return (
             <Source
@@ -229,7 +265,8 @@ export function MapConsole({ className }: MapConsoleProps) {
                 id={layer.id}
                 source-layer={layer.sourceLayer}
                 type={layer.type}
-                paint={layer.paint}
+                paint={adjustedPaint}
+                filter={statusFilter !== 'all' ? ['==', ['get', 'status'], statusFilter] : undefined}
               />
             </Source>
           );
@@ -256,49 +293,53 @@ export function MapConsole({ className }: MapConsoleProps) {
             </Select>
           </div>
 
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Layers</h4>
-            <Badge variant="outline" className="text-xs">Vector Tiles</Badge>
-          </div>
-          <div className="space-y-3">
-            {MAP_LAYERS.map((layer) => {
-              return (
-                <div key={layer.id} className="flex items-center justify-between">
-                  <Label
-                    htmlFor={`layer-${layer.id}`}
-                    className="text-sm cursor-pointer text-gray-700 dark:text-gray-300"
-                  >
-                    {layer.name}
-                  </Label>
-                  <Switch
-                    id={`layer-${layer.id}`}
-                    checked={enabledLayers.has(layer.id)}
-                    onCheckedChange={() => toggleLayer(layer.id)}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowLayersPanel(!showLayersPanel)}
+          >
+            <Layers className="w-4 h-4 mr-2" />
+            {showLayersPanel ? 'Hide' : 'Show'} Network Layers
+          </Button>
 
           <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <h4 className="text-xs font-semibold mb-2 text-gray-600 dark:text-gray-400">Legend</h4>
-            <div className="space-y-1 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
-                <span className="text-gray-700 dark:text-gray-300">Active</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
-                <span className="text-gray-700 dark:text-gray-300">Planning/Treatment</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-                <span className="text-gray-700 dark:text-gray-300">Pump Station</span>
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400">Quick Layers</h4>
+              <Badge variant="outline" className="text-xs">Vector Tiles</Badge>
+            </div>
+            <div className="space-y-2">
+              {MAP_LAYERS.slice(0, 3).map((layer) => {
+                return (
+                  <div key={layer.id} className="flex items-center justify-between">
+                    <Label
+                      htmlFor={`quick-layer-${layer.id}`}
+                      className="text-xs cursor-pointer text-gray-700 dark:text-gray-300"
+                    >
+                      {layer.name}
+                    </Label>
+                    <Switch
+                      id={`quick-layer-${layer.id}`}
+                      checked={enabledLayers.has(layer.id)}
+                      onCheckedChange={() => toggleLayer(layer.id)}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {showLayersPanel && (
+        <NetworkLayersPanel
+          enabledLayers={enabledLayers}
+          onLayerToggle={toggleLayer}
+          onStatusFilterChange={setStatusFilter}
+          onCategoryFilterChange={handleCategoryFilterChange}
+          onOpacityChange={setLayerOpacity}
+          className="absolute top-4 left-72"
+        />
+      )}
     </div>
   );
 }
