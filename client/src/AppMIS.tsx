@@ -104,6 +104,8 @@ import { OutagePlanner } from './pages/core-ops/OutagePlanner';
 import { NRWDashboard } from './pages/core-ops/NRWDashboard';
 import { DosingControl } from './pages/core-ops/DosingControl';
 import { PumpScheduling } from './pages/core-ops/PumpScheduling';
+import { TrainingLayout } from './components/layouts/TrainingLayout';
+import { CourseCatalog, MyLearning, KnowledgeBase, SopsPage, SkillsMatrix, CertificatesPage } from './pages/training';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -706,6 +708,20 @@ export function AppMIS() {
                     <CommunicationTemplates />
                   </ProtectedRoute>
                 } />
+              </Route>
+              
+              <Route path="/training" element={
+                <ProtectedRoute>
+                  <TrainingLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/training/courses" replace />} />
+                <Route path="courses" element={<CourseCatalog />} />
+                <Route path="my-learning" element={<MyLearning />} />
+                <Route path="kb" element={<KnowledgeBase />} />
+                <Route path="sops" element={<SopsPage />} />
+                <Route path="skills" element={<SkillsMatrix />} />
+                <Route path="certificates" element={<CertificatesPage />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />

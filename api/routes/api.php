@@ -666,6 +666,58 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // Training & Knowledge Hub
+    Route::prefix('training')->middleware(['auth:sanctum'])->group(function () {
+        // Courses
+        Route::get('/courses', [\App\Http\Controllers\Api\Training\CourseController::class, 'index']);
+        Route::post('/courses', [\App\Http\Controllers\Api\Training\CourseController::class, 'store'])->middleware('permission:create courses');
+        Route::get('/courses/{course}', [\App\Http\Controllers\Api\Training\CourseController::class, 'show']);
+        Route::patch('/courses/{course}', [\App\Http\Controllers\Api\Training\CourseController::class, 'update'])->middleware('permission:edit courses');
+        Route::delete('/courses/{course}', [\App\Http\Controllers\Api\Training\CourseController::class, 'destroy'])->middleware('permission:delete courses');
+        Route::post('/courses/{course}/publish', [\App\Http\Controllers\Api\Training\CourseController::class, 'publish'])->middleware('permission:publish courses');
+        Route::get('/courses/{course}/statistics', [\App\Http\Controllers\Api\Training\CourseController::class, 'statistics']);
+
+        // Enrollments
+        Route::get('/enrollments', [\App\Http\Controllers\Api\Training\EnrollmentController::class, 'index'])->middleware('permission:view enrollments');
+        Route::post('/enrollments', [\App\Http\Controllers\Api\Training\EnrollmentController::class, 'store'])->middleware('permission:enroll in courses');
+        Route::get('/enrollments/{enrollment}', [\App\Http\Controllers\Api\Training\EnrollmentController::class, 'show']);
+        Route::post('/enrollments/{enrollment}/progress', [\App\Http\Controllers\Api\Training\EnrollmentController::class, 'updateProgress'])->middleware('permission:update progress');
+        Route::post('/enrollments/{enrollment}/withdraw', [\App\Http\Controllers\Api\Training\EnrollmentController::class, 'withdraw'])->middleware('permission:withdraw from courses');
+        Route::get('/my-enrollments', [\App\Http\Controllers\Api\Training\EnrollmentController::class, 'myEnrollments']);
+
+        // Knowledge Base
+        Route::get('/kb', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'index']);
+        Route::post('/kb', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'store'])->middleware('permission:create kb articles');
+        Route::get('/kb/categories', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'categories']);
+        Route::get('/kb/popular', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'popularArticles']);
+        Route::get('/kb/{kbArticle}', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'show']);
+        Route::patch('/kb/{kbArticle}', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'update'])->middleware('permission:edit kb articles');
+        Route::delete('/kb/{kbArticle}', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'destroy'])->middleware('permission:delete kb articles');
+        Route::post('/kb/{kbArticle}/publish', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'publish'])->middleware('permission:publish kb articles');
+        Route::post('/kb/{kbArticle}/helpful', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'markHelpful'])->middleware('permission:vote on kb articles');
+        Route::post('/kb/{kbArticle}/not-helpful', [\App\Http\Controllers\Api\Training\KnowledgeBaseController::class, 'markNotHelpful'])->middleware('permission:vote on kb articles');
+
+        // SOPs
+        Route::get('/sops', [\App\Http\Controllers\Api\Training\SopController::class, 'index']);
+        Route::post('/sops', [\App\Http\Controllers\Api\Training\SopController::class, 'store'])->middleware('permission:create sops');
+        Route::get('/sops/due-review', [\App\Http\Controllers\Api\Training\SopController::class, 'dueForReview'])->middleware('permission:review sops');
+        Route::get('/sops/{sop}', [\App\Http\Controllers\Api\Training\SopController::class, 'show']);
+        Route::patch('/sops/{sop}', [\App\Http\Controllers\Api\Training\SopController::class, 'update'])->middleware('permission:edit sops');
+        Route::delete('/sops/{sop}', [\App\Http\Controllers\Api\Training\SopController::class, 'destroy'])->middleware('permission:delete sops');
+        Route::post('/sops/{sop}/publish', [\App\Http\Controllers\Api\Training\SopController::class, 'publish'])->middleware('permission:publish sops');
+        Route::post('/sops/{sop}/attest', [\App\Http\Controllers\Api\Training\SopController::class, 'attest'])->middleware('permission:attest sops');
+
+        // Skills
+        Route::get('/skills', [\App\Http\Controllers\Api\Training\SkillController::class, 'index']);
+        Route::post('/skills', [\App\Http\Controllers\Api\Training\SkillController::class, 'store'])->middleware('permission:create skills');
+        Route::get('/skills/matrix', [\App\Http\Controllers\Api\Training\SkillController::class, 'skillsMatrix'])->middleware('permission:view skills matrix');
+        Route::get('/skills/{skill}', [\App\Http\Controllers\Api\Training\SkillController::class, 'show']);
+        Route::patch('/skills/{skill}', [\App\Http\Controllers\Api\Training\SkillController::class, 'update'])->middleware('permission:edit skills');
+        Route::delete('/skills/{skill}', [\App\Http\Controllers\Api\Training\SkillController::class, 'destroy'])->middleware('permission:delete skills');
+        Route::post('/skills/assess', [\App\Http\Controllers\Api\Training\SkillController::class, 'assessEmployee'])->middleware('permission:assess employee skills');
+        Route::get('/employee-skills', [\App\Http\Controllers\Api\Training\SkillController::class, 'employeeSkills']);
+    });
+
     // Core Operations & Network Management
     Route::prefix('core-ops')->middleware(['core_ops.monitor', 'auth:sanctum'])->group(function () {
         // Network Topology
