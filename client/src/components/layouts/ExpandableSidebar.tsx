@@ -1,4 +1,5 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { 
   Calculator, 
@@ -220,10 +221,26 @@ const moduleNavigation = [
       { name: 'Communication Templates', href: '/integration/comms', icon: Settings },
     ]
   },
+  {
+    name: 'Training & Knowledge',
+    href: '/training',
+    icon: FileText,
+    color: 'text-amber-500',
+    subPages: [
+      { name: 'Course Catalog', href: '/training/courses', icon: FileText },
+      { name: 'My Learning', href: '/training/my-learning', icon: Activity },
+      { name: 'Knowledge Base', href: '/training/kb', icon: Database },
+      { name: 'SOPs', href: '/training/sops', icon: ClipboardList },
+      { name: 'Skills Matrix', href: '/training/skills', icon: Target },
+      { name: 'Certificates', href: '/training/certificates', icon: Shield },
+    ]
+  },
 ];
 
 export function ExpandableSidebar() {
   const location = useLocation();
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [isCompactMode, setIsCompactMode] = useState(false);
   
   const getActiveModule = () => {
     const basePath = '/' + location.pathname.split('/')[1];
@@ -231,6 +248,48 @@ export function ExpandableSidebar() {
   };
 
   const activeModule = getActiveModule();
+
+  useEffect(() => {
+    const checkViewportHeight = () => {
+      const height = window.innerHeight;
+      const shouldBeCompact = height < 800;
+      setIsCompactMode(shouldBeCompact);
+      
+      if (shouldBeCompact && activeModule) {
+        setExpandedModules(new Set([activeModule.name]));
+      } else if (!shouldBeCompact && activeModule) {
+        setExpandedModules(new Set([activeModule.name]));
+      }
+    };
+
+    checkViewportHeight();
+
+    let timeoutId: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkViewportHeight, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
+  }, [activeModule]);
+
+  const toggleModule = (moduleName: string) => {
+    if (isCompactMode) {
+      setExpandedModules(new Set([moduleName]));
+    } else {
+      const newExpanded = new Set(expandedModules);
+      if (newExpanded.has(moduleName)) {
+        newExpanded.delete(moduleName);
+      } else {
+        newExpanded.add(moduleName);
+      }
+      setExpandedModules(newExpanded);
+    }
+  };
 
   return (
     <aside className="w-64 bg-card border-r overflow-y-auto">
@@ -252,31 +311,44 @@ export function ExpandableSidebar() {
         {moduleNavigation.map((module) => {
           const isActive = activeModule?.href === module.href;
           const hasSubPages = module.subPages.length > 0;
+          const isExpanded = expandedModules.has(module.name);
+          const shouldShowSubPages = hasSubPages && isExpanded;
           
           return (
             <div key={module.name}>
               {/* Module Main Link */}
-              <Link
-                to={module.subPages[0]?.href || module.href}
+              <button
+                onClick={(e) => {
+                  if (hasSubPages) {
+                    e.preventDefault();
+                    toggleModule(module.name);
+                  }
+                }}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
+                  'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 )}
+                aria-expanded={shouldShowSubPages}
+                aria-label={`${module.name} ${hasSubPages ? (isExpanded ? 'expanded' : 'collapsed') : ''}`}
               >
                 <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
-                <span className="flex-1">{module.name}</span>
+                <span className="flex-1 text-left">{module.name}</span>
                 {hasSubPages && (
-                  isActive 
+                  isExpanded 
                     ? <ChevronDown className="h-4 w-4" />
                     : <ChevronRight className="h-4 w-4" />
                 )}
-              </Link>
+              </button>
 
-              {/* Sub-pages (only shown when module is active) */}
-              {isActive && hasSubPages && (
-                <div className="mt-1 ml-6 space-y-0.5">
+              {/* Sub-pages (only shown when expanded) */}
+              {shouldShowSubPages && (
+                <div 
+                  className="mt-1 ml-6 space-y-0.5 animate-in slide-in-from-top-2 duration-200"
+                  role="group"
+                  aria-label={`${module.name} submenu`}
+                >
                   {module.subPages.map((subPage) => {
                     const SubPageIcon = 'icon' in subPage ? subPage.icon : null;
                     return (
@@ -303,6 +375,13 @@ export function ExpandableSidebar() {
           );
         })}
       </nav>
+      
+      {/* Compact Mode Indicator (for debugging, can be removed) */}
+      {isCompactMode && (
+        <div className="px-3 py-2 text-xs text-muted-foreground bg-muted/50 border-t">
+          <p className="leading-tight">Compact mode active - single section expanded</p>
+        </div>
+      )}
     </aside>
   );
 }
