@@ -96,6 +96,14 @@ import { GRMConsole } from './pages/community/GRMConsole';
 import { OpenDataCatalog } from './pages/community/OpenDataCatalog';
 import { DatasetBuilder } from './pages/community/DatasetBuilder';
 import { PublicMaps } from './pages/community/PublicMaps';
+import { CoreOpsLayout } from './components/layouts/CoreOpsLayout';
+import { OperationsConsole } from './pages/core-ops/OperationsConsole';
+import { TopologyViewer } from './pages/core-ops/TopologyViewer';
+import { TelemetryDashboard } from './pages/core-ops/TelemetryDashboard';
+import { OutagePlanner } from './pages/core-ops/OutagePlanner';
+import { NRWDashboard } from './pages/core-ops/NRWDashboard';
+import { DosingControl } from './pages/core-ops/DosingControl';
+import { PumpScheduling } from './pages/core-ops/PumpScheduling';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -577,6 +585,49 @@ export function AppMIS() {
                 <Route path="public-maps" element={
                   <ProtectedRoute>
                     <PublicMaps />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/core-ops" element={
+                <ProtectedRoute>
+                  <CoreOpsLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/core-ops/console" replace />} />
+                <Route path="console" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_operations">
+                    <OperationsConsole />
+                  </ProtectedRoute>
+                } />
+                <Route path="topology" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_topology">
+                    <TopologyViewer />
+                  </ProtectedRoute>
+                } />
+                <Route path="telemetry" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_telemetry">
+                    <TelemetryDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="outages" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_outages">
+                    <OutagePlanner />
+                  </ProtectedRoute>
+                } />
+                <Route path="nrw" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_nrw">
+                    <NRWDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="dosing" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_dosing">
+                    <DosingControl />
+                  </ProtectedRoute>
+                } />
+                <Route path="scheduling" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_scheduling">
+                    <PumpScheduling />
                   </ProtectedRoute>
                 } />
               </Route>

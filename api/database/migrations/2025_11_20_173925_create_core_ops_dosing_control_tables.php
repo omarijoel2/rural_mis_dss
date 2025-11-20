@@ -13,7 +13,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->foreignUuid('scheme_id')->constrained('schemes')->cascadeOnDelete();
-            $table->foreignUuid('asset_id')->nullable()->constrained('assets')->nullOnDelete(); // Chlorinator/booster asset
+            $table->foreignId('asset_id')->nullable()->constrained('assets')->nullOnDelete(); // Chlorinator/booster asset
             $table->string('chemical')->nullable(); // e.g., chlorine, alum, polymer
             $table->jsonb('flow_bands')->nullable(); // [{min_lps, max_lps, target_mg_l}] for different flow rates
             $table->jsonb('thresholds')->nullable(); // {alarm_lo, alarm_hi} residual thresholds
