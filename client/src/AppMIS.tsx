@@ -49,6 +49,8 @@ import { ProjectsLayout } from './components/layouts/ProjectsLayout';
 import { ProjectsHome } from './pages/projects/ProjectsHome';
 import { AdminLayout } from './components/layouts/AdminLayout';
 import { IntegrationLayout } from './components/layouts/IntegrationLayout';
+import { MELayout } from './components/layouts/MELayout';
+import { CustomerLayout } from './components/layouts/CustomerLayout';
 import { UsersManagement } from './pages/admin/UsersManagement';
 import { RolesPermissions } from './pages/admin/rbac/RolesPermissions';
 import { PermissionMatrix } from './pages/admin/rbac/PermissionMatrix';
@@ -59,6 +61,19 @@ import { WebhookManager } from './pages/integration/WebhookManager';
 import { ETLJobs } from './pages/integration/ETLJobs';
 import { DataWarehouse } from './pages/integration/DataWarehouse';
 import { CommunicationTemplates } from './pages/integration/CommunicationTemplates';
+import { KPIDashboard } from './pages/me/KPIDashboard';
+import { CoverageAnalytics } from './pages/me/CoverageAnalytics';
+import { NRWTracker } from './pages/me/NRWTracker';
+import { CXAnalytics } from './pages/me/CXAnalytics';
+import { ResultsFramework } from './pages/me/ResultsFramework';
+import { Tariffs } from './pages/customer/Tariffs';
+import { BillingRuns } from './pages/customer/BillingRuns';
+import { PaymentReconciliation } from './pages/customer/PaymentReconciliation';
+import { MeterRoutes } from './pages/customer/MeterRoutes';
+import { Tickets } from './pages/customer/Tickets';
+import { Kiosks } from './pages/customer/Kiosks';
+import { WaterTrucking } from './pages/customer/WaterTrucking';
+import { Connections } from './pages/customer/Connections';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -356,6 +371,87 @@ export function AppMIS() {
                 <Route path="cost-centers" element={
                   <ProtectedRoute requiredPermission="view budgets">
                     <CostCentersPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/me" element={
+                <ProtectedRoute>
+                  <MELayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/me/kpis" replace />} />
+                <Route path="kpis" element={
+                  <ProtectedRoute>
+                    <KPIDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="coverage" element={
+                  <ProtectedRoute>
+                    <CoverageAnalytics />
+                  </ProtectedRoute>
+                } />
+                <Route path="nrw" element={
+                  <ProtectedRoute>
+                    <NRWTracker />
+                  </ProtectedRoute>
+                } />
+                <Route path="cx" element={
+                  <ProtectedRoute>
+                    <CXAnalytics />
+                  </ProtectedRoute>
+                } />
+                <Route path="indicators" element={
+                  <ProtectedRoute>
+                    <ResultsFramework />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/customer" element={
+                <ProtectedRoute>
+                  <CustomerLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/customer/tariffs" replace />} />
+                <Route path="tariffs" element={
+                  <ProtectedRoute>
+                    <Tariffs />
+                  </ProtectedRoute>
+                } />
+                <Route path="billing" element={
+                  <ProtectedRoute>
+                    <BillingRuns />
+                  </ProtectedRoute>
+                } />
+                <Route path="payments" element={
+                  <ProtectedRoute>
+                    <PaymentReconciliation />
+                  </ProtectedRoute>
+                } />
+                <Route path="meter-routes" element={
+                  <ProtectedRoute>
+                    <MeterRoutes />
+                  </ProtectedRoute>
+                } />
+                <Route path="tickets" element={
+                  <ProtectedRoute>
+                    <Tickets />
+                  </ProtectedRoute>
+                } />
+                <Route path="kiosks" element={
+                  <ProtectedRoute>
+                    <Kiosks />
+                  </ProtectedRoute>
+                } />
+                <Route path="trucking" element={
+                  <ProtectedRoute>
+                    <WaterTrucking />
+                  </ProtectedRoute>
+                } />
+                <Route path="connections" element={
+                  <ProtectedRoute>
+                    <Connections />
                   </ProtectedRoute>
                 } />
               </Route>
