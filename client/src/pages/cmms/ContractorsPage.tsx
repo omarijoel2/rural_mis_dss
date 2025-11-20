@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { contractorService } from '../../services/cmms.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Input } from '../../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import {
   Table,
@@ -21,11 +23,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../../components/ui/dialog';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { FileText, AlertCircle, TrendingUp, Clock, Plus, AlertTriangle } from 'lucide-react';
 import { Progress } from '../../components/ui/progress';
+import { FormInput } from '../../components/forms/FormInput';
+import { FormSelect } from '../../components/forms/FormSelect';
+import { FormTextarea } from '../../components/forms/FormTextarea';
 import { toast } from 'sonner';
 
 const STATUS_COLORS = {
@@ -35,12 +38,64 @@ const STATUS_COLORS = {
   terminated: 'bg-red-100 text-red-800',
 };
 
+const contractSchema = z.object({
+  contract_num: z.string().min(1, 'Contract number is required'),
+  vendor_name: z.string().min(1, 'Vendor name is required'),
+  type: z.enum(['maintenance', 'construction', 'supply', 'consulting']),
+  value: z.number().positive('Contract value must be positive'),
+  start_date: z.string().min(1, 'Start date is required'),
+  end_date: z.string().min(1, 'End date is required'),
+  description: z.string().optional(),
+});
+
+const violationSchema = z.object({
+  description: z.string().min(1, 'Description is required'),
+  penalty_amount: z.number().positive('Penalty amount must be positive'),
+});
+
+type ContractFormData = z.infer<typeof contractSchema>;
+type ViolationFormData = z.infer<typeof violationSchema>;
+
 export function ContractorsPage() {
   const [filters, setFilters] = useState({ page: 1, per_page: 15, status: 'active' });
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [violationDialogOpen, setViolationDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const queryClient = useQueryClient();
+
+  const contractForm = useForm<ContractFormData>({
+    resolver: zodResolver(contractSchema),
+    defaultValues: {
+      contract_num: '',
+      vendor_name: '',
+      type: 'maintenance',
+      value: 0,
+      start_date: '',
+      end_date: '',
+      description: '',
+    },
+  });
+
+  const violationForm = useForm<ViolationFormData>({
+    resolver: zodResolver(violationSchema),
+    defaultValues: {
+      description: '',
+      penalty_amount: 0,
+    },
+  });
+
+  useEffect(() => {
+    if (!contractDialogOpen) {
+      contractForm.reset();
+    }
+  }, [contractDialogOpen, contractForm]);
+
+  useEffect(() => {
+    if (!violationDialogOpen) {
+      violationForm.reset();
+      setSelectedContract(null);
+    }
+  }, [violationDialogOpen, violationForm]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['service-contracts', filters],
@@ -78,50 +133,24 @@ export function ContractorsPage() {
     onError: () => toast.error('Failed to record violation'),
   });
 
-  const handleCreateContract = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const value = parseFloat(formData.get('value') as string);
-    
-    if (isNaN(value)) {
-      toast.error('Please enter a valid contract value');
-      e.currentTarget.reset();
-      return;
-    }
-    
-    const data = {
-      contract_num: formData.get('contract_num') as string,
-      vendor_name: formData.get('vendor_name') as string,
-      type: formData.get('type') as 'maintenance' | 'construction' | 'supply' | 'consulting',
-      value,
-      start_date: formData.get('start_date') as string,
-      end_date: formData.get('end_date') as string,
-      description: formData.get('description') as string,
+  const handleCreateContract = (data: ContractFormData) => {
+    createContractMutation.mutate({
+      ...data,
       status: 'active' as const,
-    };
-    createContractMutation.mutate(data);
+    });
   };
 
-  const handleRecordViolation = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleRecordViolation = (data: ViolationFormData) => {
     if (!selectedContract) {
       toast.error('No contract selected');
       return;
     }
-    const formData = new FormData(e.currentTarget);
-    const penaltyAmount = parseFloat(formData.get('penalty_amount') as string);
-    
-    if (isNaN(penaltyAmount)) {
-      toast.error('Please enter a valid penalty amount');
-      e.currentTarget.reset();
-      return;
-    }
-    
+
     recordViolationMutation.mutate({
       contractId: selectedContract.id,
       data: {
-        description: formData.get('description') as string,
-        penalty_amount: penaltyAmount,
+        description: data.description,
+        penalty_amount: data.penalty_amount,
         occurred_at: new Date().toISOString(),
       },
     });
@@ -160,56 +189,72 @@ export function ContractorsPage() {
             <DialogHeader>
               <DialogTitle>Create Service Contract</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreateContract} className="space-y-4">
+            <form onSubmit={contractForm.handleSubmit(handleCreateContract)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="contract_num">Contract Number</Label>
-                  <Input id="contract_num" name="contract_num" required />
-                </div>
-                <div>
-                  <Label htmlFor="vendor_name">Vendor Name</Label>
-                  <Input id="vendor_name" name="vendor_name" required />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="type">Contract Type</Label>
-                  <Select name="type" required>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="service">Service</SelectItem>
-                      <SelectItem value="supply">Supply</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="value">Contract Value</Label>
-                  <Input
-                    id="value"
-                    name="value"
-                    type="number"
-                    step="0.01"
-                    required
-                  />
-                </div>
+                <FormInput
+                  control={contractForm.control}
+                  name="contract_num"
+                  label="Contract Number"
+                  required
+                  error={contractForm.formState.errors.contract_num?.message}
+                />
+                <FormInput
+                  control={contractForm.control}
+                  name="vendor_name"
+                  label="Vendor Name"
+                  required
+                  error={contractForm.formState.errors.vendor_name?.message}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input id="start_date" name="start_date" type="date" required />
-                </div>
-                <div>
-                  <Label htmlFor="end_date">End Date</Label>
-                  <Input id="end_date" name="end_date" type="date" required />
-                </div>
+                <FormSelect
+                  control={contractForm.control}
+                  name="type"
+                  label="Contract Type"
+                  required
+                  options={[
+                    { value: 'maintenance', label: 'Maintenance' },
+                    { value: 'construction', label: 'Construction' },
+                    { value: 'supply', label: 'Supply' },
+                    { value: 'consulting', label: 'Consulting' },
+                  ]}
+                  error={contractForm.formState.errors.type?.message}
+                />
+                <FormInput
+                  control={contractForm.control}
+                  name="value"
+                  label="Contract Value"
+                  type="number"
+                  step="0.01"
+                  required
+                  error={contractForm.formState.errors.value?.message}
+                />
               </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" rows={3} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormInput
+                  control={contractForm.control}
+                  name="start_date"
+                  label="Start Date"
+                  type="date"
+                  required
+                  error={contractForm.formState.errors.start_date?.message}
+                />
+                <FormInput
+                  control={contractForm.control}
+                  name="end_date"
+                  label="End Date"
+                  type="date"
+                  required
+                  error={contractForm.formState.errors.end_date?.message}
+                />
               </div>
+              <FormTextarea
+                control={contractForm.control}
+                name="description"
+                label="Description"
+                rows={3}
+                error={contractForm.formState.errors.description?.message}
+              />
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
@@ -218,7 +263,10 @@ export function ContractorsPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createContractMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={createContractMutation.isPending || !contractForm.formState.isValid}
+                >
                   Create
                 </Button>
               </div>
@@ -483,27 +531,28 @@ export function ContractorsPage() {
           <DialogHeader>
             <DialogTitle>Record SLA Violation</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleRecordViolation} className="space-y-4">
-            <div>
-              <Label htmlFor="description">Violation Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                rows={3}
-                required
-                placeholder="Describe the SLA breach..."
-              />
+          <form onSubmit={violationForm.handleSubmit(handleRecordViolation)} className="space-y-4">
+            <div className="bg-muted p-3 rounded-md text-sm">
+              <strong>Contract:</strong> {selectedContract?.contract_num} - {selectedContract?.vendor_name}
             </div>
-            <div>
-              <Label htmlFor="penalty_amount">Penalty Amount</Label>
-              <Input
-                id="penalty_amount"
-                name="penalty_amount"
-                type="number"
-                step="0.01"
-                required
-              />
-            </div>
+            <FormTextarea
+              control={violationForm.control}
+              name="description"
+              label="Violation Description"
+              placeholder="Describe the SLA breach..."
+              rows={3}
+              required
+              error={violationForm.formState.errors.description?.message}
+            />
+            <FormInput
+              control={violationForm.control}
+              name="penalty_amount"
+              label="Penalty Amount"
+              type="number"
+              step="0.01"
+              required
+              error={violationForm.formState.errors.penalty_amount?.message}
+            />
             <div className="flex justify-end gap-2">
               <Button
                 type="button"
@@ -512,7 +561,10 @@ export function ContractorsPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={recordViolationMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={recordViolationMutation.isPending || !violationForm.formState.isValid}
+              >
                 Record Violation
               </Button>
             </div>
