@@ -126,20 +126,31 @@ const moduleNavigation = [
     subPages: []
   },
   {
-    name: 'Security',
-    href: '/security',
+    name: 'Security & Admin',
+    href: '/admin',
     icon: Shield,
     color: 'text-gray-500',
     subPages: [
-      { name: 'Audit Logs', href: '/security/audit', icon: FileText },
-      { name: 'Security Alerts', href: '/security/alerts', icon: AlertTriangle },
-      { name: 'Roles & Permissions', href: '/security/roles', icon: Users },
-      { name: 'API Keys', href: '/security/api-keys', icon: Key },
-      { name: 'DSR Requests', href: '/security/dsr', icon: Database },
-      { name: 'Consents', href: '/security/consents', icon: Shield },
-      { name: 'Encryption Keys', href: '/security/kms', icon: Lock },
-      { name: 'Retention Policies', href: '/security/retention', icon: Clock },
-      { name: 'Data Catalog', href: '/security/data-catalog', icon: Settings },
+      { name: 'Users Management', href: '/admin/users', icon: Users },
+      { name: 'Roles & Permissions', href: '/admin/rbac/roles', icon: Key },
+      { name: 'Permission Matrix', href: '/admin/rbac/matrix', icon: Settings },
+      { name: 'Audit Logs', href: '/admin/audit', icon: FileText },
+      { name: 'Security Alerts', href: '/admin/security/alerts', icon: AlertTriangle },
+      { name: 'API Keys', href: '/admin/security/api-keys', icon: Lock },
+    ]
+  },
+  {
+    name: 'Integration',
+    href: '/integration',
+    icon: Settings,
+    color: 'text-indigo-500',
+    subPages: [
+      { name: 'API Catalog', href: '/integration/api', icon: Database },
+      { name: 'Connector Gallery', href: '/integration/connectors', icon: Settings },
+      { name: 'Webhook Manager', href: '/integration/webhooks', icon: Settings },
+      { name: 'ETL Jobs', href: '/integration/etl', icon: Settings },
+      { name: 'Data Warehouse', href: '/integration/dw', icon: Database },
+      { name: 'Communication Templates', href: '/integration/comms', icon: Settings },
     ]
   },
 ];

@@ -47,6 +47,18 @@ import { CoreRegistryLayout } from './components/layouts/CoreRegistryLayout';
 import { HydrometLayout } from './components/layouts/HydrometLayout';
 import { ProjectsLayout } from './components/layouts/ProjectsLayout';
 import { ProjectsHome } from './pages/projects/ProjectsHome';
+import { AdminLayout } from './components/layouts/AdminLayout';
+import { IntegrationLayout } from './components/layouts/IntegrationLayout';
+import { UsersManagement } from './pages/admin/UsersManagement';
+import { RolesPermissions } from './pages/admin/rbac/RolesPermissions';
+import { PermissionMatrix } from './pages/admin/rbac/PermissionMatrix';
+import { AuditLogs } from './pages/admin/AuditLogs';
+import { APICatalog } from './pages/integration/APICatalog';
+import { ConnectorGallery } from './pages/integration/ConnectorGallery';
+import { WebhookManager } from './pages/integration/WebhookManager';
+import { ETLJobs } from './pages/integration/ETLJobs';
+import { DataWarehouse } from './pages/integration/DataWarehouse';
+import { CommunicationTemplates } from './pages/integration/CommunicationTemplates';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -344,6 +356,82 @@ export function AppMIS() {
                 <Route path="cost-centers" element={
                   <ProtectedRoute requiredPermission="view budgets">
                     <CostCentersPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/admin/users" replace />} />
+                <Route path="users" element={
+                  <ProtectedRoute requiredPermission="rbac.view">
+                    <UsersManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="rbac/roles" element={
+                  <ProtectedRoute requiredPermission="rbac.view">
+                    <RolesPermissions />
+                  </ProtectedRoute>
+                } />
+                <Route path="rbac/matrix" element={
+                  <ProtectedRoute requiredPermission="rbac.view">
+                    <PermissionMatrix />
+                  </ProtectedRoute>
+                } />
+                <Route path="audit" element={
+                  <ProtectedRoute requiredPermission="audit.view">
+                    <AuditLogs />
+                  </ProtectedRoute>
+                } />
+                <Route path="security/alerts" element={
+                  <ProtectedRoute requiredPermission="security.view">
+                    <SecurityAlertsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="security/api-keys" element={
+                  <ProtectedRoute requiredPermission="security.view">
+                    <ApiKeysPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/integration" element={
+                <ProtectedRoute>
+                  <IntegrationLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/integration/api" replace />} />
+                <Route path="api" element={
+                  <ProtectedRoute requiredPermission="integration.api.view">
+                    <APICatalog />
+                  </ProtectedRoute>
+                } />
+                <Route path="connectors" element={
+                  <ProtectedRoute requiredPermission="integration.connectors.view">
+                    <ConnectorGallery />
+                  </ProtectedRoute>
+                } />
+                <Route path="webhooks" element={
+                  <ProtectedRoute requiredPermission="integration.webhooks.view">
+                    <WebhookManager />
+                  </ProtectedRoute>
+                } />
+                <Route path="etl" element={
+                  <ProtectedRoute requiredPermission="integration.etl.view">
+                    <ETLJobs />
+                  </ProtectedRoute>
+                } />
+                <Route path="dw" element={
+                  <ProtectedRoute requiredPermission="integration.dw.view">
+                    <DataWarehouse />
+                  </ProtectedRoute>
+                } />
+                <Route path="comms" element={
+                  <ProtectedRoute requiredPermission="integration.comms.view">
+                    <CommunicationTemplates />
                   </ProtectedRoute>
                 } />
               </Route>
