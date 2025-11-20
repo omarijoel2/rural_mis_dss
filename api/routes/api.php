@@ -110,6 +110,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/facilities/import', [FacilityController::class, 'importGeojson'])->middleware('permission:import spatial data');
         Route::get('/facilities/export', [FacilityController::class, 'export'])->middleware('permission:export spatial data');
         
+        Route::get('/tiles/schemes/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'schemeTiles']);
+        Route::get('/tiles/dmas/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'dmaTiles']);
+        Route::get('/tiles/facilities/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'facilityTiles']);
+        Route::get('/tiles/pipelines/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'pipelineTiles']);
+        Route::get('/tiles/network-nodes/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'networkNodeTiles']);
+        Route::get('/tiles/network-edges/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'networkEdgeTiles']);
+        
         Route::get('/layers', function (Request $request) {
             return response()->json([
                 'layers' => [
@@ -118,6 +125,7 @@ Route::prefix('v1')->group(function () {
                         'name' => 'Water Supply Schemes',
                         'type' => 'fill',
                         'source' => url('/api/v1/gis/schemes/geojson'),
+                        'tile_source' => url('/api/v1/gis/tiles/schemes/{z}/{x}/{y}.mvt'),
                         'paint' => [
                             'fill-color' => ['match', ['get', 'status'], 'active', '#22c55e', 'planning', '#3b82f6', 'decommissioned', '#94a3b8', '#6b7280'],
                             'fill-opacity' => 0.6,
@@ -129,6 +137,7 @@ Route::prefix('v1')->group(function () {
                         'name' => 'District Metered Areas',
                         'type' => 'fill',
                         'source' => url('/api/v1/gis/dmas/geojson'),
+                        'tile_source' => url('/api/v1/gis/tiles/dmas/{z}/{x}/{y}.mvt'),
                         'paint' => [
                             'fill-color' => ['match', ['get', 'status'], 'active', '#8b5cf6', 'planned', '#06b6d4', 'retired', '#94a3b8', '#6b7280'],
                             'fill-opacity' => 0.5,
@@ -140,6 +149,7 @@ Route::prefix('v1')->group(function () {
                         'name' => 'Facilities',
                         'type' => 'circle',
                         'source' => url('/api/v1/gis/facilities/geojson'),
+                        'tile_source' => url('/api/v1/gis/tiles/facilities/{z}/{x}/{y}.mvt'),
                         'paint' => [
                             'circle-radius' => 6,
                             'circle-color' => ['match', ['get', 'type'], 'source', '#10b981', 'treatment', '#3b82f6', 'pumpstation', '#f59e0b', 'reservoir', '#06b6d4', '#6b7280'],
