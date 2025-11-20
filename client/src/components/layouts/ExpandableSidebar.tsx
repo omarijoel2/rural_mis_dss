@@ -37,7 +37,12 @@ import {
   Phone,
   CreditCard,
   Gauge,
-  Truck
+  Truck,
+  HandHeart,
+  MessageSquare,
+  Handshake,
+  BarChart2,
+  FolderOpen
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -159,6 +164,25 @@ const moduleNavigation = [
       { name: 'Kiosks', href: '/customer/kiosks', icon: Home },
       { name: 'Water Trucking', href: '/customer/trucking', icon: Truck },
       { name: 'Connections', href: '/customer/connections', icon: Package },
+    ]
+  },
+  {
+    name: 'Community & Stakeholder',
+    href: '/community',
+    icon: HandHeart,
+    color: 'text-purple-500',
+    subPages: [
+      { name: 'RWSS Committees', href: '/community/committees', icon: Users },
+      { name: 'Committee Finance', href: '/community/finance', icon: DollarSign },
+      { name: 'Vendor Portal', href: '/community/vendors', icon: Handshake },
+      { name: 'Bids & RFQs', href: '/community/bids', icon: FileText },
+      { name: 'Vendor Deliveries', href: '/community/deliveries', icon: Package },
+      { name: 'Stakeholder Map', href: '/community/stakeholders', icon: Users },
+      { name: 'Engagement Planner', href: '/community/engagements', icon: Calendar },
+      { name: 'GRM Console', href: '/community/grm', icon: MessageSquare },
+      { name: 'Open Data Catalog', href: '/community/open-data', icon: FolderOpen },
+      { name: 'Dataset Builder', href: '/community/dataset-builder', icon: Settings },
+      { name: 'Public Maps', href: '/community/public-maps', icon: Map },
     ]
   },
   {
