@@ -634,4 +634,49 @@ Route::prefix('v1')->group(function () {
             Route::delete('/disputes/{id}', [LandController::class, 'destroyDispute'])->middleware('permission:delete disputes');
         });
     });
+
+    // Core Operations & Network Management
+    Route::prefix('core-ops')->middleware('auth:sanctum')->group(function () {
+        // Network Topology
+        Route::get('/network/nodes', [\App\Http\Controllers\Api\TopologyController::class, 'nodes'])->middleware('permission:view network topology');
+        Route::post('/network/nodes', [\App\Http\Controllers\Api\TopologyController::class, 'storeNode'])->middleware('permission:edit network topology');
+        Route::get('/network/edges', [\App\Http\Controllers\Api\TopologyController::class, 'edges'])->middleware('permission:view network topology');
+        Route::post('/network/edges', [\App\Http\Controllers\Api\TopologyController::class, 'storeEdge'])->middleware('permission:edit network topology');
+        Route::get('/network/trace/{node}', [\App\Http\Controllers\Api\TopologyController::class, 'traceUpstream'])->middleware('permission:view network topology');
+
+        // Telemetry & SCADA
+        Route::get('/telemetry/tags', [\App\Http\Controllers\Api\TelemetryController::class, 'tags'])->middleware('permission:view telemetry');
+        Route::post('/telemetry/tags', [\App\Http\Controllers\Api\TelemetryController::class, 'storeTag'])->middleware('permission:manage telemetry');
+        Route::get('/telemetry/measurements', [\App\Http\Controllers\Api\TelemetryController::class, 'measurements'])->middleware('permission:view telemetry');
+        Route::post('/telemetry/ingest', [\App\Http\Controllers\Api\TelemetryController::class, 'ingest'])->middleware('permission:ingest telemetry');
+
+        // NRW & Interventions
+        Route::get('/nrw/snapshots', [\App\Http\Controllers\Api\NrwController::class, 'snapshots'])->middleware('permission:view nrw');
+        Route::post('/nrw/snapshots', [\App\Http\Controllers\Api\NrwController::class, 'storeSnapshot'])->middleware('permission:manage nrw');
+        Route::get('/nrw/interventions', [\App\Http\Controllers\Api\NrwController::class, 'interventions'])->middleware('permission:view nrw');
+        Route::post('/nrw/interventions', [\App\Http\Controllers\Api\NrwController::class, 'storeIntervention'])->middleware('permission:manage nrw');
+
+        // Outage Management
+        Route::get('/outages', [\App\Http\Controllers\Api\OutageController::class, 'index'])->middleware('permission:view outages');
+        Route::post('/outages', [\App\Http\Controllers\Api\OutageController::class, 'store'])->middleware('permission:manage outages');
+        Route::get('/outages/{outage}', [\App\Http\Controllers\Api\OutageController::class, 'show'])->middleware('permission:view outages');
+        Route::patch('/outages/{outage}', [\App\Http\Controllers\Api\OutageController::class, 'update'])->middleware('permission:manage outages');
+        Route::post('/outages/{outage}/state', [\App\Http\Controllers\Api\OutageController::class, 'changeState'])->middleware('permission:manage outages');
+        Route::delete('/outages/{outage}', [\App\Http\Controllers\Api\OutageController::class, 'destroy'])->middleware('permission:delete outages');
+
+        // Dosing Control
+        Route::get('/dosing/plans', [\App\Http\Controllers\Api\DosingController::class, 'plans'])->middleware('permission:view dosing');
+        Route::post('/dosing/plans', [\App\Http\Controllers\Api\DosingController::class, 'storePlan'])->middleware('permission:manage dosing');
+        Route::get('/dosing/stocks', [\App\Http\Controllers\Api\DosingController::class, 'stocks'])->middleware('permission:view dosing');
+        Route::post('/dosing/stocks', [\App\Http\Controllers\Api\DosingController::class, 'storeStock'])->middleware('permission:manage dosing');
+
+        // Pump Scheduling
+        Route::get('/schedule', [\App\Http\Controllers\Api\ScheduleController::class, 'index'])->middleware('permission:view pump schedules');
+        Route::post('/schedule', [\App\Http\Controllers\Api\ScheduleController::class, 'store'])->middleware('permission:manage pump schedules');
+        Route::patch('/schedule/{schedule}', [\App\Http\Controllers\Api\ScheduleController::class, 'update'])->middleware('permission:manage pump schedules');
+
+        // Operations Dashboard
+        Route::get('/dashboard', [\App\Http\Controllers\Api\OperationsController::class, 'dashboard'])->middleware('permission:view operations dashboard');
+        Route::get('/alarms', [\App\Http\Controllers\Api\OperationsController::class, 'alarms'])->middleware('permission:view operations dashboard');
+    });
 });
