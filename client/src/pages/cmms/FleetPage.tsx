@@ -52,7 +52,7 @@ type ServiceFormData = z.infer<typeof serviceSchema>;
 type FuelFormData = z.infer<typeof fuelSchema>;
 
 export function FleetPage() {
-  const [filters, setFilters] = useState({ page: 1, per_page: 15, status: '' });
+  const [filters, setFilters] = useState({ page: 1, per_page: 15, status: 'all' });
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [fuelDialogOpen, setFuelDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<FleetAsset | null>(null);
@@ -241,7 +241,7 @@ export function FleetPage() {
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="maintenance">Maintenance</SelectItem>
                 <SelectItem value="retired">Retired</SelectItem>
