@@ -14,8 +14,13 @@ class FacilityController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Facility::where('tenant_id', auth()->user()->tenant_id)
-            ->with(['scheme', 'tenant']);
+        $query = Facility::query();
+        
+        if (auth()->user()) {
+            $query->where('tenant_id', auth()->user()->tenant_id);
+        }
+        
+        $query->with(['scheme', 'tenant']);
 
         if ($request->has('scheme_id')) {
             $query->where('scheme_id', $request->scheme_id);
