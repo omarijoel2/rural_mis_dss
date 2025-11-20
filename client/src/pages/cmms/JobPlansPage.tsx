@@ -34,7 +34,7 @@ const STATUS_COLORS = {
 };
 
 export function JobPlansPage() {
-  const [filters, setFilters] = useState({ page: 1, per_page: 15, search: '', status: '' });
+  const [filters, setFilters] = useState({ page: 1, per_page: 15, search: '', status: 'all' });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<JobPlan | null>(null);
   const queryClient = useQueryClient();
@@ -213,7 +213,7 @@ export function JobPlansPage() {
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="archived">Archived</SelectItem>

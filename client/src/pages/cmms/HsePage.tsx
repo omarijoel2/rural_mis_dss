@@ -42,7 +42,7 @@ const INCIDENT_SEVERITY_COLORS = {
 };
 
 export function HsePage() {
-  const [permitFilters, setPermitFilters] = useState({ page: 1, per_page: 15, status: '' });
+  const [permitFilters, setPermitFilters] = useState({ page: 1, per_page: 15, status: 'all' });
   const [incidentFilters, setIncidentFilters] = useState({ page: 1, per_page: 15, status: 'open' });
   const [capaFilters, setCapaFilters] = useState({ page: 1, per_page: 15, status: 'open' });
   const [permitDialogOpen, setPermitDialogOpen] = useState(false);
@@ -249,7 +249,7 @@ export function HsePage() {
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="approved">Approved</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
@@ -381,7 +381,7 @@ export function HsePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="open">Open</SelectItem>
                       <SelectItem value="investigated">Investigated</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
@@ -527,7 +527,7 @@ export function HsePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="open">Open</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                     </SelectContent>
