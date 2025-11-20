@@ -16,6 +16,8 @@ class Encumbrance extends Model
         'entity_type',
         'entity_id',
         'cost_center_id',
+        'gl_account_id',
+        'project_id',
         'period',
         'amount',
         'released',
@@ -48,5 +50,15 @@ class Encumbrance extends Model
     public function costCenter()
     {
         return $this->belongsTo(CostCenter::class);
+    }
+
+    public function glAccount()
+    {
+        return $this->belongsTo(GlAccount::class);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(\App\Models\Projects\Project::class, 'project_id');
     }
 }
