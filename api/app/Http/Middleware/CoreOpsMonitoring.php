@@ -55,7 +55,7 @@ class CoreOpsMonitoring
             // Calculate execution time for exception case
             $executionTime = (microtime(true) - $startTime) * 1000;
             
-            // Log exception details
+            // Log exception details with full stack trace
             Log::channel('core_ops')->error('[Core Ops] Request Exception', [
                 'request_id' => $requestId,
                 'method' => $request->method(),
@@ -64,24 +64,32 @@ class CoreOpsMonitoring
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
                 'execution_time_ms' => round($executionTime, 2),
                 'user_id' => $userId,
                 'tenant_id' => $tenantId,
             ]);
             
-            // Create a basic error response so headers can be attached
+            // Determine appropriate status code
+            $statusCode = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+            if ($statusCode < 400) {
+                $statusCode = 500; // Ensure it's an error code
+            }
+            
+            // Create error response with monitoring headers
             $response = response()->json([
-                'error' => 'Internal Server Error',
+                'error' => class_basename($e),
+                'message' => app()->environment('production') ? 'Internal Server Error' : $e->getMessage(),
                 'request_id' => $requestId,
-            ], 500);
+            ], $statusCode);
             
             // Add monitoring headers to error response
             $response->headers->set('X-Request-ID', $requestId);
             $response->headers->set('X-Response-Time', round($executionTime, 2) . 'ms');
             $response->headers->set('X-Had-Exception', 'true');
             
-            // Re-throw to let Laravel's exception handler process
-            throw $e;
+            // Return the response (don't rethrow) so headers reach the client
+            // Exception is already fully logged above
         } finally {
             // Always log completion metrics, even if exception occurred
             $executionTime = (microtime(true) - $startTime) * 1000; // milliseconds

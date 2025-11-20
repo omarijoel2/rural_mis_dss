@@ -18,10 +18,18 @@ echo "==========================================\n";
 echo "Core Ops Exception Monitoring Test\n";
 echo "==========================================\n\n";
 
-// Clear existing logs for clean test
-$coreOpsLog = storage_path('logs/core_ops.log');
-$performanceLog = storage_path('logs/core_ops_performance.log');
+// Ensure logs directory exists
+$logsDir = storage_path('logs');
+if (!File::isDirectory($logsDir)) {
+    File::makeDirectory($logsDir, 0755, true);
+}
 
+// Define log file paths (using daily rotation format)
+$dateString = date('Y-m-d');
+$coreOpsLog = storage_path("logs/core_ops-{$dateString}.log");
+$performanceLog = storage_path("logs/core_ops_performance-{$dateString}.log");
+
+// Clear existing logs for clean test
 if (File::exists($coreOpsLog)) {
     File::delete($coreOpsLog);
 }
