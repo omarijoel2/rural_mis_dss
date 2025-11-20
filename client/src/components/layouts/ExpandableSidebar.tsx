@@ -1,6 +1,7 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Calculator, 
   Database, 
@@ -292,9 +293,9 @@ export function ExpandableSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-card border-r overflow-y-auto">
+    <aside className="w-64 bg-card border-r flex flex-col h-screen">
       {/* Logo/Title */}
-      <div className="p-6 border-b">
+      <div className="p-6 border-b flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">RW</span>
@@ -307,7 +308,8 @@ export function ExpandableSidebar() {
       </div>
 
       {/* Module Navigation */}
-      <nav className="p-3 space-y-1">
+      <ScrollArea className="flex-1">
+        <nav className="p-3 space-y-1">
         {moduleNavigation.map((module) => {
           const isActive = activeModule?.href === module.href;
           const hasSubPages = module.subPages.length > 0;
@@ -374,11 +376,12 @@ export function ExpandableSidebar() {
             </div>
           );
         })}
-      </nav>
+        </nav>
+      </ScrollArea>
       
       {/* Compact Mode Indicator (for debugging, can be removed) */}
       {isCompactMode && (
-        <div className="px-3 py-2 text-xs text-muted-foreground bg-muted/50 border-t">
+        <div className="px-3 py-2 text-xs text-muted-foreground bg-muted/50 border-t flex-shrink-0">
           <p className="leading-tight">Compact mode active - single section expanded</p>
         </div>
       )}
