@@ -8,8 +8,15 @@ use App\Models\WoLabor;
 use App\Models\Asset;
 use App\Models\PmPolicy;
 use App\Models\StockTxn;
+use App\Models\WoAttachment;
+use App\Models\WoChecklistItem;
+use App\Models\WoTransition;
+use App\Models\WoAssignment;
+use App\Models\WoComment;
+use App\Models\JobPlan;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class WorkOrderService
 {
@@ -256,5 +263,128 @@ class WorkOrderService
                 'status' => 'scheduled'
             ]);
         }
+    }
+
+    public function transitionWorkOrder(string $workOrderId, string $toStatus, ?string $notes = null): WorkOrder
+    {
+        $wo = WorkOrder::findOrFail($workOrderId);
+        $fromStatus = $wo->status;
+        
+        DB::transaction(function () use ($wo, $toStatus, $fromStatus, $notes) {
+            $wo->update(['status' => $toStatus]);
+            
+            WoTransition::create([
+                'work_order_id' => $wo->id,
+                'from_status' => $fromStatus,
+                'to_status' => $toStatus,
+                'transitioned_by' => auth()->id(),
+                'notes' => $notes,
+                'transitioned_at' => now()
+            ]);
+        });
+        
+        return $wo->fresh();
+    }
+
+    public function addChecklistFromJobPlan(string $workOrderId, int $jobPlanId): Collection
+    {
+        $jobPlan = JobPlan::findOrFail($jobPlanId);
+        $checklist = $jobPlan->checklist ?? [];
+        
+        $items = collect();
+        
+        foreach ($checklist as $index => $item) {
+            $checklistItem = WoChecklistItem::create([
+                'work_order_id' => $workOrderId,
+                'seq' => $index + 1,
+                'step' => $item['step'] ?? $item,
+                'result' => 'pending'
+            ]);
+            
+            $items->push($checklistItem);
+        }
+        
+        return $items;
+    }
+
+    public function updateChecklistItem(int $itemId, string $result, ?string $notes = null, ?string $photoPath = null): WoChecklistItem
+    {
+        $item = WoChecklistItem::findOrFail($itemId);
+        
+        $item->update([
+            'result' => $result,
+            'notes' => $notes,
+            'photo_path' => $photoPath,
+            'completed_by' => auth()->id(),
+            'completed_at' => now()
+        ]);
+        
+        return $item->fresh();
+    }
+
+    public function addAttachment(string $workOrderId, string $type, $file, ?string $caption = null): WoAttachment
+    {
+        $fileName = $file->getClientOriginalName();
+        $filePath = $file->store('work_orders/' . $workOrderId, 'public');
+        
+        return WoAttachment::create([
+            'work_order_id' => $workOrderId,
+            'type' => $type,
+            'file_path' => $filePath,
+            'file_name' => $fileName,
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'caption' => $caption,
+            'uploaded_by' => auth()->id()
+        ]);
+    }
+
+    public function addAssignment(string $workOrderId, string $userId, string $role = 'primary'): WoAssignment
+    {
+        return WoAssignment::create([
+            'work_order_id' => $workOrderId,
+            'user_id' => $userId,
+            'role' => $role,
+            'assigned_at' => now(),
+            'assigned_by' => auth()->id()
+        ]);
+    }
+
+    public function addComment(string $workOrderId, string $comment): WoComment
+    {
+        return WoComment::create([
+            'work_order_id' => $workOrderId,
+            'comment' => $comment,
+            'user_id' => auth()->id()
+        ]);
+    }
+
+    public function approveWorkOrder(string $workOrderId): WorkOrder
+    {
+        return $this->transitionWorkOrder($workOrderId, 'approved', 'Work order approved');
+    }
+
+    public function qaWorkOrder(string $workOrderId, ?string $notes = null): WorkOrder
+    {
+        $wo = WorkOrder::findOrFail($workOrderId);
+        
+        DB::transaction(function () use ($wo, $notes) {
+            $wo->update([
+                'status' => 'qa',
+                'qa_at' => now(),
+                'qa_by' => auth()->id()
+            ]);
+            
+            WoTransition::create([
+                'work_order_id' => $wo->id,
+                'from_status' => 'in_progress',
+                'to_status' => 'qa',
+                'transitioned_by' => auth()->id(),
+                'notes' => $notes ?? 'QA review started',
+                'transitioned_at' => now()
+            ]);
+        });
+        
+        return $wo->fresh();
     }
 }
