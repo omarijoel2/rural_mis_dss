@@ -57,7 +57,11 @@ type ContractFormData = z.infer<typeof contractSchema>;
 type ViolationFormData = z.infer<typeof violationSchema>;
 
 export function ContractorsPage() {
-  const [filters, setFilters] = useState({ page: 1, per_page: 15, status: 'active' });
+  const [filters, setFilters] = useState<{ page: number; per_page: number; status?: string }>({ 
+    page: 1, 
+    per_page: 15, 
+    status: 'active' 
+  });
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [violationDialogOpen, setViolationDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
@@ -343,14 +347,20 @@ export function ContractorsPage() {
               <div className="flex items-center justify-between">
                 <CardTitle>Service Contracts</CardTitle>
                 <Select
-                  value={filters.status}
-                  onValueChange={(value) => setFilters({ ...filters, status: value, page: 1 })}
+                  value={filters.status || 'all'}
+                  onValueChange={(value) => {
+                    const { status, ...rest } = filters;
+                    setFilters(value === 'all' 
+                      ? { ...rest, page: 1 } 
+                      : { ...rest, status: value, page: 1 }
+                    );
+                  }}
                 >
                   <SelectTrigger className="w-[200px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="terminated">Terminated</SelectItem>
