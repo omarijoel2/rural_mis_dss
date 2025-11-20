@@ -636,7 +636,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Core Operations & Network Management
-    Route::prefix('core-ops')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('core-ops')->middleware(['auth:sanctum', 'core_ops.monitor'])->group(function () {
         // Network Topology
         Route::get('/network/nodes', [\App\Http\Controllers\Api\TopologyController::class, 'nodes'])->middleware('permission:view network topology');
         Route::post('/network/nodes', [\App\Http\Controllers\Api\TopologyController::class, 'storeNode'])->middleware('permission:edit network topology');

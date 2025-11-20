@@ -73,6 +73,22 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'core_ops' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/core_ops.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
+        'core_ops_performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/core_ops_performance.log'),
+            'level' => 'info',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
