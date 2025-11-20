@@ -11,7 +11,8 @@ Key capabilities include:
 - Production-ready CRM and Revenue Assurance backend and frontend.
 - Production-ready Hydro-Meteorological & Water Sources module with GIS integration.
 - Production-ready Costing, Budgeting & Forecasts module with comprehensive backend and React service layer.
-- Database schemas and placeholder pages for Monitoring, Evaluation & Service Levels, and Customer & Commercial Field Service modules.
+- Database schemas and placeholder pages for Monitoring, Evaluation & Service Levels, Customer & Commercial Field Service, and Community & Stakeholder Engagement modules.
+- Community & Stakeholder module includes RWSS committee governance (directory, profile with tabs, finance tracking), vendor portal (onboarding, bids, deliveries with OTIF tracking), GRM (stakeholder mapping, engagement planning, grievance SLA console), and open data transparency (catalog, dataset builder with privacy filters, public maps).
 
 # User Preferences
 
