@@ -66,7 +66,7 @@ Route::prefix('v1/gis')->group(function () {
     Route::get('/facilities/geojson', [FacilityController::class, 'geojson']);
 });
 
-Route::prefix('v1')->middleware(['auth:sanctum', 'audit'])->group(function () {
+Route::prefix('v1')->group(function () {
     Route::apiResource('organizations', OrganizationController::class);
     
     Route::prefix('schemes')->group(function () {
