@@ -30,7 +30,14 @@ import {
   Lock,
   Clock,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Target,
+  Activity,
+  Globe,
+  Phone,
+  CreditCard,
+  Gauge,
+  Truck
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -124,6 +131,35 @@ const moduleNavigation = [
     icon: Map,
     color: 'text-red-500',
     subPages: []
+  },
+  {
+    name: 'M&E & Service Levels',
+    href: '/me',
+    icon: Target,
+    color: 'text-teal-500',
+    subPages: [
+      { name: 'KPI Dashboard', href: '/me/kpis', icon: Gauge },
+      { name: 'Coverage Analytics', href: '/me/coverage', icon: Globe },
+      { name: 'NRW Tracker', href: '/me/nrw', icon: Droplet },
+      { name: 'CX Analytics', href: '/me/cx', icon: Activity },
+      { name: 'Results Framework', href: '/me/indicators', icon: Target },
+    ]
+  },
+  {
+    name: 'Customer & Commercial',
+    href: '/customer',
+    icon: Phone,
+    color: 'text-pink-500',
+    subPages: [
+      { name: 'Tariffs', href: '/customer/tariffs', icon: DollarSign },
+      { name: 'Billing Runs', href: '/customer/billing', icon: Receipt },
+      { name: 'Payment Reconciliation', href: '/customer/payments', icon: CreditCard },
+      { name: 'Meter Routes', href: '/customer/meter-routes', icon: MapPin },
+      { name: 'Tickets (CRM)', href: '/customer/tickets', icon: Phone },
+      { name: 'Kiosks', href: '/customer/kiosks', icon: Home },
+      { name: 'Water Trucking', href: '/customer/trucking', icon: Truck },
+      { name: 'Connections', href: '/customer/connections', icon: Package },
+    ]
   },
   {
     name: 'Security & Admin',
