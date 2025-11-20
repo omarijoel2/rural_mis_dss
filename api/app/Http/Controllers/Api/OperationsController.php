@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Traits\ValidatesTenantOwnership;
 use App\Models\Outage;
 use App\Models\TelemetryTag;
 use App\Models\PumpSchedule;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 
 class OperationsController extends Controller
 {
+    use ValidatesTenantOwnership;
     public function dashboard(Request $request)
     {
         $tenantId = auth()->user()->currentTenantId();

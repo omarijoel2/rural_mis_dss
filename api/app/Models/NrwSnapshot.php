@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenancy;
+
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class NrwSnapshot extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasUuids, SoftDeletes, HasTenancy;
 
     protected $fillable = [
         'tenant_id',
@@ -36,18 +38,6 @@ class NrwSnapshot extends Model
         'nrw_pct' => 'decimal:3',
     ];
 
-    protected static function booted()
-    {
-        static::addGlobalScope('tenant', function (Builder $query) {
-            if (auth()->check()) {
-                try {
-                    $query->where('tenant_id', auth()->user()->currentTenantId());
-                } catch (\RuntimeException $e) {
-                    $query->whereRaw('1 = 0');
-                }
-            }
-        });
-    }
 
     public function tenant(): BelongsTo
     {

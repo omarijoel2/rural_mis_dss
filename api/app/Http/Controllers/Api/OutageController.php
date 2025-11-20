@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Traits\ValidatesTenantOwnership;
 use App\Models\Outage;
 use App\Models\OutageAudit;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
 
 class OutageController extends Controller
 {
+    use ValidatesTenantOwnership;
     public function index(Request $request)
     {
         $query = Outage::query()->with(['scheme', 'dma', 'audits']);
@@ -48,7 +50,11 @@ class OutageController extends Controller
             'affected_geom' => 'nullable|array',
         ]);
 
-        $validated['tenant_id'] = auth()->user()->currentTenantId();
+        $tenantId = auth()->user()->currentTenantId();
+        $this->validateTenantScheme($validated['scheme_id'], $tenantId);
+        $this->validateTenantDma($validated['dma_id'] ?? null, $tenantId);
+
+        $validated['tenant_id'] = $tenantId;
         $validated['state'] = 'draft';
 
         if (isset($validated['affected_geom'])) {

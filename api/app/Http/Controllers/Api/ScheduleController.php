@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Traits\ValidatesTenantOwnership;
 use App\Models\PumpSchedule;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
+    use ValidatesTenantOwnership;
     public function index(Request $request)
     {
         $query = PumpSchedule::query()->with(['asset', 'scheme']);
@@ -48,7 +50,11 @@ class ScheduleController extends Controller
             'source' => 'nullable|in:manual,optimizer',
         ]);
 
-        $validated['tenant_id'] = auth()->user()->currentTenantId();
+        $tenantId = auth()->user()->currentTenantId();
+        $this->validateTenantAsset($validated['asset_id'], $tenantId);
+        $this->validateTenantScheme($validated['scheme_id'], $tenantId);
+
+        $validated['tenant_id'] = $tenantId;
         $validated['status'] = 'scheduled';
 
         $schedule = PumpSchedule::create($validated);

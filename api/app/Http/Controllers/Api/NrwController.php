@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Traits\ValidatesTenantOwnership;
 use App\Models\NrwSnapshot;
 use App\Models\Intervention;
 use Illuminate\Http\Request;
 
 class NrwController extends Controller
 {
+    use ValidatesTenantOwnership;
     public function snapshots(Request $request)
     {
         $query = NrwSnapshot::query()->with('dma');
@@ -41,7 +43,10 @@ class NrwController extends Controller
             'real_losses_m3' => 'nullable|numeric',
         ]);
 
-        $validated['tenant_id'] = auth()->user()->currentTenantId();
+        $tenantId = auth()->user()->currentTenantId();
+        $this->validateTenantDma($validated['dma_id'], $tenantId);
+
+        $validated['tenant_id'] = $tenantId;
         
         $nrw_m3 = ($validated['apparent_losses_m3'] ?? 0) + ($validated['real_losses_m3'] ?? 0);
         $validated['nrw_m3'] = $nrw_m3;
@@ -82,7 +87,11 @@ class NrwController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $validated['tenant_id'] = auth()->user()->currentTenantId();
+        $tenantId = auth()->user()->currentTenantId();
+        $this->validateTenantDma($validated['dma_id'] ?? null, $tenantId);
+        $this->validateTenantAsset($validated['asset_id'] ?? null, $tenantId);
+
+        $validated['tenant_id'] = $tenantId;
 
         $intervention = Intervention::create($validated);
         return response()->json($intervention, 201);

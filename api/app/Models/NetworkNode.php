@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenancy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class NetworkNode extends Model
 {
-    use HasUuids, SoftDeletes, HasSpatial;
+    use HasUuids, SoftDeletes, HasSpatial, HasTenancy;
 
     protected $fillable = [
         'tenant_id',
@@ -36,18 +37,6 @@ class NetworkNode extends Model
         'pressure_bar' => 'decimal:2',
     ];
 
-    protected static function booted()
-    {
-        static::addGlobalScope('tenant', function (Builder $query) {
-            if (auth()->check()) {
-                try {
-                    $query->where('tenant_id', auth()->user()->currentTenantId());
-                } catch (\RuntimeException $e) {
-                    $query->whereRaw('1 = 0');
-                }
-            }
-        });
-    }
 
     public function tenant(): BelongsTo
     {
