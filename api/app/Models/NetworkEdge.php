@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenancy;
+
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +14,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class NetworkEdge extends Model
 {
-    use HasUuids, SoftDeletes, HasSpatial;
+    use HasUuids, SoftDeletes, HasTenancy, HasSpatial;
 
     protected $fillable = [
         'tenant_id',
@@ -39,18 +41,6 @@ class NetworkEdge extends Model
         'install_year' => 'integer',
     ];
 
-    protected static function booted()
-    {
-        static::addGlobalScope('tenant', function (Builder $query) {
-            if (auth()->check()) {
-                try {
-                    $query->where('tenant_id', auth()->user()->currentTenantId());
-                } catch (\RuntimeException $e) {
-                    $query->whereRaw('1 = 0');
-                }
-            }
-        });
-    }
 
     public function tenant(): BelongsTo
     {
