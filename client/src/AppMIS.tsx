@@ -43,6 +43,10 @@ import { SourcesPage } from './pages/hydromet/SourcesPage';
 import { StationsPage } from './pages/hydromet/StationsPage';
 import { CostingLayout } from './components/layouts/CostingLayout';
 import { BudgetListPage, BudgetDetailPage, AllocationConsolePage, CostToServeDashboard, GlAccountsPage, CostCentersPage } from './pages/costing';
+import { CoreRegistryLayout } from './components/layouts/CoreRegistryLayout';
+import { HydrometLayout } from './components/layouts/HydrometLayout';
+import { ProjectsLayout } from './components/layouts/ProjectsLayout';
+import { ProjectsHome } from './pages/projects/ProjectsHome';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -61,46 +65,42 @@ export function AppMIS() {
               } />
               
               <Route path="/core" element={
-                <ProtectedRoute requiredPermission="view schemes">
-                  <CoreRegistryHome />
+                <ProtectedRoute>
+                  <CoreRegistryLayout />
                 </ProtectedRoute>
-              } />
-              
-              <Route path="/core/schemes" element={
-                <ProtectedRoute requiredPermission="view schemes">
-                  <SchemesPage />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/core/facilities" element={
-                <ProtectedRoute requiredPermission="view facilities">
-                  <FacilitiesPage />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/core/dmas" element={
-                <ProtectedRoute requiredPermission="view dmas">
-                  <DmasPage />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/core/pipelines" element={
-                <ProtectedRoute requiredPermission="view pipelines">
-                  <PipelinesPage />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/core/zones" element={
-                <ProtectedRoute requiredPermission="view zones">
-                  <ZonesPage />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/core/addresses" element={
-                <ProtectedRoute requiredPermission="view addresses">
-                  <AddressesPage />
-                </ProtectedRoute>
-              } />
+              }>
+                <Route index element={<Navigate to="/core/schemes" replace />} />
+                <Route path="schemes" element={
+                  <ProtectedRoute requiredPermission="view schemes">
+                    <SchemesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="facilities" element={
+                  <ProtectedRoute requiredPermission="view facilities">
+                    <FacilitiesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="dmas" element={
+                  <ProtectedRoute requiredPermission="view dmas">
+                    <DmasPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="pipelines" element={
+                  <ProtectedRoute requiredPermission="view pipelines">
+                    <PipelinesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="zones" element={
+                  <ProtectedRoute requiredPermission="view zones">
+                    <ZonesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="addresses" element={
+                  <ProtectedRoute requiredPermission="view addresses">
+                    <AddressesPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
               
               <Route path="/gis/map" element={
                 <ProtectedRoute requiredPermission="view schemes">
@@ -242,6 +242,18 @@ export function AppMIS() {
                 } />
               </Route>
               
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <ProjectsLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <ProjectsHome />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
               <Route path="/crm" element={
                 <ProtectedRoute>
                   <CrmLayout />
@@ -280,17 +292,23 @@ export function AppMIS() {
                 } />
               </Route>
               
-              <Route path="/hydromet/sources" element={
-                <ProtectedRoute requiredPermission="view sources">
-                  <SourcesPage />
+              <Route path="/hydromet" element={
+                <ProtectedRoute>
+                  <HydrometLayout />
                 </ProtectedRoute>
-              } />
-              
-              <Route path="/hydromet/stations" element={
-                <ProtectedRoute requiredPermission="view stations">
-                  <StationsPage />
-                </ProtectedRoute>
-              } />
+              }>
+                <Route index element={<Navigate to="/hydromet/sources" replace />} />
+                <Route path="sources" element={
+                  <ProtectedRoute requiredPermission="view sources">
+                    <SourcesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="stations" element={
+                  <ProtectedRoute requiredPermission="view stations">
+                    <StationsPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
               
               <Route path="/costing" element={
                 <ProtectedRoute>
