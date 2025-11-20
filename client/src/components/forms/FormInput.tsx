@@ -32,7 +32,7 @@ export function FormInput<T extends FieldValues>({
       <Controller
         control={control}
         name={name}
-        render={({ field }) => (
+        render={({ field: { value, onChange, ...field } }) => (
           <Input
             {...field}
             id={name}
@@ -40,7 +40,24 @@ export function FormInput<T extends FieldValues>({
             placeholder={placeholder}
             step={step}
             className={error ? 'border-red-500' : ''}
-            value={field.value ?? ''}
+            value={value ?? ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (type === 'number') {
+                // Let user type freely, convert on blur
+                onChange(val === '' ? undefined : val);
+              } else {
+                onChange(val);
+              }
+            }}
+            onBlur={(e) => {
+              if (type === 'number' && e.target.value !== '') {
+                // Convert to number on blur
+                const num = parseFloat(e.target.value);
+                onChange(isNaN(num) ? e.target.value : num);
+              }
+              field.onBlur();
+            }}
           />
         )}
       />
