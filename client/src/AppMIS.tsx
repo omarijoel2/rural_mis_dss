@@ -74,6 +74,19 @@ import { Tickets } from './pages/customer/Tickets';
 import { Kiosks } from './pages/customer/Kiosks';
 import { WaterTrucking } from './pages/customer/WaterTrucking';
 import { Connections } from './pages/customer/Connections';
+import { CommunityLayout } from './components/layouts/CommunityLayout';
+import { CommitteesDirectory } from './pages/community/CommitteesDirectory';
+import { CommitteeProfile } from './pages/community/CommitteeProfile';
+import { CommitteeFinance } from './pages/community/CommitteeFinance';
+import { VendorPortal } from './pages/community/VendorPortal';
+import { BidsCenter } from './pages/community/BidsCenter';
+import { VendorDeliveries } from './pages/community/VendorDeliveries';
+import { StakeholderMap } from './pages/community/StakeholderMap';
+import { EngagementPlanner } from './pages/community/EngagementPlanner';
+import { GRMConsole } from './pages/community/GRMConsole';
+import { OpenDataCatalog } from './pages/community/OpenDataCatalog';
+import { DatasetBuilder } from './pages/community/DatasetBuilder';
+import { PublicMaps } from './pages/community/PublicMaps';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -452,6 +465,74 @@ export function AppMIS() {
                 <Route path="connections" element={
                   <ProtectedRoute>
                     <Connections />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/community" element={
+                <ProtectedRoute>
+                  <CommunityLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/community/committees" replace />} />
+                <Route path="committees" element={
+                  <ProtectedRoute>
+                    <CommitteesDirectory />
+                  </ProtectedRoute>
+                } />
+                <Route path="committees/:id" element={
+                  <ProtectedRoute>
+                    <CommitteeProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="finance" element={
+                  <ProtectedRoute>
+                    <CommitteeFinance />
+                  </ProtectedRoute>
+                } />
+                <Route path="vendors" element={
+                  <ProtectedRoute>
+                    <VendorPortal />
+                  </ProtectedRoute>
+                } />
+                <Route path="bids" element={
+                  <ProtectedRoute>
+                    <BidsCenter />
+                  </ProtectedRoute>
+                } />
+                <Route path="deliveries" element={
+                  <ProtectedRoute>
+                    <VendorDeliveries />
+                  </ProtectedRoute>
+                } />
+                <Route path="stakeholders" element={
+                  <ProtectedRoute>
+                    <StakeholderMap />
+                  </ProtectedRoute>
+                } />
+                <Route path="engagements" element={
+                  <ProtectedRoute>
+                    <EngagementPlanner />
+                  </ProtectedRoute>
+                } />
+                <Route path="grm" element={
+                  <ProtectedRoute>
+                    <GRMConsole />
+                  </ProtectedRoute>
+                } />
+                <Route path="open-data" element={
+                  <ProtectedRoute>
+                    <OpenDataCatalog />
+                  </ProtectedRoute>
+                } />
+                <Route path="dataset-builder" element={
+                  <ProtectedRoute>
+                    <DatasetBuilder />
+                  </ProtectedRoute>
+                } />
+                <Route path="public-maps" element={
+                  <ProtectedRoute>
+                    <PublicMaps />
                   </ProtectedRoute>
                 } />
               </Route>
