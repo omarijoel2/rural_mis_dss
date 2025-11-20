@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["php83", "php83Packages.composer", "python311Packages.python-docx"]
+packages = ["php83", "php83Packages.composer", "python311Packages.python-docx", "caddy"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -24,7 +24,7 @@ localPort = 34203
 externalPort = 3003
 
 [[ports]]
-localPort = 39509
+localPort = 35119
 externalPort = 4200
 
 [[ports]]
