@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('pump_schedules', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignUuid('asset_id')->constrained('assets')->cascadeOnDelete(); // Pump asset
+            $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete(); // Pump asset
             $table->foreignUuid('scheme_id')->constrained('schemes')->cascadeOnDelete();
             $table->timestampTz('start_at');
             $table->timestampTz('end_at');

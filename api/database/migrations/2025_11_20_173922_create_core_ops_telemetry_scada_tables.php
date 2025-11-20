@@ -13,7 +13,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->foreignUuid('scheme_id')->nullable()->constrained('schemes')->nullOnDelete();
-            $table->foreignUuid('asset_id')->nullable()->constrained('assets')->nullOnDelete();
+            $table->foreignId('asset_id')->nullable()->constrained('assets')->nullOnDelete();
             $table->foreignUuid('network_node_id')->nullable()->constrained('network_nodes')->nullOnDelete();
             $table->string('tag')->unique(); // e.g., SCADA.PS1.FLOW
             $table->enum('io_type', ['AI', 'DI', 'DO', 'AO'])->default('AI'); // Analog/Digital Input/Output

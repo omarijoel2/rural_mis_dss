@@ -34,7 +34,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->foreignUuid('dma_id')->nullable()->constrained('dmas')->nullOnDelete();
-            $table->foreignUuid('asset_id')->nullable()->constrained('assets')->nullOnDelete();
+            $table->foreignId('asset_id')->nullable()->constrained('assets')->nullOnDelete();
             $table->enum('type', ['leak_repair', 'meter_replacement', 'prv_tuning', 'sectorization', 'campaign', 'other'])->default('leak_repair');
             $table->date('date');
             $table->decimal('estimated_savings_m3d', 10, 2)->nullable();

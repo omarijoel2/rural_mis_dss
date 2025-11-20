@@ -15,7 +15,8 @@ class OperationsController extends Controller
     use ValidatesTenantOwnership;
     public function dashboard(Request $request)
     {
-        $tenantId = auth()->user()->currentTenantId();
+        // Note: All queries below are automatically scoped by tenant via HasTenancy trait
+        // on Outage, PumpSchedule, DosePlan, and TelemetryTag models
         
         $activeOutages = Outage::whereIn('state', ['approved', 'live'])
             ->with(['scheme', 'dma'])
