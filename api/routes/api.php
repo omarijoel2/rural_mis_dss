@@ -119,6 +119,25 @@ Route::prefix('v1')->group(function () {
             Route::get('/tiles/network-edges/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'networkEdgeTiles']);
         });
         
+        Route::middleware(['auth:sanctum'])->prefix('edits')->group(function () {
+            Route::get('/', [App\Http\Controllers\Api\SpatialEditController::class, 'index']);
+            Route::post('/', [App\Http\Controllers\Api\SpatialEditController::class, 'store']);
+            Route::get('/{spatialEdit}', [App\Http\Controllers\Api\SpatialEditController::class, 'show']);
+            Route::post('/{spatialEdit}/submit', [App\Http\Controllers\Api\SpatialEditController::class, 'submitForReview']);
+            Route::post('/{spatialEdit}/approve', [App\Http\Controllers\Api\SpatialEditController::class, 'approve']);
+            Route::post('/{spatialEdit}/reject', [App\Http\Controllers\Api\SpatialEditController::class, 'reject']);
+            Route::delete('/{spatialEdit}', [App\Http\Controllers\Api\SpatialEditController::class, 'destroy']);
+        });
+        
+        Route::middleware(['auth:sanctum'])->prefix('redlines')->group(function () {
+            Route::get('/', [App\Http\Controllers\Api\RedlineController::class, 'index']);
+            Route::post('/', [App\Http\Controllers\Api\RedlineController::class, 'store']);
+            Route::post('/bulk', [App\Http\Controllers\Api\RedlineController::class, 'bulkCreate']);
+            Route::get('/{redline}', [App\Http\Controllers\Api\RedlineController::class, 'show']);
+            Route::patch('/{redline}', [App\Http\Controllers\Api\RedlineController::class, 'update']);
+            Route::delete('/{redline}', [App\Http\Controllers\Api\RedlineController::class, 'destroy']);
+        });
+        
         Route::get('/layers', function (Request $request) {
             return response()->json([
                 'layers' => [
