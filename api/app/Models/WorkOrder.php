@@ -18,6 +18,8 @@ class WorkOrder extends Model
         'wo_num',
         'kind',
         'asset_id',
+        'scheme_id',
+        'dma_id',
         'title',
         'description',
         'priority',
@@ -25,18 +27,36 @@ class WorkOrder extends Model
         'created_by',
         'assigned_to',
         'scheduled_for',
+        'due_at',
         'started_at',
         'completed_at',
+        'qa_at',
+        'qa_by',
         'completion_notes',
         'pm_policy_id',
+        'job_plan_id',
+        'sla_policy_id',
+        'est_labor_hours',
+        'est_parts_cost',
+        'actual_labor_hours',
+        'actual_parts_cost',
+        'actual_external_cost',
+        'variance_notes',
         'geom',
         'source',
     ];
 
     protected $casts = [
         'scheduled_for' => 'datetime',
+        'due_at' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'qa_at' => 'datetime',
+        'est_labor_hours' => 'decimal:2',
+        'est_parts_cost' => 'decimal:2',
+        'actual_labor_hours' => 'decimal:2',
+        'actual_parts_cost' => 'decimal:2',
+        'actual_external_cost' => 'decimal:2',
         'geom' => Point::class,
     ];
 
@@ -64,6 +84,16 @@ class WorkOrder extends Model
         return $this->belongsTo(Asset::class);
     }
 
+    public function scheme(): BelongsTo
+    {
+        return $this->belongsTo(Scheme::class);
+    }
+
+    public function dma(): BelongsTo
+    {
+        return $this->belongsTo(Dma::class);
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -73,10 +103,25 @@ class WorkOrder extends Model
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
+
+    public function qaBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'qa_by');
+    }
     
     public function pmPolicy(): BelongsTo
     {
         return $this->belongsTo(PmPolicy::class);
+    }
+
+    public function jobPlan(): BelongsTo
+    {
+        return $this->belongsTo(JobPlan::class);
+    }
+
+    public function slaPolicy(): BelongsTo
+    {
+        return $this->belongsTo(SlaPolicy::class);
     }
 
     public function woParts(): HasMany
@@ -97,5 +142,50 @@ class WorkOrder extends Model
     public function stockTxns(): HasMany
     {
         return $this->hasMany(StockTxn::class);
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(WoAttachment::class);
+    }
+
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(WoChecklistItem::class);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(WoComment::class);
+    }
+
+    public function transitions(): HasMany
+    {
+        return $this->hasMany(WoTransition::class);
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(WoAssignment::class);
+    }
+
+    public function permits(): HasMany
+    {
+        return $this->hasMany(Permit::class);
+    }
+
+    public function riskAssessments(): HasMany
+    {
+        return $this->hasMany(RiskAssessment::class);
+    }
+
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
+
+    public function slaBreaches(): HasMany
+    {
+        return $this->hasMany(SlaBreach::class);
     }
 }
