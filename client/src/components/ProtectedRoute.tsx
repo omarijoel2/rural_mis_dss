@@ -14,6 +14,13 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, hasPermission, hasRole } = useAuth();
 
+  // DEMO MODE: Bypass authentication to view pages without login
+  const DEMO_MODE = true;
+
+  if (DEMO_MODE) {
+    return <>{children}</>;
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

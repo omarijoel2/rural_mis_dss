@@ -56,7 +56,7 @@ export function AppMIS() {
               
               <Route path="/" element={
                 <ProtectedRoute>
-                  <Navigate to="/core" replace />
+                  <Navigate to="/costing/budgets" replace />
                 </ProtectedRoute>
               } />
               
