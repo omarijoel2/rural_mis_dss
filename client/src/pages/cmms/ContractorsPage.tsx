@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { contractorService } from '../../services/cmms.service';
+import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { Input } from '../../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import {
   Table,
@@ -12,9 +14,19 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../components/ui/dialog';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { FileText, AlertCircle, TrendingUp, Clock } from 'lucide-react';
+import { FileText, AlertCircle, TrendingUp, Clock, Plus, AlertTriangle } from 'lucide-react';
 import { Progress } from '../../components/ui/progress';
+import { toast } from 'sonner';
 
 const STATUS_COLORS = {
   draft: 'bg-gray-100 text-gray-800',
@@ -25,8 +37,12 @@ const STATUS_COLORS = {
 
 export function ContractorsPage() {
   const [filters, setFilters] = useState({ page: 1, per_page: 15, status: 'active' });
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [violationDialogOpen, setViolationDialogOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['service-contracts', filters],
     queryFn: () => contractorService.getContracts(filters),
   });
@@ -41,14 +57,172 @@ export function ContractorsPage() {
     queryFn: () => contractorService.getExpiringContracts({ days: 90 }),
   });
 
+  const createContractMutation = useMutation({
+    mutationFn: contractorService.createContract,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-contracts'] });
+      setContractDialogOpen(false);
+      toast.success('Contract created successfully');
+    },
+    onError: () => toast.error('Failed to create contract'),
+  });
+
+  const recordViolationMutation = useMutation({
+    mutationFn: contractorService.recordViolation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-contracts'] });
+      setViolationDialogOpen(false);
+      toast.success('SLA violation recorded');
+    },
+    onError: () => toast.error('Failed to record violation'),
+  });
+
+  const handleCreateContract = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const value = parseFloat(formData.get('value') as string);
+    
+    if (isNaN(value)) {
+      toast.error('Please enter a valid contract value');
+      e.currentTarget.reset();
+      return;
+    }
+    
+    const data = {
+      contract_num: formData.get('contract_num') as string,
+      vendor_name: formData.get('vendor_name') as string,
+      type: formData.get('type') as 'maintenance' | 'service' | 'supply',
+      value,
+      start_date: formData.get('start_date') as string,
+      end_date: formData.get('end_date') as string,
+      description: formData.get('description') as string,
+      status: 'active' as const,
+    };
+    createContractMutation.mutate(data);
+  };
+
+  const handleRecordViolation = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedContract) {
+      toast.error('No contract selected');
+      return;
+    }
+    const formData = new FormData(e.currentTarget);
+    const penaltyAmount = parseFloat(formData.get('penalty_amount') as string);
+    
+    if (isNaN(penaltyAmount)) {
+      toast.error('Please enter a valid penalty amount');
+      e.currentTarget.reset();
+      return;
+    }
+    
+    const data = {
+      contract_id: selectedContract.id,
+      description: formData.get('description') as string,
+      penalty_amount: penaltyAmount,
+      occurred_at: new Date().toISOString(),
+    };
+    recordViolationMutation.mutate(data);
+  };
+
   const activeCount = data?.data?.filter(c => c.status === 'active').length || 0;
   const totalValue = data?.data?.reduce((sum, c) => sum + (c.value || 0), 0) || 0;
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold">Failed to load contracts data</h3>
+          <p className="text-muted-foreground">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Contractor & SLA Management</h1>
-        <p className="text-muted-foreground">Service contracts and vendor performance tracking</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Contractor & SLA Management</h1>
+          <p className="text-muted-foreground">Service contracts and vendor performance tracking</p>
+        </div>
+        <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              New Contract
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create Service Contract</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateContract} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="contract_num">Contract Number</Label>
+                  <Input id="contract_num" name="contract_num" required />
+                </div>
+                <div>
+                  <Label htmlFor="vendor_name">Vendor Name</Label>
+                  <Input id="vendor_name" name="vendor_name" required />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="type">Contract Type</Label>
+                  <Select name="type" required>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      <SelectItem value="service">Service</SelectItem>
+                      <SelectItem value="supply">Supply</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="value">Contract Value</Label>
+                  <Input
+                    id="value"
+                    name="value"
+                    type="number"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="start_date">Start Date</Label>
+                  <Input id="start_date" name="start_date" type="date" required />
+                </div>
+                <div>
+                  <Label htmlFor="end_date">End Date</Label>
+                  <Input id="end_date" name="end_date" type="date" required />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" rows={3} />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setContractDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createContractMutation.isPending}>
+                  Create
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
@@ -137,6 +311,10 @@ export function ContractorsPage() {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">Loading...</div>
+              ) : !data?.data || data.data.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No contracts found
+                </div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -147,10 +325,11 @@ export function ContractorsPage() {
                       <TableHead>Value</TableHead>
                       <TableHead>Period</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data?.data?.map((contract) => (
+                    {data.data.map((contract) => (
                       <TableRow key={contract.id}>
                         <TableCell className="font-mono">{contract.contract_num}</TableCell>
                         <TableCell className="font-medium">{contract.vendor_name}</TableCell>
@@ -166,6 +345,18 @@ export function ContractorsPage() {
                           <Badge className={STATUS_COLORS[contract.status]}>
                             {contract.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedContract(contract);
+                              setViolationDialogOpen(true);
+                            }}
+                          >
+                            Log Violation
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -284,6 +475,48 @@ export function ContractorsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={violationDialogOpen} onOpenChange={setViolationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record SLA Violation</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRecordViolation} className="space-y-4">
+            <div>
+              <Label htmlFor="description">Violation Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                rows={3}
+                required
+                placeholder="Describe the SLA breach..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="penalty_amount">Penalty Amount</Label>
+              <Input
+                id="penalty_amount"
+                name="penalty_amount"
+                type="number"
+                step="0.01"
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setViolationDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={recordViolationMutation.isPending}>
+                Record Violation
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
