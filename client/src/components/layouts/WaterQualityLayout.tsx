@@ -1,78 +1,55 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { Button } from '../ui/button';
+import { Outlet, NavLink } from 'react-router-dom';
+import { cn } from '../../lib/utils';
+import { GlobalSidebar } from './GlobalSidebar';
 import { 
   Droplet, 
   MapPin, 
   Calendar, 
   TestTube, 
   FileText, 
-  BarChart3,
-  LogOut
+  BarChart3
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/water-quality/parameters', label: 'Parameters', icon: TestTube, permission: 'view wq parameters' },
-  { path: '/water-quality/sampling-points', label: 'Sampling Points', icon: MapPin, permission: 'view wq sampling points' },
-  { path: '/water-quality/plans', label: 'Sampling Plans', icon: Calendar, permission: 'view wq plans' },
-  { path: '/water-quality/samples', label: 'Samples', icon: Droplet, permission: 'view wq samples' },
-  { path: '/water-quality/results', label: 'Lab Results', icon: FileText, permission: 'view wq results' },
-  { path: '/water-quality/compliance', label: 'Compliance', icon: BarChart3, permission: 'view wq compliance' },
+  { path: '/water-quality/parameters', label: 'Parameters', icon: TestTube },
+  { path: '/water-quality/sampling-points', label: 'Sampling Points', icon: MapPin },
+  { path: '/water-quality/plans', label: 'Sampling Plans', icon: Calendar },
+  { path: '/water-quality/samples', label: 'Samples', icon: Droplet },
+  { path: '/water-quality/results', label: 'Lab Results', icon: FileText },
+  { path: '/water-quality/compliance', label: 'Compliance', icon: BarChart3 },
 ];
 
 export function WaterQualityLayout() {
-  const location = useLocation();
-  const { user, logout, hasPermission } = useAuth();
-
-  const visibleNavItems = navItems.filter(item => hasPermission(item.permission));
-
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Droplet className="h-6 w-6 text-blue-500" />
-            <h1 className="text-2xl font-bold">Water Quality & Lab QA/QC</h1>
+    <div className="flex min-h-screen">
+      <GlobalSidebar />
+      <div className="flex flex-1">
+        <aside className="w-64 bg-card border-r">
+          <div className="p-6">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Droplet className="h-5 w-5 text-blue-500" />
+              Water Quality
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">Lab & QA/QC Management</p>
           </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-muted-foreground">
-              <p className="font-medium">{user?.name}</p>
-              <p>{user?.email}</p>
-            </div>
-            <Button onClick={logout} variant="outline" size="sm">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        <aside className="w-64 border-r bg-card min-h-[calc(100vh-73px)]">
-          <nav className="p-4 space-y-2">
-            <Link to="/core">
-              <Button variant="ghost" className="w-full justify-start mb-4">
-                ← Back to Core Registry
-              </Button>
-            </Link>
-            
-            {visibleNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <Link key={item.path} to={item.path}>
-                  <Button
-                    variant={isActive ? 'secondary' : 'ghost'}
-                    className="w-full justify-start"
-                  >
-                    <Icon className="h-4 w-4 mr-2" />
-                    {item.label}
-                  </Button>
-                </Link>
-              );
-            })}
+          <nav className="px-3 space-y-1">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  )
+                }
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </NavLink>
+            ))}
           </nav>
         </aside>
 

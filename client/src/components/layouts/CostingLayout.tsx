@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { Calculator, PieChart, TrendingUp, DollarSign, Building2 } from 'lucide-react';
-import { GlobalNav } from './GlobalNav';
+import { GlobalSidebar } from './GlobalSidebar';
 
 const costingNav = [
   { name: 'Budgets', href: '/costing/budgets', icon: Calculator },
@@ -13,9 +13,8 @@ const costingNav = [
 
 export function CostingLayout() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <GlobalNav />
-
+    <div className="flex min-h-screen">
+      <GlobalSidebar />
       <div className="flex flex-1">
         {/* Module-specific Sidebar */}
         <aside className="w-64 bg-card border-r">

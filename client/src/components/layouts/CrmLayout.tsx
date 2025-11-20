@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { Users, Home, Receipt, AlertTriangle, FileText, Upload } from 'lucide-react';
-import { GlobalNav } from './GlobalNav';
+import { GlobalSidebar } from './GlobalSidebar';
 
 const navigation = [
   { name: 'Customers', href: '/crm/customers', icon: Users },
@@ -13,8 +13,8 @@ const navigation = [
 
 export function CrmLayout() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <GlobalNav />
+    <div className="flex min-h-screen">
+      <GlobalSidebar />
       <div className="flex flex-1">
         <aside className="w-64 bg-card border-r">
           <div className="p-6">
