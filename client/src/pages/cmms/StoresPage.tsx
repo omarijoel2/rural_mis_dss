@@ -28,15 +28,16 @@ import { toast } from 'sonner';
 
 const receiptSchema = z.object({
   part_id: z.number().int().positive('Part ID is required'),
-  quantity: z.number().positive('Quantity must be positive'),
+  bin_id: z.number().int().positive('Bin ID is required'),
+  qty: z.number().positive('Quantity must be positive'),
   unit_cost: z.number().positive('Unit cost must be positive'),
-  supplier: z.string().optional(),
   notes: z.string().optional(),
 });
 
 const issueSchema = z.object({
   part_id: z.number().int().positive('Part ID is required'),
-  quantity: z.number().positive('Quantity must be positive'),
+  bin_id: z.number().int().positive('Bin ID is required'),
+  qty: z.number().positive('Quantity must be positive'),
   work_order_id: z.number().int().positive().optional(),
   notes: z.string().optional(),
 });
@@ -54,9 +55,9 @@ export function StoresPage() {
     resolver: zodResolver(receiptSchema),
     defaultValues: {
       part_id: 0,
-      quantity: 0,
+      bin_id: 1,
+      qty: 0,
       unit_cost: 0,
-      supplier: '',
       notes: '',
     },
   });
@@ -65,7 +66,8 @@ export function StoresPage() {
     resolver: zodResolver(issueSchema),
     defaultValues: {
       part_id: 0,
-      quantity: 0,
+      bin_id: 1,
+      qty: 0,
       notes: '',
     },
   });
@@ -83,20 +85,20 @@ export function StoresPage() {
   }, [issueDialogOpen, issueForm]);
 
   const { data: inventory, isLoading, error } = useQuery({
-    queryKey: ['inventory', filters],
-    queryFn: () => storesService.getInventory(filters),
+    queryKey: ['stores', filters],
+    queryFn: () => storesService.getStores(filters),
   });
 
-  const { data: transactions } = useQuery({
-    queryKey: ['inventory-transactions', { page: 1, per_page: 10 }],
-    queryFn: () => storesService.getTransactions({ page: 1, per_page: 10 }),
+  const { data: lowStock } = useQuery({
+    queryKey: ['low-stock'],
+    queryFn: () => storesService.getLowStock(),
   });
 
   const receiptMutation = useMutation({
     mutationFn: storesService.receiveStock,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['stores'] });
+      queryClient.invalidateQueries({ queryKey: ['low-stock'] });
       setReceiptDialogOpen(false);
       toast.success('Stock received successfully');
     },
@@ -106,8 +108,8 @@ export function StoresPage() {
   const issueMutation = useMutation({
     mutationFn: storesService.issueStock,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['stores'] });
+      queryClient.invalidateQueries({ queryKey: ['low-stock'] });
       setIssueDialogOpen(false);
       toast.success('Stock issued successfully');
     },
@@ -115,33 +117,15 @@ export function StoresPage() {
   });
 
   const handleReceiveStock = (data: ReceiptFormData) => {
-    receiptMutation.mutate({
-      part_id: data.part_id,
-      quantity: data.quantity,
-      unit_cost: data.unit_cost,
-      supplier: data.supplier || '',
-      received_at: new Date().toISOString(),
-      notes: data.notes || '',
-    });
+    receiptMutation.mutate(data);
   };
 
   const handleIssueStock = (data: IssueFormData) => {
-    const payload: any = {
-      part_id: data.part_id,
-      quantity: data.quantity,
-      issued_at: new Date().toISOString(),
-      notes: data.notes || '',
-    };
-    
-    if (data.work_order_id) {
-      payload.work_order_id = data.work_order_id;
-    }
-
-    issueMutation.mutate(payload);
+    issueMutation.mutate(data);
   };
 
-  const totalValue = inventory?.data?.reduce((sum, item) => sum + (item.quantity || 0) * (item.avg_cost || 0), 0) || 0;
-  const lowStockCount = inventory?.data?.filter(item => item.quantity && item.quantity < 10).length || 0;
+  const totalValue = 0; // Placeholder - would come from valuation API
+  const lowStockCount = lowStock?.length || 0;
 
   if (error) {
     return (
@@ -210,58 +194,48 @@ export function StoresPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Recent Transactions</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Stores</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{transactions?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">All time</p>
+            <div className="text-2xl font-bold">{inventory?.total || 0}</div>
+            <p className="text-xs text-muted-foreground">Locations</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Current Inventory</CardTitle>
+          <CardTitle>Stores</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Loading...</div>
           ) : !inventory?.data || inventory.data.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No inventory items. Receive stock to get started.
+              No stores configured. Create a store to manage inventory.
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Part ID</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Avg Cost</TableHead>
-                  <TableHead>Total Value</TableHead>
+                  <TableHead>Store Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Location</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inventory.data.map((item) => (
-                  <TableRow key={item.part_id}>
-                    <TableCell className="font-mono font-medium">{item.part_id}</TableCell>
-                    <TableCell>{item.description || '—'}</TableCell>
+                {inventory.data.map((store: any) => (
+                  <TableRow key={store.id}>
+                    <TableCell className="font-medium">{store.name}</TableCell>
                     <TableCell>
-                      <span className={item.quantity && item.quantity < 10 ? 'text-yellow-600 font-medium' : ''}>
-                        {item.quantity || 0}
-                      </span>
+                      <Badge variant="outline">{store.type || 'General'}</Badge>
                     </TableCell>
-                    <TableCell>${item.avg_cost?.toFixed(2) || '0.00'}</TableCell>
-                    <TableCell className="font-medium">
-                      ${((item.quantity || 0) * (item.avg_cost || 0)).toFixed(2)}
+                    <TableCell className="text-sm text-muted-foreground">
+                      {store.location || '—'}
                     </TableCell>
                     <TableCell>
-                      {item.quantity && item.quantity < 10 ? (
-                        <Badge className="bg-yellow-100 text-yellow-800">Low Stock</Badge>
-                      ) : (
-                        <Badge className="bg-green-100 text-green-800">In Stock</Badge>
-                      )}
+                      <Badge className="bg-green-100 text-green-800">Active</Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -277,23 +251,33 @@ export function StoresPage() {
             <DialogTitle>Receive Stock</DialogTitle>
           </DialogHeader>
           <form onSubmit={receiptForm.handleSubmit(handleReceiveStock)} className="space-y-4">
-            <FormInput
-              control={receiptForm.control}
-              name="part_id"
-              label="Part ID"
-              type="number"
-              required
-              error={receiptForm.formState.errors.part_id?.message}
-            />
             <div className="grid grid-cols-2 gap-4">
               <FormInput
                 control={receiptForm.control}
-                name="quantity"
+                name="part_id"
+                label="Part ID"
+                type="number"
+                required
+                error={receiptForm.formState.errors.part_id?.message}
+              />
+              <FormInput
+                control={receiptForm.control}
+                name="bin_id"
+                label="Bin ID"
+                type="number"
+                required
+                error={receiptForm.formState.errors.bin_id?.message}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                control={receiptForm.control}
+                name="qty"
                 label="Quantity"
                 type="number"
                 step="0.01"
                 required
-                error={receiptForm.formState.errors.quantity?.message}
+                error={receiptForm.formState.errors.qty?.message}
               />
               <FormInput
                 control={receiptForm.control}
@@ -305,12 +289,6 @@ export function StoresPage() {
                 error={receiptForm.formState.errors.unit_cost?.message}
               />
             </div>
-            <FormInput
-              control={receiptForm.control}
-              name="supplier"
-              label="Supplier"
-              error={receiptForm.formState.errors.supplier?.message}
-            />
             <FormTextarea
               control={receiptForm.control}
               name="notes"
@@ -343,22 +321,32 @@ export function StoresPage() {
             <DialogTitle>Issue Stock</DialogTitle>
           </DialogHeader>
           <form onSubmit={issueForm.handleSubmit(handleIssueStock)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                control={issueForm.control}
+                name="part_id"
+                label="Part ID"
+                type="number"
+                required
+                error={issueForm.formState.errors.part_id?.message}
+              />
+              <FormInput
+                control={issueForm.control}
+                name="bin_id"
+                label="Bin ID"
+                type="number"
+                required
+                error={issueForm.formState.errors.bin_id?.message}
+              />
+            </div>
             <FormInput
               control={issueForm.control}
-              name="part_id"
-              label="Part ID"
-              type="number"
-              required
-              error={issueForm.formState.errors.part_id?.message}
-            />
-            <FormInput
-              control={issueForm.control}
-              name="quantity"
+              name="qty"
               label="Quantity"
               type="number"
               step="0.01"
               required
-              error={issueForm.formState.errors.quantity?.message}
+              error={issueForm.formState.errors.qty?.message}
             />
             <FormInput
               control={issueForm.control}
