@@ -110,12 +110,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/facilities/import', [FacilityController::class, 'importGeojson'])->middleware('permission:import spatial data');
         Route::get('/facilities/export', [FacilityController::class, 'export'])->middleware('permission:export spatial data');
         
-        Route::get('/tiles/schemes/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'schemeTiles']);
-        Route::get('/tiles/dmas/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'dmaTiles']);
-        Route::get('/tiles/facilities/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'facilityTiles']);
-        Route::get('/tiles/pipelines/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'pipelineTiles']);
-        Route::get('/tiles/network-nodes/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'networkNodeTiles']);
-        Route::get('/tiles/network-edges/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'networkEdgeTiles']);
+        Route::middleware(['auth:sanctum'])->group(function () {
+            Route::get('/tiles/schemes/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'schemeTiles']);
+            Route::get('/tiles/dmas/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'dmaTiles']);
+            Route::get('/tiles/facilities/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'facilityTiles']);
+            Route::get('/tiles/pipelines/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'pipelineTiles']);
+            Route::get('/tiles/network-nodes/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'networkNodeTiles']);
+            Route::get('/tiles/network-edges/{z}/{x}/{y}.mvt', [App\Http\Controllers\Api\VectorTileController::class, 'networkEdgeTiles']);
+        });
         
         Route::get('/layers', function (Request $request) {
             return response()->json([

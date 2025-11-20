@@ -5,15 +5,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { Badge } from '@/components/ui/badge';
 
 interface MapLayer {
   id: string;
   name: string;
-  url: string;
+  tileUrl: string;
+  sourceLayer: string;
   type: 'fill' | 'circle' | 'line';
   paint: any;
+  minZoom?: number;
+  maxZoom?: number;
 }
 
 const BASEMAP_STYLES = [
@@ -43,8 +45,11 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'schemes',
     name: 'Water Supply Schemes',
-    url: '/api/v1/gis/schemes/geojson',
+    tileUrl: '/api/v1/gis/tiles/schemes/{z}/{x}/{y}.mvt',
+    sourceLayer: 'schemes',
     type: 'fill',
+    minZoom: 0,
+    maxZoom: 22,
     paint: {
       'fill-color': [
         'match',
@@ -61,8 +66,11 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'dmas',
     name: 'District Metered Areas',
-    url: '/api/v1/gis/dmas/geojson',
+    tileUrl: '/api/v1/gis/tiles/dmas/{z}/{x}/{y}.mvt',
+    sourceLayer: 'dmas',
     type: 'fill',
+    minZoom: 0,
+    maxZoom: 22,
     paint: {
       'fill-color': [
         'match',
@@ -79,8 +87,11 @@ const MAP_LAYERS: MapLayer[] = [
   {
     id: 'facilities',
     name: 'Facilities',
-    url: '/api/v1/gis/facilities/geojson',
+    tileUrl: '/api/v1/gis/tiles/facilities/{z}/{x}/{y}.mvt',
+    sourceLayer: 'facilities',
     type: 'circle',
+    minZoom: 8,
+    maxZoom: 22,
     paint: {
       'circle-radius': 6,
       'circle-color': [
@@ -96,29 +107,69 @@ const MAP_LAYERS: MapLayer[] = [
       'circle-stroke-color': '#ffffff',
     },
   },
+  {
+    id: 'pipelines',
+    name: 'Pipelines',
+    tileUrl: '/api/v1/gis/tiles/pipelines/{z}/{x}/{y}.mvt',
+    sourceLayer: 'pipelines',
+    type: 'line',
+    minZoom: 12,
+    maxZoom: 22,
+    paint: {
+      'line-color': [
+        'match',
+        ['get', 'status'],
+        'active', '#3b82f6',
+        'leak', '#ef4444',
+        'rehab', '#f59e0b',
+        'abandoned', '#94a3b8',
+        '#6b7280'
+      ],
+      'line-width': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        12, 1,
+        16, 3,
+        20, 6
+      ],
+      'line-opacity': 0.8,
+    },
+  },
+  {
+    id: 'network-nodes',
+    name: 'Network Nodes',
+    tileUrl: '/api/v1/gis/tiles/network-nodes/{z}/{x}/{y}.mvt',
+    sourceLayer: 'network_nodes',
+    type: 'circle',
+    minZoom: 14,
+    maxZoom: 22,
+    paint: {
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        14, 2,
+        18, 4,
+        22, 8
+      ],
+      'circle-color': [
+        'match',
+        ['get', 'type'],
+        'source', '#10b981',
+        'wtp', '#3b82f6',
+        'reservoir', '#06b6d4',
+        'junction', '#fbbf24',
+        'valve', '#8b5cf6',
+        'pump', '#f59e0b',
+        '#6b7280'
+      ],
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#ffffff',
+    },
+  },
 ];
 
-async function fetchGeoJSON(url: string) {
-  const response = await fetch(url, {
-    credentials: 'include',
-  });
-  
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  
-  return response.json();
-}
-
-function useLayerData(layerId: string, url: string, enabled: boolean) {
-  return useQuery({
-    queryKey: ['gis-layer', layerId],
-    queryFn: () => fetchGeoJSON(url),
-    enabled,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-}
 
 interface MapConsoleProps {
   className?: string;
@@ -133,7 +184,7 @@ export function MapConsole({ className }: MapConsoleProps) {
 
   const [basemapId, setBasemapId] = useState('positron');
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(
-    new Set(['schemes', 'dmas', 'facilities'])
+    new Set(['schemes', 'dmas', 'facilities', 'pipelines'])
   );
 
   const toggleLayer = useCallback((layerId: string) => {
@@ -147,16 +198,6 @@ export function MapConsole({ className }: MapConsoleProps) {
       return next;
     });
   }, []);
-
-  const schemesQuery = useLayerData('schemes', MAP_LAYERS[0].url, enabledLayers.has('schemes'));
-  const dmasQuery = useLayerData('dmas', MAP_LAYERS[1].url, enabledLayers.has('dmas'));
-  const facilitiesQuery = useLayerData('facilities', MAP_LAYERS[2].url, enabledLayers.has('facilities'));
-
-  const layerQueries = {
-    schemes: schemesQuery,
-    dmas: dmasQuery,
-    facilities: facilitiesQuery,
-  };
 
   const selectedBasemap = BASEMAP_STYLES.find((style) => style.id === basemapId) || BASEMAP_STYLES[0];
 
@@ -173,18 +214,20 @@ export function MapConsole({ className }: MapConsoleProps) {
         <FullscreenControl position="top-right" />
 
         {MAP_LAYERS.map((layer) => {
-          const query = layerQueries[layer.id as keyof typeof layerQueries];
-          if (!enabledLayers.has(layer.id) || !query.data) return null;
+          if (!enabledLayers.has(layer.id)) return null;
 
           return (
             <Source
               key={layer.id}
               id={layer.id}
-              type="geojson"
-              data={query.data}
+              type="vector"
+              tiles={[layer.tileUrl]}
+              minzoom={layer.minZoom}
+              maxzoom={layer.maxZoom}
             >
               <Layer
                 id={layer.id}
+                source-layer={layer.sourceLayer}
                 type={layer.type}
                 paint={layer.paint}
               />
@@ -213,10 +256,12 @@ export function MapConsole({ className }: MapConsoleProps) {
             </Select>
           </div>
 
-          <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Layers</h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Layers</h4>
+            <Badge variant="outline" className="text-xs">Vector Tiles</Badge>
+          </div>
           <div className="space-y-3">
             {MAP_LAYERS.map((layer) => {
-              const query = layerQueries[layer.id as keyof typeof layerQueries];
               return (
                 <div key={layer.id} className="flex items-center justify-between">
                   <Label
@@ -225,19 +270,11 @@ export function MapConsole({ className }: MapConsoleProps) {
                   >
                     {layer.name}
                   </Label>
-                  <div className="flex items-center gap-2">
-                    {query.isLoading && (
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                    )}
-                    {query.isError && (
-                      <span className="text-xs text-red-500">Error</span>
-                    )}
-                    <Switch
-                      id={`layer-${layer.id}`}
-                      checked={enabledLayers.has(layer.id)}
-                      onCheckedChange={() => toggleLayer(layer.id)}
-                    />
-                  </div>
+                  <Switch
+                    id={`layer-${layer.id}`}
+                    checked={enabledLayers.has(layer.id)}
+                    onCheckedChange={() => toggleLayer(layer.id)}
+                  />
                 </div>
               );
             })}

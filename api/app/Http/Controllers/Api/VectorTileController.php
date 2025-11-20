@@ -57,10 +57,14 @@ class VectorTileController extends Controller
 
     private function generateTile(string $table, string $geomColumn, int $z, int $x, int $y, array $properties)
     {
+        if (!auth()->check() || !auth()->user()) {
+            return response('Unauthorized', 401);
+        }
+
         $tenantId = auth()->user()->currentTenantId();
         
         if (!$tenantId) {
-            return response('Unauthorized', 401);
+            return response('Forbidden - No tenant assigned', 403);
         }
 
         $cacheKey = "mvt:{$table}:{$tenantId}:{$z}:{$x}:{$y}";
@@ -121,7 +125,6 @@ class VectorTileController extends Controller
 
         return response($mvt)
             ->header('Content-Type', 'application/x-protobuf')
-            ->header('Content-Encoding', 'gzip')
             ->header('Cache-Control', 'public, max-age=3600');
     }
 
