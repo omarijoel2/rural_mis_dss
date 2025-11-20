@@ -68,7 +68,8 @@ export function ContractorsPage() {
   });
 
   const recordViolationMutation = useMutation({
-    mutationFn: contractorService.recordViolation,
+    mutationFn: ({ contractId, data }: { contractId: number; data: any }) =>
+      contractorService.recordViolation(contractId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service-contracts'] });
       setViolationDialogOpen(false);
@@ -91,7 +92,7 @@ export function ContractorsPage() {
     const data = {
       contract_num: formData.get('contract_num') as string,
       vendor_name: formData.get('vendor_name') as string,
-      type: formData.get('type') as 'maintenance' | 'service' | 'supply',
+      type: formData.get('type') as 'maintenance' | 'construction' | 'supply' | 'consulting',
       value,
       start_date: formData.get('start_date') as string,
       end_date: formData.get('end_date') as string,
@@ -116,13 +117,14 @@ export function ContractorsPage() {
       return;
     }
     
-    const data = {
-      contract_id: selectedContract.id,
-      description: formData.get('description') as string,
-      penalty_amount: penaltyAmount,
-      occurred_at: new Date().toISOString(),
-    };
-    recordViolationMutation.mutate(data);
+    recordViolationMutation.mutate({
+      contractId: selectedContract.id,
+      data: {
+        description: formData.get('description') as string,
+        penalty_amount: penaltyAmount,
+        occurred_at: new Date().toISOString(),
+      },
+    });
   };
 
   const activeCount = data?.data?.filter(c => c.status === 'active').length || 0;
