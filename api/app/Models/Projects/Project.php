@@ -23,10 +23,12 @@ class Project extends Model
         'description',
         'program_id',
         'category_id',
+        'cost_center_id',
         'pipeline_id',
         'pm_id',
         'baseline_budget',
         'revised_budget',
+        'budget_version_id',
         'baseline_start_date',
         'baseline_end_date',
         'revised_start_date',
@@ -135,5 +137,25 @@ class Project extends Model
     public function capitalizationEntries()
     {
         return $this->hasMany(CapitalizationEntry::class);
+    }
+
+    public function budgetVersion()
+    {
+        return $this->belongsTo(\App\Models\Costing\BudgetVersion::class, 'budget_version_id');
+    }
+
+    public function costCenter()
+    {
+        return $this->belongsTo(\App\Models\Costing\CostCenter::class, 'cost_center_id');
+    }
+
+    public function actuals()
+    {
+        return $this->hasMany(\App\Models\Costing\Actual::class, 'project_id');
+    }
+
+    public function encumbrances()
+    {
+        return $this->hasMany(\App\Models\Costing\Encumbrance::class, 'project_id');
     }
 }

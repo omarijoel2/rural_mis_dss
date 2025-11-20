@@ -57,4 +57,9 @@ class Actual extends Model
     {
         return $this->belongsTo(GlAccount::class);
     }
+
+    public function project()
+    {
+        return $this->belongsTo(\App\Models\Projects\Project::class, 'project_id');
+    }
 }
