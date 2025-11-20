@@ -24,12 +24,21 @@ import { RetentionPage } from './pages/security/RetentionPage';
 import { DataCatalogPage } from './pages/security/DataCatalogPage';
 import { TwoFactorSetupPage } from './pages/security/TwoFactorSetupPage';
 import { CmmsLayout } from './components/layouts/CmmsLayout';
-import { CmmsDashboard } from './pages/cmms/CmmsDashboard';
-import { AssetsPage } from './pages/cmms/AssetsPage';
-import { AssetDetailPage } from './pages/cmms/AssetDetailPage';
-import { WorkOrdersPage } from './pages/cmms/WorkOrdersPage';
-import { PartsPage } from './pages/cmms/PartsPage';
-import { CmmsMapPage } from './pages/cmms/CmmsMapPage';
+import { 
+  CmmsDashboard, 
+  AssetsPage, 
+  AssetDetailPage, 
+  WorkOrdersPage, 
+  PartsPage, 
+  CmmsMapPage,
+  JobPlansPage,
+  PmPage,
+  ConditionMonitoringPage,
+  StoresPage,
+  FleetPage,
+  ContractorsPage,
+  HsePage
+} from './pages/cmms';
 import { WaterQualityLayout } from './components/layouts/WaterQualityLayout';
 import { ParametersPage } from './pages/water-quality/ParametersPage';
 import { SamplingPointsPage } from './pages/water-quality/SamplingPointsPage';
@@ -182,6 +191,41 @@ export function AppMIS() {
                 <Route path="map" element={
                   <ProtectedRoute requiredPermission="view assets">
                     <CmmsMapPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="job-plans" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <JobPlansPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="pm" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <PmPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="condition-monitoring" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <ConditionMonitoringPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="stores" element={
+                  <ProtectedRoute requiredPermission="view parts inventory">
+                    <StoresPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="fleet" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <FleetPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="contractors" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <ContractorsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="hse" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <HsePage />
                   </ProtectedRoute>
                 } />
               </Route>
