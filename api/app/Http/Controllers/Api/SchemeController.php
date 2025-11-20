@@ -15,8 +15,13 @@ class SchemeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Scheme::where('tenant_id', auth()->user()->tenant_id)
-            ->with(['organization', 'tenant']);
+        $query = Scheme::query();
+        
+        if (auth()->user()) {
+            $query->where('tenant_id', auth()->user()->tenant_id);
+        }
+        
+        $query->with(['organization', 'tenant']);
 
         if ($request->has('q')) {
             $search = $request->q;
