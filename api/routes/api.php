@@ -223,6 +223,113 @@ Route::prefix('v1')->group(function () {
         Route::post('/{workOrder}/cancel', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'cancel'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/parts', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addParts'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/labor', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addLabor'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/approve', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'approve'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/qa', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'qa'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/checklist', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addChecklist'])->middleware('permission:edit work orders');
+        Route::patch('/checklist-items/{itemId}', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'updateChecklistItem'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/attachments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addAttachment'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/assignments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addAssignment'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/comments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addComment'])->middleware('permission:view work orders');
+    });
+
+    Route::prefix('cmms')->group(function () {
+        Route::prefix('job-plans')->group(function () {
+            Route::get('/', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'show']);
+            Route::patch('/{id}', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'update']);
+            Route::put('/{id}', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'destroy']);
+            Route::post('/{id}/version', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'createVersion']);
+            Route::post('/{id}/activate', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'activate']);
+        });
+
+        Route::prefix('pm')->group(function () {
+            Route::get('/templates', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'index']);
+            Route::post('/templates', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'store']);
+            Route::get('/templates/{id}', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'show']);
+            Route::patch('/templates/{id}', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'update']);
+            Route::put('/templates/{id}', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'update']);
+            Route::delete('/templates/{id}', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'destroy']);
+            Route::post('/generate', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'generate']);
+            Route::post('/logs/{logId}/defer', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'defer']);
+            Route::get('/compliance', [\App\Http\Controllers\API\V1\Cmms\PmController::class, 'compliance']);
+        });
+
+        Route::prefix('condition-monitoring')->group(function () {
+            Route::get('/tags', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'index']);
+            Route::post('/tags', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'store']);
+            Route::get('/tags/{id}', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'show']);
+            Route::patch('/tags/{id}', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'update']);
+            Route::put('/tags/{id}', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'update']);
+            Route::delete('/tags/{id}', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'destroy']);
+            Route::post('/tags/{tagId}/readings', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'ingestReading']);
+            Route::post('/alarms/{alarmId}/acknowledge', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'acknowledgeAlarm']);
+            Route::post('/alarms/{alarmId}/clear', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'clearAlarm']);
+            Route::get('/assets/{assetId}/health', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'assetHealth']);
+            Route::post('/rules/evaluate', [\App\Http\Controllers\API\V1\Cmms\ConditionMonitoringController::class, 'evaluateRules']);
+        });
+
+        Route::prefix('stores')->group(function () {
+            Route::get('/', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'show']);
+            Route::patch('/{id}', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'update']);
+            Route::put('/{id}', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'update']);
+            Route::post('/{storeId}/bins', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'createBin']);
+            Route::post('/receive', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'receiveStock']);
+            Route::post('/issue', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'issueStock']);
+            Route::get('/valuation', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'valuation']);
+            Route::get('/low-stock', [\App\Http\Controllers\API\V1\Cmms\StoresController::class, 'lowStock']);
+        });
+
+        Route::prefix('fleet')->group(function () {
+            Route::get('/', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'show']);
+            Route::patch('/{id}', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'update']);
+            Route::put('/{id}', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'update']);
+            Route::post('/{fleetAssetId}/service-schedules', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'createServiceSchedule']);
+            Route::post('/{fleetAssetId}/fuel-logs', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'logFuel']);
+            Route::post('/{fleetAssetId}/uptime-logs', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'logUptime']);
+            Route::get('/utilization', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'utilization']);
+            Route::get('/{fleetAssetId}/fuel-efficiency', [\App\Http\Controllers\API\V1\Cmms\FleetController::class, 'fuelEfficiency']);
+        });
+
+        Route::prefix('contractors')->group(function () {
+            Route::get('/contracts', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'index']);
+            Route::post('/contracts', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'store']);
+            Route::get('/contracts/{id}', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'show']);
+            Route::patch('/contracts/{id}', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'update']);
+            Route::put('/contracts/{id}', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'update']);
+            Route::post('/contracts/{contractId}/violations', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'recordViolation']);
+            Route::post('/contracts/{contractId}/payments', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'recordPayment']);
+            Route::get('/vendor-score', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'vendorScore']);
+            Route::get('/active', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'activeContracts']);
+            Route::get('/expiring', [\App\Http\Controllers\API\V1\Cmms\ContractorController::class, 'expiring']);
+        });
+
+        Route::prefix('hse')->group(function () {
+            Route::get('/permits', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'permits']);
+            Route::post('/permits', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'storePermit']);
+            Route::get('/permits/{id}', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'showPermit']);
+            Route::post('/permits/{id}/approve', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'approvePermit']);
+            Route::post('/permits/{id}/close', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'closePermit']);
+            
+            Route::post('/risk-assessments', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'storeRiskAssessment']);
+            Route::patch('/risk-assessments/{id}', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'updateRiskAssessment']);
+            Route::put('/risk-assessments/{id}', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'updateRiskAssessment']);
+            
+            Route::get('/incidents', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'incidents']);
+            Route::post('/incidents', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'storeIncident']);
+            Route::post('/incidents/{id}/investigate', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'investigateIncident']);
+            Route::post('/incidents/{id}/close', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'closeIncident']);
+            Route::get('/incidents/stats', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'incidentStats']);
+            
+            Route::get('/capas', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'capas']);
+            Route::post('/capas', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'storeCapa']);
+            Route::post('/capas/{id}/complete', [\App\Http\Controllers\API\V1\Cmms\HseController::class, 'completeCapa']);
+        });
     });
 
     Route::prefix('operations')->group(function () {

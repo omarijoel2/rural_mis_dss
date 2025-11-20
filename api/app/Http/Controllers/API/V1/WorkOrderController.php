@@ -210,4 +210,92 @@ class WorkOrderController extends Controller
         $stats = $this->workOrderService->getWorkOrderStats($from, $to);
         return response()->json($stats);
     }
+
+    public function approve(WorkOrder $workOrder)
+    {
+        $updated = $this->workOrderService->approveWorkOrder($workOrder->id);
+        return response()->json($updated);
+    }
+
+    public function qa(Request $request, WorkOrder $workOrder)
+    {
+        $validated = $request->validate([
+            'notes' => 'nullable|string'
+        ]);
+
+        $updated = $this->workOrderService->qaWorkOrder($workOrder->id, $validated['notes'] ?? null);
+        return response()->json($updated);
+    }
+
+    public function addChecklist(Request $request, WorkOrder $workOrder)
+    {
+        $validated = $request->validate([
+            'job_plan_id' => 'required|integer|exists:job_plans,id'
+        ]);
+
+        $items = $this->workOrderService->addChecklistFromJobPlan($workOrder->id, $validated['job_plan_id']);
+        return response()->json($items, 201);
+    }
+
+    public function updateChecklistItem(Request $request, int $itemId)
+    {
+        $validated = $request->validate([
+            'result' => 'required|in:pass,fail,na,pending',
+            'notes' => 'nullable|string',
+            'photo_path' => 'nullable|string'
+        ]);
+
+        $item = $this->workOrderService->updateChecklistItem(
+            $itemId,
+            $validated['result'],
+            $validated['notes'] ?? null,
+            $validated['photo_path'] ?? null
+        );
+
+        return response()->json($item);
+    }
+
+    public function addAttachment(Request $request, WorkOrder $workOrder)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:photo,video,drawing,telemetry_trace,redline,document',
+            'file' => 'required|file|max:10240',
+            'caption' => 'nullable|string'
+        ]);
+
+        $attachment = $this->workOrderService->addAttachment(
+            $workOrder->id,
+            $validated['type'],
+            $request->file('file'),
+            $validated['caption'] ?? null
+        );
+
+        return response()->json($attachment, 201);
+    }
+
+    public function addAssignment(Request $request, WorkOrder $workOrder)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|uuid|exists:users,id',
+            'role' => 'required|in:primary,secondary,supervisor,observer'
+        ]);
+
+        $assignment = $this->workOrderService->addAssignment(
+            $workOrder->id,
+            $validated['user_id'],
+            $validated['role']
+        );
+
+        return response()->json($assignment, 201);
+    }
+
+    public function addComment(Request $request, WorkOrder $workOrder)
+    {
+        $validated = $request->validate([
+            'comment' => 'required|string'
+        ]);
+
+        $comment = $this->workOrderService->addComment($workOrder->id, $validated['comment']);
+        return response()->json($comment, 201);
+    }
 }
