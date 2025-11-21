@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use('/api', createProxyMiddleware({
-  target: 'http://127.0.0.1:8001',
+  target: 'http://127.0.0.1:8000',
   changeOrigin: true,
   pathRewrite: {
     '^/': '/api/'
@@ -26,7 +26,7 @@ app.use('/api', createProxyMiddleware({
         res.writeHead(503, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           error: 'Laravel API unavailable', 
-          message: 'Start Laravel: cd api && php artisan serve --host=0.0.0.0 --port=8001',
+          message: 'Start Laravel: cd api && php artisan serve --host=0.0.0.0 --port=8000',
           details: err.message
         }));
       }
