@@ -672,7 +672,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/trends', [CostingKpiController::class, 'trends'])->middleware('permission:view cost to serve');
         });
 
-        Route::prefix('energy')->group(function () {
+        Route::prefix('energy')->middleware(['auth:sanctum'])->group(function () {
             Route::get('/tariffs', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'indexTariffs'])->middleware('permission:view energy tariffs');
             Route::post('/tariffs', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'storeTariff'])->middleware('permission:create energy tariffs');
             Route::get('/tariffs/{id}', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'showTariff'])->middleware('permission:view energy tariffs');
@@ -685,7 +685,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::prefix('procurement')->group(function () {
+    Route::prefix('procurement')->middleware(['auth:sanctum'])->group(function () {
         Route::prefix('vendors')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\Procurement\VendorController::class, 'index'])->middleware('permission:view vendors');
             Route::post('/', [\App\Http\Controllers\Api\V1\Procurement\VendorController::class, 'store'])->middleware('permission:create vendors');
