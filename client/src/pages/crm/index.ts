@@ -2,6 +2,8 @@ export { CustomersPage } from './CustomersPage';
 export { Account360Page } from './Account360Page';
 export { AccountSearchPage } from './AccountSearchPage';
 export { ComplaintsPage } from './ComplaintsPage';
+export { InteractionsPage } from './InteractionsPage';
+export { SegmentationPage } from './SegmentationPage';
 export { RaConsolePage } from './RaConsolePage';
 export { DunningPage } from './DunningPage';
 export { ImportCenterPage } from './ImportCenterPage';
