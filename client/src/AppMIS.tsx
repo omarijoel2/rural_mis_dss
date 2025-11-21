@@ -47,7 +47,7 @@ import { SamplesPage } from './pages/water-quality/SamplesPage';
 import { ResultsPage } from './pages/water-quality/ResultsPage';
 import { CompliancePage } from './pages/water-quality/CompliancePage';
 import { CrmLayout } from './components/layouts/CrmLayout';
-import { CustomersPage, Account360Page, AccountSearchPage, RaConsolePage, DunningPage, ImportCenterPage } from './pages/crm';
+import { CustomersPage, Account360Page, AccountSearchPage, ComplaintsPage, RaConsolePage, DunningPage, ImportCenterPage } from './pages/crm';
 import { SourcesPage } from './pages/hydromet/SourcesPage';
 import { StationsPage } from './pages/hydromet/StationsPage';
 import { CostingLayout } from './components/layouts/CostingLayout';
@@ -357,6 +357,11 @@ export function AppMIS() {
                 <Route path="customers" element={
                   <ProtectedRoute requiredPermission="view customers">
                     <CustomersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="complaints" element={
+                  <ProtectedRoute requiredPermission="view customers">
+                    <ComplaintsPage />
                   </ProtectedRoute>
                 } />
                 <Route path="accounts/search" element={
