@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Crm\DunningController;
 use App\Http\Controllers\Api\Crm\ImportController;
 use App\Http\Controllers\Api\Crm\InteractionController;
 use App\Http\Controllers\Api\Crm\ComplaintController;
+use App\Http\Controllers\Api\Crm\NoteController;
 use App\Http\Controllers\Api\Hydromet\SourceController;
 use App\Http\Controllers\Api\Hydromet\StationController;
 use App\Http\Controllers\Api\V1\Costing\BudgetController;
@@ -537,6 +538,15 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', [ComplaintController::class, 'show'])->middleware('permission:view complaints');
             Route::patch('/{id}', [ComplaintController::class, 'update'])->middleware('permission:assign complaints');
             Route::put('/{id}', [ComplaintController::class, 'update'])->middleware('permission:assign complaints');
+        });
+
+        Route::prefix('notes')->group(function () {
+            Route::get('/', [NoteController::class, 'index'])->middleware('permission:view notes');
+            Route::post('/', [NoteController::class, 'store'])->middleware('permission:create notes');
+            Route::get('/{id}', [NoteController::class, 'show'])->middleware('permission:view notes');
+            Route::patch('/{id}', [NoteController::class, 'update'])->middleware('permission:edit notes');
+            Route::put('/{id}', [NoteController::class, 'update'])->middleware('permission:edit notes');
+            Route::delete('/{id}', [NoteController::class, 'destroy'])->middleware('permission:delete notes');
         });
     });
 

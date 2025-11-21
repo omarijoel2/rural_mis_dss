@@ -97,6 +97,51 @@ export interface AgingReport {
   by_category: Record<string, any>;
 }
 
+export interface Complaint {
+  id: number;
+  tenant_id: number;
+  customer_id: number;
+  account_no: string;
+  category: 'billing' | 'water_quality' | 'supply' | 'meter' | 'leak' | 'customer_service' | 'other';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'triage' | 'field' | 'resolved' | 'closed';
+  description?: string;
+  resolution?: string;
+  resolved_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Interaction {
+  id: number;
+  tenant_id: number;
+  customer_id: number;
+  account_no: string;
+  channel: 'phone' | 'email' | 'sms' | 'web_portal' | 'walk_in' | 'field_visit';
+  subject: string;
+  message: string;
+  status: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Note {
+  id: number;
+  tenant_id: number;
+  customer_id: number;
+  account_no: string;
+  content: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  createdBy?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
 export const crmService = {
   getCustomers: (filters?: { search?: string; per_page?: number }) => {
     const params: Record<string, string> = {};
@@ -174,4 +219,54 @@ export const crmService = {
     formData.append('file', file);
     return apiClient.post(`${BASE_URL}/import/mpesa`, formData);
   },
+
+  getComplaints: (filters?: { status?: string; category?: string; priority?: string; account_no?: string }) => {
+    const params: Record<string, string> = {};
+    if (filters?.status) params.status = filters.status;
+    if (filters?.category) params.category = filters.category;
+    if (filters?.priority) params.priority = filters.priority;
+    if (filters?.account_no) params.account_no = filters.account_no;
+    return apiClient.get<{ data: Complaint[] }>(`${BASE_URL}/complaints`, params);
+  },
+
+  getComplaint: (id: number) =>
+    apiClient.get<Complaint>(`${BASE_URL}/complaints/${id}`),
+
+  createComplaint: (data: Partial<Complaint>) =>
+    apiClient.post<Complaint>(`${BASE_URL}/complaints`, data),
+
+  updateComplaint: (id: number, data: Partial<Complaint>) =>
+    apiClient.patch<Complaint>(`${BASE_URL}/complaints/${id}`, data),
+
+  getInteractions: (filters?: { channel?: string; account_no?: string }) => {
+    const params: Record<string, string> = {};
+    if (filters?.channel) params.channel = filters.channel;
+    if (filters?.account_no) params.account_no = filters.account_no;
+    return apiClient.get<{ data: Interaction[] }>(`${BASE_URL}/interactions`, params);
+  },
+
+  getInteraction: (id: number) =>
+    apiClient.get<Interaction>(`${BASE_URL}/interactions/${id}`),
+
+  createInteraction: (data: Partial<Interaction>) =>
+    apiClient.post<Interaction>(`${BASE_URL}/interactions`, data),
+
+  getNotes: (filters?: { account_no?: string; customer_id?: number }) => {
+    const params: Record<string, string> = {};
+    if (filters?.account_no) params.account_no = filters.account_no;
+    if (filters?.customer_id) params.customer_id = filters.customer_id.toString();
+    return apiClient.get<{ data: Note[] }>(`${BASE_URL}/notes`, params);
+  },
+
+  getNote: (id: number) =>
+    apiClient.get<Note>(`${BASE_URL}/notes/${id}`),
+
+  createNote: (data: Partial<Note>) =>
+    apiClient.post<Note>(`${BASE_URL}/notes`, data),
+
+  updateNote: (id: number, data: Partial<Note>) =>
+    apiClient.patch<Note>(`${BASE_URL}/notes/${id}`, data),
+
+  deleteNote: (id: number) =>
+    apiClient.delete(`${BASE_URL}/notes/${id}`),
 };

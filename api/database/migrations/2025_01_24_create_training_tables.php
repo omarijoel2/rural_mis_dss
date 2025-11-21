@@ -22,7 +22,7 @@ return new class extends Migration
             $table->integer('duration_min')->default(0);
             $table->json('prerequisites')->nullable(); // Array of course IDs
             $table->integer('expiry_days')->nullable(); // Certificate expiry
-            $table->foreignId('owner_id')->constrained('users')->onDelete('restrict');
+            $table->foreignUuid('owner_id')->constrained('users')->onDelete('restrict');
             $table->json('syllabus')->nullable();
             $table->text('description')->nullable();
             $table->string('thumbnail_url')->nullable();
@@ -57,7 +57,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('tenant_id');
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
             $table->string('status')->default('enrolled'); // enrolled/in_progress/completed/withdrawn
             $table->integer('progress_percent')->default(0);
@@ -125,7 +125,7 @@ return new class extends Migration
             $table->timestamp('started_at');
             $table->timestamp('submitted_at')->nullable();
             $table->json('evidence')->nullable(); // Photos, signatures, etc.
-            $table->foreignId('assessor_id')->nullable()->constrained('users');
+            $table->foreignUuid('assessor_id')->nullable()->constrained('users');
             $table->timestamps();
 
             $table->index(['enrollment_id', 'attempt_number']);
@@ -136,7 +136,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('tenant_id');
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
             $table->string('code')->unique(); // Certificate number
             $table->string('qr_token')->unique(); // For verification
@@ -162,9 +162,9 @@ return new class extends Migration
             $table->json('attachments')->nullable(); // URLs to media
             $table->integer('version')->default(1);
             $table->string('status')->default('draft'); // draft/review/published
-            $table->foreignId('author_id')->constrained('users')->onDelete('restrict');
+            $table->foreignUuid('author_id')->constrained('users')->onDelete('restrict');
             $table->json('reviewers')->nullable(); // Array of user IDs
-            $table->foreignId('approver_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignUuid('approver_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamp('published_at')->nullable();
             $table->integer('views_count')->default(0);
@@ -192,7 +192,7 @@ return new class extends Migration
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamp('published_at')->nullable();
             $table->timestamp('next_review_due')->nullable();
-            $table->foreignId('approver_id')->nullable()->constrained('users');
+            $table->foreignUuid('approver_id')->nullable()->constrained('users');
             $table->json('attestations')->nullable(); // Who has read/signed
             $table->timestamps();
             $table->softDeletes();
@@ -221,12 +221,12 @@ return new class extends Migration
             $table->id();
             $table->uuid('tenant_id');
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('skill_id')->constrained('skills')->onDelete('cascade');
             $table->integer('level_index')->default(0); // 0=Novice, 1=Practitioner, etc.
             $table->json('evidence')->nullable(); // Course completions, assessments, supervisor sign-offs
             $table->timestamp('assessed_at')->nullable();
-            $table->foreignId('assessor_id')->nullable()->constrained('users');
+            $table->foreignUuid('assessor_id')->nullable()->constrained('users');
             $table->timestamps();
 
             $table->unique(['user_id', 'skill_id']);
