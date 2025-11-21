@@ -96,8 +96,8 @@ return new class extends Migration
             $table->integer('useful_life_years');
             $table->decimal('salvage_value', 20, 2)->nullable();
             $table->date('capitalization_date');
-            $table->foreignUuid('gl_account_id')->nullable()->constrained('gl_accounts')->nullOnDelete();
-            $table->unsignedBigInteger('linked_asset_id')->nullable(); // Foreign key to asset_register (when available)
+            $table->foreignId('gl_account_id')->nullable()->constrained('gl_accounts')->nullOnDelete();
+            $table->unsignedBigInteger('linked_asset_id')->nullable();
             $table->enum('status', ['draft', 'posted', 'reversed'])->default('draft');
             $table->foreignUuid('posted_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('posted_at')->nullable();
