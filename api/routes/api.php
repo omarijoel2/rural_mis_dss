@@ -671,6 +671,57 @@ Route::prefix('v1')->group(function () {
             Route::get('/dma-league/{period}', [CostingKpiController::class, 'dmaLeague'])->middleware('permission:view cost to serve');
             Route::get('/trends', [CostingKpiController::class, 'trends'])->middleware('permission:view cost to serve');
         });
+
+        Route::prefix('energy')->group(function () {
+            Route::get('/tariffs', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'indexTariffs'])->middleware('permission:view energy tariffs');
+            Route::post('/tariffs', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'storeTariff'])->middleware('permission:create energy tariffs');
+            Route::get('/tariffs/{id}', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'showTariff'])->middleware('permission:view energy tariffs');
+            Route::patch('/tariffs/{id}', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'updateTariff'])->middleware('permission:edit energy tariffs');
+            Route::put('/tariffs/{id}', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'updateTariff'])->middleware('permission:edit energy tariffs');
+            Route::delete('/tariffs/{id}', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'destroyTariff'])->middleware('permission:delete energy tariffs');
+            Route::get('/dashboard', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'dashboard'])->middleware('permission:view energy dashboard');
+            Route::post('/readings/upload', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'uploadReadings'])->middleware('permission:upload energy readings');
+            Route::get('/specific-energy-trend', [\App\Http\Controllers\Api\V1\Costing\EnergyController::class, 'specificEnergyTrend'])->middleware('permission:view energy dashboard');
+        });
+    });
+
+    Route::prefix('procurement')->group(function () {
+        Route::prefix('vendors')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Procurement\VendorController::class, 'index'])->middleware('permission:view vendors');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Procurement\VendorController::class, 'store'])->middleware('permission:create vendors');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Procurement\VendorController::class, 'show'])->middleware('permission:view vendors');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\V1\Procurement\VendorController::class, 'update'])->middleware('permission:edit vendors');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Procurement\VendorController::class, 'update'])->middleware('permission:edit vendors');
+        });
+
+        Route::prefix('requisitions')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'index'])->middleware('permission:view requisitions');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'store'])->middleware('permission:create requisitions');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'show'])->middleware('permission:view requisitions');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'update'])->middleware('permission:edit requisitions');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'update'])->middleware('permission:edit requisitions');
+            Route::post('/{id}/submit', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'submit'])->middleware('permission:submit requisitions');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'approve'])->middleware('permission:approve requisitions');
+            Route::post('/{id}/reject', [\App\Http\Controllers\Api\V1\Procurement\RequisitionController::class, 'reject'])->middleware('permission:approve requisitions');
+        });
+
+        Route::prefix('rfqs')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Procurement\RfqController::class, 'index'])->middleware('permission:view rfqs');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Procurement\RfqController::class, 'store'])->middleware('permission:create rfqs');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Procurement\RfqController::class, 'show'])->middleware('permission:view rfqs');
+            Route::post('/{id}/issue', [\App\Http\Controllers\Api\V1\Procurement\RfqController::class, 'issue'])->middleware('permission:issue rfqs');
+            Route::post('/{id}/award', [\App\Http\Controllers\Api\V1\Procurement\RfqController::class, 'award'])->middleware('permission:award rfqs');
+            Route::get('/{id}/evaluation-matrix', [\App\Http\Controllers\Api\V1\Procurement\RfqController::class, 'evaluationMatrix'])->middleware('permission:view rfqs');
+        });
+
+        Route::prefix('lpos')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Procurement\LpoController::class, 'index'])->middleware('permission:view lpos');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Procurement\LpoController::class, 'store'])->middleware('permission:create lpos');
+            Route::post('/generate-from-rfq', [\App\Http\Controllers\Api\V1\Procurement\LpoController::class, 'generateFromRfq'])->middleware('permission:create lpos');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Procurement\LpoController::class, 'show'])->middleware('permission:view lpos');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Api\V1\Procurement\LpoController::class, 'approve'])->middleware('permission:approve lpos');
+            Route::post('/{id}/issue', [\App\Http\Controllers\Api\V1\Procurement\LpoController::class, 'issue'])->middleware('permission:issue lpos');
+        });
     });
 
     Route::prefix('projects')->group(function () {
