@@ -54,6 +54,7 @@ const moduleNavigation = [
     icon: Database,
     color: 'text-blue-500',
     subPages: [
+      { name: 'Home', href: '/core' },
       { name: 'Schemes', href: '/core/schemes' },
       { name: 'Facilities', href: '/core/facilities' },
       { name: 'DMAs', href: '/core/dmas' },
