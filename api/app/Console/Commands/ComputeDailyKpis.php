@@ -53,17 +53,9 @@ class ComputeDailyKpis extends Command
                     now()->addHours(2)
                 );
 
-                // Store in database for historical tracking
-                DB::table('operational_kpis')->updateOrInsert(
-                    [
-                        'scheme_id' => $scheme->id,
-                        'computed_at' => Carbon::now()->startOfHour(),
-                    ],
-                    [
-                        'kpis' => json_encode($kpis),
-                        'updated_at' => now(),
-                    ]
-                );
+                // Store in cache for dashboard access (table 'operational_kpis' not yet created)
+                // TODO: Create operational_kpis table for historical tracking
+                // DB::table('operational_kpis')->updateOrInsert(...)
 
                 $totalProcessed++;
                 $this->line("  ✓ Computed {$this->count($kpis)} KPIs");
@@ -129,7 +121,7 @@ class ComputeDailyKpis extends Command
         $energyConsumption = DB::table('telemetry_measurements as tm')
             ->join('telemetry_tags as tt', 'tm.telemetry_tag_id', '=', 'tt.id')
             ->where('tt.scheme_id', $scheme->id)
-            ->where('tt.tag_name', 'LIKE', '%energy%')
+            ->where('tt.tag', 'LIKE', '%energy%')
             ->whereDate('tm.ts', $date)
             ->sum('tm.value') ?? 0;
 
