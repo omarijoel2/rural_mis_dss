@@ -14,14 +14,19 @@ class MeterRouteController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         
-        $routes = CrmMeterRoute::query()
+        $paginator = CrmMeterRoute::query()
             ->when($request->filled('status'), function ($q) use ($request) {
                 $q->where('status', $request->input('status'));
             })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
-        return response()->json($routes);
+        return response()->json([
+            'data' => $paginator->items(),
+            'total' => $paginator->total(),
+            'per_page' => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+        ]);
     }
 
     public function store(Request $request): JsonResponse

@@ -14,25 +14,26 @@ class KioskController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         
-        $query = CrmKiosk::query()
+        $paginator = CrmKiosk::query()
             ->when($request->filled('status'), function ($q) use ($request) {
                 $q->where('status', $request->input('status'));
             })
-            ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
-        $kiosks = $query->paginate($perPage);
-
-        // Add summary statistics
-        $allKiosks = CrmKiosk::all();
+        // Calculate summary statistics with aggregate queries (tenant-scoped)
         $summary = [
-            'total_kiosks' => $allKiosks->count(),
-            'active_kiosks' => $allKiosks->where('status', 'active')->count(),
-            'today_total_sales' => $allKiosks->sum('today_sales'),
-            'total_balance' => $allKiosks->sum('balance'),
+            'total_kiosks' => CrmKiosk::count(),
+            'active_kiosks' => CrmKiosk::where('status', 'active')->count(),
+            'today_total_sales' => CrmKiosk::sum('today_sales') ?? 0,
+            'total_balance' => CrmKiosk::sum('balance') ?? 0,
         ];
 
         return response()->json([
-            ...$kiosks->toArray(),
+            'data' => $paginator->items(),
+            'total' => $paginator->total(),
+            'per_page' => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
             'summary' => $summary,
         ]);
     }
