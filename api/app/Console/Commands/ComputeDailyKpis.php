@@ -58,7 +58,8 @@ class ComputeDailyKpis extends Command
                 // DB::table('operational_kpis')->updateOrInsert(...)
 
                 $totalProcessed++;
-                $this->line("  ✓ Computed {$this->count($kpis)} KPIs");
+                $kpiCount = count(array_filter($kpis, fn($v) => is_array($v) && !empty($v)));
+                $this->line("  ✓ Computed {$kpiCount} KPI categories");
                 
             } catch (\Exception $e) {
                 $this->error("  ✗ Failed: {$e->getMessage()}");
@@ -117,11 +118,30 @@ class ComputeDailyKpis extends Command
             ->whereDate('tm.ts', $date)
             ->sum('tm.value') ?? 0;
 
-        // Energy consumption
+        // Energy consumption - use scheme_id from telemetry_tags or join through assets
         $energyConsumption = DB::table('telemetry_measurements as tm')
             ->join('telemetry_tags as tt', 'tm.telemetry_tag_id', '=', 'tt.id')
-            ->where('tt.scheme_id', $scheme->id)
-            ->where('tt.tag', 'LIKE', '%energy%')
+            ->where(function ($query) use ($scheme) {
+                // Try direct scheme_id first (if tag is linked to scheme)
+                $query->where('tt.scheme_id', $scheme->id)
+                    // Or join through assets
+                    ->orWhereExists(function ($subQuery) use ($scheme) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('assets as a')
+                            ->whereColumn('a.id', 'tt.asset_id')
+                            ->where('a.scheme_id', $scheme->id);
+                    });
+            })
+            ->where(function ($query) {
+                // Match energy tags by metadata (canonical) or fallback to name/unit patterns
+                $query->whereRaw("tt.meta->>'category' = 'energy'")
+                    ->orWhereRaw("tt.meta->>'signal_type' = 'energy'")
+                    ->orWhere('tt.tag', 'LIKE', '%energy%')
+                    ->orWhere('tt.tag', 'LIKE', '%power%')
+                    ->orWhere('tt.tag', 'LIKE', '%kwh%')
+                    ->orWhere('tt.unit', 'LIKE', '%kWh%')
+                    ->orWhere('tt.unit', 'LIKE', '%kW%');
+            })
             ->whereDate('tm.ts', $date)
             ->sum('tm.value') ?? 0;
 
