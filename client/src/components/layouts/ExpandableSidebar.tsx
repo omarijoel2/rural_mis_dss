@@ -70,6 +70,7 @@ const moduleNavigation = [
     subPages: [
       { name: 'Customers', href: '/crm/customers', icon: Users },
       { name: 'Account Search', href: '/crm/accounts/search', icon: Home },
+      { name: 'Complaints', href: '/crm/complaints', icon: AlertTriangle },
       { name: 'Revenue Assurance', href: '/crm/ra', icon: AlertTriangle },
       { name: 'Dunning & Collections', href: '/crm/dunning', icon: Receipt },
       { name: 'Import Center', href: '/crm/import', icon: Upload },
