@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/api-client';
 
-const BASE_URL = '/api/v1';
+const BASE_URL = '';
 
 // ===================================
 // PROJECT MANAGEMENT INTERFACES

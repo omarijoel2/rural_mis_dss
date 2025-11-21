@@ -25,7 +25,7 @@ import type {
   PaginatedResponse
 } from '../types/cmms';
 
-const BASE_URL = '/api/v1/cmms';
+const BASE_URL = '/cmms';
 
 export const jobPlanService = {
   getJobPlans: (filters?: { search?: string; status?: string; page?: number; per_page?: number }) => {

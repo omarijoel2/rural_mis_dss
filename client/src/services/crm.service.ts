@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/api-client';
 
-const BASE_URL = '/api/v1/crm';
+const BASE_URL = '/crm';
 
 export interface Customer {
   id: number;
