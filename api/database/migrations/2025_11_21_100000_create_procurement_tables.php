@@ -57,7 +57,7 @@ return new class extends Migration
             $table->string('unit', 50);
             $table->decimal('unit_cost_estimate', 12, 2)->default(0);
             $table->decimal('total_estimate', 15, 2)->default(0);
-            $table->foreignBigInteger('budget_line_id')->nullable();
+            $table->unsignedBigInteger('budget_line_id')->nullable();
             $table->jsonb('specifications')->nullable();
             $table->timestamps();
         });
