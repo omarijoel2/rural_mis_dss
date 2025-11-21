@@ -66,7 +66,7 @@ export default function ForecastStudioPage() {
     queryKey: ['schemes'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/schemes');
-      return res.data.data;
+      return (res as any).data.data;
     },
   });
 
@@ -75,7 +75,7 @@ export default function ForecastStudioPage() {
     queryKey: ['forecast-jobs'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/dsa/forecast');
-      return res.data.data as ForecastJob[];
+      return (res as any).data.data as ForecastJob[];
     },
   });
 
@@ -85,7 +85,7 @@ export default function ForecastStudioPage() {
     queryFn: async () => {
       if (!selectedJob) return null;
       const res = await apiClient.get(`/api/v1/dsa/forecast/${selectedJob}`);
-      return res.data as ForecastResult;
+      return (res as any).data as ForecastResult;
     },
     enabled: !!selectedJob,
   });
@@ -94,7 +94,7 @@ export default function ForecastStudioPage() {
   const createJobMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const res = await apiClient.post('/api/v1/dsa/forecast', data);
-      return res.data;
+      return (res as any).data;
     },
     onSuccess: (data) => {
       toast.success('Forecast job started successfully');
