@@ -1,0 +1,200 @@
+TITLE
+Build a World-Class Core Service & Network Operations Module (Water Utilities)
+
+CONTEXT
+- Domain: Water utility operations for East Africa; TZ: Africa/Nairobi; currency: KES (multi-currency ready).
+- Backend: Laravel 11 (PHP ≥ 8.2), PostgreSQL 15 + PostGIS, TimescaleDB optional, Redis, Horizon, Sanctum (or JWT if needed), spatie/permission (RBAC), spatie/activitylog (audit), Laravel Scout (search).
+- Frontend: React 18 + Vite + TypeScript, TanStack Query, shadcn/ui, react-leaflet (+ Leaflet Draw & VectorGrid), Recharts, DataTables-style tables.
+- Maps: All geometries SRID=4326; use MVT vector tiles for >50k features; bbox filters on every map endpoint.
+- Reuse patterns: Policies for per-tenant + scheme/DMA scoping; API Resources & Requests; queue heavy work; SSE/WebSockets for live data.
+- Roles: viewer, operator, engineer, planner, admin.
+
+SCOPE (implement EVERYTHING below)
+1) FEATURES (functional)
+A. Scheme Registry & Topology
+   - Master list of schemes → zones → DMAs/DMZs; reservoirs, facilities, kiosks, trucking points
+   - Network graph: nodes (sources, WTPs, reservoirs, junctions) + edges (pipes, valves, pump links)
+   - Parent-child topology and spatial relations
+
+B. Hydraulic Assets Register
+   - Assets: pipes, valves, meters (bulk/district/customer), pumps, reservoirs, treatment units, PRVs, chlorinators
+   - Specs JSON, condition, criticality, warranties, lifecycle, installation dates
+   - Attachments (as-builts, manuals); QR/NFC tags (id fields; no hardware integration required)
+
+C. Network Operations Console
+   - Live views: flows, pressures, tank levels, pump status, alarms, outages
+   - KPI cards (SIV, min pressure %, tank storage %, pumps running, alarms count)
+   - SSE/WebSockets feed for alarms & tag updates
+
+D. SCADA/Telemetry Integration
+   - Secure ingest endpoint (HMAC + idempotency key) for RTU/PLC data
+   - Timeseries storage (Timescale optional), tag registry (AI/DI/AO/DO, units, thresholds)
+   - Alarms engine (lo/hi, deadbands); two-way controls endpoints (role-gated; simulate/no-op in demo)
+
+E. Pumping & Reservoir Scheduling
+   - Scheduler CRUD; constraints (minimum storage, tariff bands)
+   - Optimizer stub: heuristic to avoid peak tariff, maintain min tank level; store proposed schedules
+   - Calendar view + apply/override workflow
+
+F. Water Balance & NRW
+   - IWA balance per DMA; daily/period snapshots
+   - Apparent/real losses; DMA ranking; intervention log (leak repair, meter replacement, PRV tuning)
+   - NRW calculator service (integrates telemetry + billed volumes stub)
+
+G. Meter Management
+   - Inventory: bulk/district/customer meters; models, calibration, tamper flags, replacement cycles
+   - Reads summary (AMI stub & manual reads list), anomalies stats
+
+H. Leak & Pressure Management
+   - PRV settings; pressure targets by DMA
+   - Transient/pressure exception feeds; leak suspicion scoring (simple rules)
+   - Heatmap by suspicion and pressure non-compliance
+
+I. Outage & Rotational Supply Planner
+   - Planned/unplanned outages: polygons, isolation plan (valves), customer impact estimate
+   - Approve → go-live → restore → close; notifications (mail/db; SMS stub)
+   - Rotational supply calendar
+
+J. Chlorination/Dosing Control
+   - Dose plans (flow bands → target residual mg/L), thresholds
+   - Chemical stocks (qty on hand, reorder level, daily balance)
+   - Change logs with reason and approvals
+
+2) DATA MODEL (migrations; soft deletes where sensible)
+- schemes(id, code, name, type enum, status enum, ownership, county_id, population_served, connections_total/active, geom:Polygon/MultiPolygon)
+- dmas(id, scheme_id, code, name, status, boundary:Polygon)
+- network_nodes(id, scheme_id, type, props jsonb, geom:Point)
+- network_edges(id, scheme_id, from_node_id, to_node_id, type, props jsonb, geom:LineString)
+- asset_types(id, name unique, schema jsonb)
+- assets(id, asset_type_id, scheme_id, dma_id?, code unique, status, condition, criticality 1..5, specs jsonb, manufacturer, model, serial, installed_at, warranty_ends_at, geom (any), node_id?)
+- telemetry_tags(id, tag unique, io_type enum(AI,DI,AO,DO), unit, scale jsonb, thresholds jsonb, asset_id?, scheme_id?, enabled bool)
+- telemetry_measurements(id, telemetry_tag_id, ts timestamptz, value double, meta jsonb)  // hypertable optional
+- pump_schedules(id, asset_id(pump), start_at, end_at, constraints jsonb, source enum(manual,optimizer))
+- nrw_snapshots(id, dma_id, as_of date, siv_m3, billed_m3, apparent_m3, real_m3, nrw_pct (computed))
+- interventions(id, dma_id?, asset_id?, type enum, date, est_savings_m3d, realized_savings_m3d, cost, responsible, follow_up_at, evidence jsonb)
+- outages(id, scheme_id, cause enum, state enum(draft,approved,live,restored,closed,post_mortem), starts_at ts, ends_at ts?, affected_geom:MultiPolygon, affected_stats jsonb, notifications jsonb, isolation_plan jsonb, summary text)
+- outage_audits(id, outage_id, event, meta jsonb, user_id)
+- dose_plans(id, scheme_id, asset_id?, flow_bands jsonb, thresholds jsonb)
+- chemical_stocks(id, scheme_id, chemical, qty_on_hand_kg, reorder_level_kg, as_of date)
+- dose_change_logs(id, dose_plan_id, user_id, before jsonb, after jsonb, reason text)
+- meters(id, scheme_id, dma_id?, kind enum(bulk,district,customer), model_id?, serial, status, tamper_flags jsonb, installed_at, geom:Point)
+- meter_models(id, manufacturer, model, size_mm, technology enum)
+Indexes: GIST on all geom; btree on FKs; partial indexes for active; uniqueness on codes.
+
+3) API (routes under /api/core-ops)
+- Schemes & DMAs: CRUD + /schemes/{id}/kpis
+- Assets: /assets (CRUD, bbox filter), /assets/{id}/telemetry
+- Topology: /topology/trace?node_id=&dir=(up|down|both)  // BFS now; SQL CTE preferred
+- Telemetry: POST /telemetry/ingest (HMAC + idempotency-key), GET /telemetry/tags, GET /telemetry/series?tag=&from=&to=
+- Scheduling: /pump-schedules (CRUD)
+- NRW: GET /nrw/dma/{id}, POST /nrw/snapshot, /interventions (CRUD)
+- Outages: /outages (CRUD) + /outages/{id}/approve|go-live|restore|close
+- Dosing: /dose-plans (CRUD) + /dose-plans/{id}/log-change, /chemical-stocks (CRUD)
+- Console: /console/kpis, /console/alarms (SSE)
+- Tiles: /tiles/{layer}/{z}/{x}/{y}.mvt for schemes,dmas,pipes,valves,meters (ST_AsMVT + tile envelope)
+All list endpoints accept ?q, ?status, ?bbox=minx,miny,maxx,maxy, pagination, sort.
+
+4) SECURITY & RBAC
+- spatie/permission permissions: coreops.view, coreops.manage, coreops.assets, coreops.telemetry, coreops.outages, coreops.optimize
+- Policies enforce tenant + scheme/DMA scoping (ABAC helper), and role-gated two-way control endpoints.
+- Activity log on all mutations (before/after summary) + user, tenant, route.
+
+5) SERVICES & JOBS
+- TelemetryIngestService: validates HMAC, batches writes, dispatches AlarmRaised events
+- NrwCalculator: builds IWA balance, updates nrw_snapshots
+- PumpOptimizer: simple heuristic (minimize peak tariff usage)
+- Jobs: ComputeDailyKpis (hourly), RebuildNrwSnapshots (nightly), DispatchOutageNotifications
+
+6) FRONTEND (React pages — complete screens with exact fields/components)
+A. SchemesExplorer.tsx
+   - Filters: status (dropdown), county (dropdown), q (textbox)
+   - Map (react-leaflet): schemes GeoJSON; click → side drawer (name, status, links)
+   - Table: Name, Code, Type, Status, AssetsCount, DmasCount; server-side pagination
+
+B. AssetCatalogue.tsx
+   - Filters: type (chips), status (chips), criticality (slider 1–5), bbox (auto)
+   - DataTable (TanStack): Code, Type, Scheme, DMA, Status, Criticality, Installed, Warranty; row hover → map highlight
+   - Map: pins/lines; layer toggles; Export CSV button
+
+C. OperationsConsole.tsx
+   - KPI cards: SIV m³/d, min pressure %, storage %, pumps running, open alarms
+   - SSE live feed of alarms (list with severity pills)
+   - Map: telemetry symbols; click → Tag Popover (value, unit, last updated, thresholds)
+
+D. TelemetryTags.tsx
+   - Table: Tag, Asset, IO type, Unit, Enabled
+   - Form Drawer: tag(textbox), io_type(dropdown AI/DI/AO/DO), unit(textbox), thresholds(json editor), asset(select)
+   - Chart modal: Trend (Recharts line) with date range
+
+E. PumpScheduler.tsx
+   - Calendar view; New Schedule modal: asset(select pump), start/end(datetime), constraints(json), source(readonly)
+   - “Optimize” button (period pickers) → shows proposed blocks → Apply
+
+F. NRWDashboard.tsx
+   - Filters: DMA dropdown, period (date range)
+   - Cards: NRW %, SIV vs Billed, Real vs Apparent
+   - Table: DMA ranking with trend arrows; Interventions list with add/edit modal
+
+G. MeterRegistry.tsx
+   - Filters: kind (chips), status, model
+   - Table: Serial, Kind, Scheme, DMA, Status, Installed, Tamper flags
+   - Detail drawer: calibration dates (datepickers), replacement recommendation (badge)
+
+H. PressureLeak.tsx
+   - Targets editor: DMA(select), min/max (number), PRV settings(number)
+   - Heatmap: leak suspicion index; table of high-suspicion segments with “Create WO” quick action
+
+I. OutagePlanner.tsx
+   - Calendar (FullCalendar) + Map with Leaflet Draw to capture polygons
+   - Form: cause(dropdown), starts_at/ends_at(datetime), summary(textarea)
+   - Compute impact (stub) → affected_stats json preview
+   - Workflow buttons: Approve, Go-Live, Restore, Close
+
+J. DosingControl.tsx
+   - Dose plan editor: flow bands (min_lps, max_lps, target_mg_l) [dynamic rows], thresholds
+   - Chemical stock table: chemical, qty_on_hand, reorder_level, as_of (date)
+   - Change log list with diff view
+
+Shared hooks/components:
+- useLeafletDraw({onGeoJson}) returns drawn GeoJSON polygon/line/point
+- useVectorGrid(layer, styleFn) → fetches /tiles/{layer}/{z}/{x}/{y}.mvt
+- CSV export util (array→CSV, download)
+- DataTable wrapper with server-side pagination/sort
+
+7) OPENAPI
+- Provide an OpenAPI v3 YAML covering all endpoints, request/response schemas, auth (Sanctum bearer), error shapes.
+
+8) TESTS (Pest)
+- Feature: create scheme, trace topology, ingest telemetry (HMAC), compute NRW snapshot, outage workflow transitions
+- Policy: engineer of Scheme A cannot mutate Scheme B; role-gated control endpoints blocked for viewer
+- Request validation: dose plan bands; outage dates; telemetry payloads
+- Tile endpoint returns MVT with correct content-type
+
+9) SEEDERS
+- 5 schemes, 30 DMAs (random polygons), ~80k pipes, 1k valves, 500 meters, 40 pumps/reservoirs
+- Telemetry tags for 30 assets, daily sample measurements (few days)
+- NRW demo snapshots, 10 interventions, 3 dose plans, chemical stocks
+- Outage examples + audits
+
+10) DEVOPS & ENV
+- .env samples: DB (Postgres), POSTGIS, QUEUE=redis, BROADCAST=redis, HORIZON, FEATURE_FLAGS=telemetry,nrw,optimizer
+- HMAC secrets for telemetry ingest; IDP stubs
+- Horizon config; queues for telemetry+jobs
+- CORS config for React app
+- README quickstart (migrate/seed, run API, run UI)
+
+DELIVERABLES (return all as paste-ready files)
+- All Laravel migrations/models/policies/requests/resources/controllers/services/jobs/notifications
+- routes/core_ops.php
+- React pages + shared hooks/components (as files)
+- OpenAPI YAML (single file)
+- Seeders/factories
+- Pest tests
+- README quickstart
+
+QUALITY BAR / ACCEPTANCE
+- Builds & lints clean; tests pass; OpenAPI validates
+- Map endpoints support ?bbox; MVT tiles render smoothly
+- SSE shows live alarms; optimizer stub produces schedule blocks
+- Policies enforce tenant + scheme/DMA scope
+- CSV exports work; activity log captured on mutations
