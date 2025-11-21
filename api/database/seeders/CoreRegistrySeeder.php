@@ -9,6 +9,10 @@ use App\Models\Organization;
 use App\Models\Scheme;
 use App\Models\Dma;
 use App\Models\Facility;
+use App\Models\Zone;
+use App\Models\Pipeline;
+use App\Models\Address;
+use App\Models\Meter;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
@@ -39,6 +43,10 @@ class CoreRegistrySeeder extends Seeder
         $this->seedSchemes($tenant, $org);
         $this->seedDmas($tenant);
         $this->seedFacilities($tenant);
+        $this->seedZones($tenant);
+        $this->seedPipelines($tenant);
+        $this->seedAddresses($tenant);
+        $this->seedMeters($tenant);
 
         $this->command->info('Core registry seeded with realistic Kenya spatial data');
     }
@@ -287,6 +295,379 @@ class CoreRegistrySeeder extends Seeder
                 [
                     'tenant_id' => $tenant->id,
                     'code' => $data['code'],
+                ],
+                array_merge($data, ['tenant_id' => $tenant->id])
+            );
+        }
+    }
+
+    private function seedZones(Tenant $tenant): void
+    {
+        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        
+        if ($schemes->isEmpty()) {
+            return;
+        }
+
+        $nairobi = $schemes->first();
+
+        $zones = [
+            [
+                'code' => 'ZONE-WEST-01',
+                'name' => 'Westlands Commercial Zone',
+                'zone_type' => 'commercial',
+                'scheme_id' => $nairobi->id,
+                'geom' => new Polygon([
+                    new LineString([
+                        new Point(-1.26, 36.80),
+                        new Point(-1.26, 36.82),
+                        new Point(-1.28, 36.82),
+                        new Point(-1.28, 36.80),
+                        new Point(-1.26, 36.80),
+                    ], 4326)
+                ], 4326),
+            ],
+            [
+                'code' => 'ZONE-RES-02',
+                'name' => 'Kilimani Residential Zone',
+                'zone_type' => 'residential',
+                'scheme_id' => $nairobi->id,
+                'geom' => new Polygon([
+                    new LineString([
+                        new Point(-1.29, 36.77),
+                        new Point(-1.29, 36.79),
+                        new Point(-1.31, 36.79),
+                        new Point(-1.31, 36.77),
+                        new Point(-1.29, 36.77),
+                    ], 4326)
+                ], 4326),
+            ],
+            [
+                'code' => 'ZONE-IND-03',
+                'name' => 'Industrial Area Zone',
+                'zone_type' => 'industrial',
+                'scheme_id' => $nairobi->id,
+                'geom' => new Polygon([
+                    new LineString([
+                        new Point(-1.31, 36.84),
+                        new Point(-1.31, 36.87),
+                        new Point(-1.34, 36.87),
+                        new Point(-1.34, 36.84),
+                        new Point(-1.31, 36.84),
+                    ], 4326)
+                ], 4326),
+            ],
+            [
+                'code' => 'ZONE-MIX-04',
+                'name' => 'Upperhill Mixed-Use Zone',
+                'zone_type' => 'mixed',
+                'scheme_id' => $nairobi->id,
+                'geom' => new Polygon([
+                    new LineString([
+                        new Point(-1.28, 36.81),
+                        new Point(-1.28, 36.83),
+                        new Point(-1.30, 36.83),
+                        new Point(-1.30, 36.81),
+                        new Point(-1.28, 36.81),
+                    ], 4326)
+                ], 4326),
+            ],
+        ];
+
+        foreach ($zones as $data) {
+            Zone::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'code' => $data['code'],
+                ],
+                array_merge($data, ['tenant_id' => $tenant->id])
+            );
+        }
+    }
+
+    private function seedPipelines(Tenant $tenant): void
+    {
+        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        
+        if ($schemes->isEmpty()) {
+            return;
+        }
+
+        $nairobi = $schemes->first();
+
+        $pipelines = [
+            [
+                'code' => 'PIPE-TR-001',
+                'name' => 'Sasumua-Gigiri Transmission Main',
+                'pipeline_type' => 'transmission',
+                'material' => 'ductile_iron',
+                'diameter_mm' => 800,
+                'length_m' => 15400,
+                'installation_year' => 2015,
+                'scheme_id' => $nairobi->id,
+                'geom' => new LineString([
+                    new Point(-1.10, 36.65),
+                    new Point(-1.17, 36.71),
+                    new Point(-1.24, 36.78),
+                ], 4326),
+            ],
+            [
+                'code' => 'PIPE-DS-002',
+                'name' => 'CBD Distribution Network',
+                'pipeline_type' => 'distribution',
+                'material' => 'pvc',
+                'diameter_mm' => 300,
+                'length_m' => 5200,
+                'installation_year' => 2018,
+                'scheme_id' => $nairobi->id,
+                'geom' => new LineString([
+                    new Point(-1.28, 36.81),
+                    new Point(-1.29, 36.82),
+                    new Point(-1.30, 36.82),
+                ], 4326),
+            ],
+            [
+                'code' => 'PIPE-DS-003',
+                'name' => 'Kilimani Residential Mains',
+                'pipeline_type' => 'distribution',
+                'material' => 'hdpe',
+                'diameter_mm' => 200,
+                'length_m' => 3800,
+                'installation_year' => 2020,
+                'scheme_id' => $nairobi->id,
+                'geom' => new LineString([
+                    new Point(-1.29, 36.77),
+                    new Point(-1.30, 36.78),
+                    new Point(-1.31, 36.79),
+                ], 4326),
+            ],
+            [
+                'code' => 'PIPE-TR-004',
+                'name' => 'Ruaraka Trunk Main',
+                'pipeline_type' => 'transmission',
+                'material' => 'steel',
+                'diameter_mm' => 600,
+                'length_m' => 8900,
+                'installation_year' => 2012,
+                'scheme_id' => $nairobi->id,
+                'geom' => new LineString([
+                    new Point(-1.24, 36.78),
+                    new Point(-1.25, 36.84),
+                    new Point(-1.25, 36.88),
+                ], 4326),
+            ],
+            [
+                'code' => 'PIPE-DS-005',
+                'name' => 'Industrial Area Supply',
+                'pipeline_type' => 'distribution',
+                'material' => 'ductile_iron',
+                'diameter_mm' => 400,
+                'length_m' => 6500,
+                'installation_year' => 2016,
+                'scheme_id' => $nairobi->id,
+                'geom' => new LineString([
+                    new Point(-1.31, 36.84),
+                    new Point(-1.32, 36.85),
+                    new Point(-1.34, 36.86),
+                ], 4326),
+            ],
+        ];
+
+        foreach ($pipelines as $data) {
+            Pipeline::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'code' => $data['code'],
+                ],
+                array_merge($data, ['tenant_id' => $tenant->id])
+            );
+        }
+    }
+
+    private function seedAddresses(Tenant $tenant): void
+    {
+        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        
+        if ($schemes->isEmpty()) {
+            return;
+        }
+
+        $nairobi = $schemes->first();
+
+        $addresses = [
+            [
+                'address_code' => 'ADDR-001',
+                'street_address' => 'Kenyatta Avenue, Plot 45',
+                'city' => 'Nairobi',
+                'postal_code' => '00100',
+                'scheme_id' => $nairobi->id,
+                'location' => new Point(-1.2850, 36.8219, 4326),
+            ],
+            [
+                'address_code' => 'ADDR-002',
+                'street_address' => 'Waiyaki Way, Westlands',
+                'city' => 'Nairobi',
+                'postal_code' => '00600',
+                'scheme_id' => $nairobi->id,
+                'location' => new Point(-1.2695, 36.8064, 4326),
+            ],
+            [
+                'address_code' => 'ADDR-003',
+                'street_address' => 'Ngong Road, Kilimani Estate',
+                'city' => 'Nairobi',
+                'postal_code' => '00100',
+                'scheme_id' => $nairobi->id,
+                'location' => new Point(-1.2974, 36.7826, 4326),
+            ],
+            [
+                'address_code' => 'ADDR-004',
+                'street_address' => 'Industrial Area, Enterprise Road',
+                'city' => 'Nairobi',
+                'postal_code' => '00100',
+                'scheme_id' => $nairobi->id,
+                'location' => new Point(-1.3230, 36.8537, 4326),
+            ],
+            [
+                'address_code' => 'ADDR-005',
+                'street_address' => 'Upperhill, Ralph Bunche Road',
+                'city' => 'Nairobi',
+                'postal_code' => '00100',
+                'scheme_id' => $nairobi->id,
+                'location' => new Point(-1.2895, 36.8156, 4326),
+            ],
+            [
+                'address_code' => 'ADDR-006',
+                'street_address' => 'Riverside Drive, Westlands',
+                'city' => 'Nairobi',
+                'postal_code' => '00600',
+                'scheme_id' => $nairobi->id,
+                'location' => new Point(-1.2643, 36.8091, 4326),
+            ],
+        ];
+
+        foreach ($addresses as $data) {
+            Address::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'address_code' => $data['address_code'],
+                ],
+                array_merge($data, ['tenant_id' => $tenant->id])
+            );
+        }
+    }
+
+    private function seedMeters(Tenant $tenant): void
+    {
+        $addresses = Address::where('tenant_id', $tenant->id)->get();
+        
+        if ($addresses->isEmpty()) {
+            return;
+        }
+
+        $meters = [
+            [
+                'meter_number' => 'MTR-2024-001',
+                'meter_type' => 'residential',
+                'size_mm' => 15,
+                'manufacturer' => 'Sensus',
+                'model' => 'iPERL',
+                'installation_date' => '2023-01-15',
+                'status' => 'active',
+                'last_reading' => 1245.50,
+                'last_reading_date' => '2024-11-20',
+                'address_id' => $addresses[0]->id ?? null,
+            ],
+            [
+                'meter_number' => 'MTR-2024-002',
+                'meter_type' => 'commercial',
+                'size_mm' => 25,
+                'manufacturer' => 'Elster',
+                'model' => 'Amco C700',
+                'installation_date' => '2022-06-10',
+                'status' => 'active',
+                'last_reading' => 5678.75,
+                'last_reading_date' => '2024-11-20',
+                'address_id' => $addresses[1]->id ?? null,
+            ],
+            [
+                'meter_number' => 'MTR-2024-003',
+                'meter_type' => 'residential',
+                'size_mm' => 15,
+                'manufacturer' => 'Kamstrup',
+                'model' => 'flowIQ 2200',
+                'installation_date' => '2023-03-22',
+                'status' => 'active',
+                'last_reading' => 892.25,
+                'last_reading_date' => '2024-11-19',
+                'address_id' => $addresses[2]->id ?? null,
+            ],
+            [
+                'meter_number' => 'MTR-2024-004',
+                'meter_type' => 'industrial',
+                'size_mm' => 50,
+                'manufacturer' => 'Elster',
+                'model' => 'H4000',
+                'installation_date' => '2021-11-05',
+                'status' => 'active',
+                'last_reading' => 15240.00,
+                'last_reading_date' => '2024-11-20',
+                'address_id' => $addresses[3]->id ?? null,
+            ],
+            [
+                'meter_number' => 'MTR-2024-005',
+                'meter_type' => 'commercial',
+                'size_mm' => 20,
+                'manufacturer' => 'Sensus',
+                'model' => 'iPERL',
+                'installation_date' => '2023-07-18',
+                'status' => 'faulty',
+                'last_reading' => 3456.50,
+                'last_reading_date' => '2024-11-10',
+                'address_id' => $addresses[4]->id ?? null,
+            ],
+            [
+                'meter_number' => 'MTR-2024-006',
+                'meter_type' => 'residential',
+                'size_mm' => 15,
+                'manufacturer' => 'Kamstrup',
+                'model' => 'Multical 21',
+                'installation_date' => '2024-02-10',
+                'status' => 'active',
+                'last_reading' => 245.75,
+                'last_reading_date' => '2024-11-20',
+                'address_id' => $addresses[5]->id ?? null,
+            ],
+            [
+                'meter_number' => 'MTR-2024-007',
+                'meter_type' => 'residential',
+                'size_mm' => 15,
+                'manufacturer' => 'Sensus',
+                'model' => 'Meitwin',
+                'installation_date' => '2022-09-15',
+                'status' => 'decommissioned',
+                'last_reading' => 2150.00,
+                'last_reading_date' => '2024-10-01',
+                'address_id' => $addresses[0]->id ?? null,
+            ],
+            [
+                'meter_number' => 'MTR-2024-008',
+                'meter_type' => 'commercial',
+                'size_mm' => 32,
+                'manufacturer' => 'Elster',
+                'model' => 'Amco C700',
+                'installation_date' => '2023-05-20',
+                'status' => 'active',
+                'last_reading' => 7890.25,
+                'last_reading_date' => '2024-11-20',
+                'address_id' => $addresses[1]->id ?? null,
+            ],
+        ];
+
+        foreach ($meters as $data) {
+            Meter::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'meter_number' => $data['meter_number'],
                 ],
                 array_merge($data, ['tenant_id' => $tenant->id])
             );
