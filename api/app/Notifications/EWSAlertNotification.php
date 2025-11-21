@@ -2,11 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Channels\WebhookChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Http;
+use NotificationChannels\Twilio\TwilioChannel;
+use NotificationChannels\Twilio\TwilioSmsMessage;
 
 class EWSAlertNotification extends Notification implements ShouldQueue
 {
@@ -14,14 +16,25 @@ class EWSAlertNotification extends Notification implements ShouldQueue
 
     public function __construct(
         public array $alert,
-        public array $channels = ['mail']
+        public array $requestedChannels = ['mail']
     ) {
         $this->onQueue('notifications');
     }
 
     public function via(object $notifiable): array
     {
-        return $this->channels;
+        $channels = [];
+        
+        foreach ($this->requestedChannels as $channel) {
+            $channels[] = match($channel) {
+                'mail', 'email' => 'mail',
+                'sms' => TwilioChannel::class,
+                'webhook' => WebhookChannel::class,
+                default => null,
+            };
+        }
+        
+        return array_filter($channels);
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -30,15 +43,8 @@ class EWSAlertNotification extends Notification implements ShouldQueue
         $message = $this->alert['message'] ?? 'Alert triggered';
         $ruleName = $this->alert['rule_name'] ?? 'EWS Rule';
         
-        $color = match($severity) {
-            'CRITICAL' => 'red',
-            'HIGH' => 'orange',
-            'MEDIUM' => 'yellow',
-            default => 'blue',
-        };
-
         return (new MailMessage)
-            ->subject("[$severity] $ruleName")
+            ->subject("[$severity] $ruleName - Rural Water MIS Alert")
             ->line("**Alert:** $message")
             ->line("**Severity:** $severity")
             ->line("**Time:** " . ($this->alert['created_at'] ?? now()->toDateTimeString()))
@@ -49,26 +55,13 @@ class EWSAlertNotification extends Notification implements ShouldQueue
             ->line('Please acknowledge this alert in the EWS Console.');
     }
 
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'alert_id' => $this->alert['id'] ?? null,
-            'rule_name' => $this->alert['rule_name'] ?? null,
-            'severity' => $this->alert['severity'] ?? 'medium',
-            'message' => $this->alert['message'] ?? '',
-            'trigger_values' => $this->alert['trigger_values'] ?? [],
-        ];
-    }
-
-    public function toTwilio(object $notifiable): array
+    public function toTwilio(object $notifiable): TwilioSmsMessage
     {
         $severity = strtoupper($this->alert['severity'] ?? 'MEDIUM');
         $message = $this->alert['message'] ?? 'Alert triggered';
         
-        return [
-            'from' => env('TWILIO_FROM'),
-            'body' => "[$severity] $message - Rural Water MIS",
-        ];
+        return (new TwilioSmsMessage())
+            ->content("[$severity] $message - Rural Water MIS. View: " . url('/dsa/ews'));
     }
 
     public function toWebhook(object $notifiable): array
@@ -78,8 +71,20 @@ class EWSAlertNotification extends Notification implements ShouldQueue
             'payload' => [
                 'event' => 'ews.alert.created',
                 'alert' => $this->alert,
+                'tenant_id' => $this->alert['tenant_id'] ?? null,
                 'timestamp' => now()->toIso8601String(),
             ],
+        ];
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'alert_id' => $this->alert['id'] ?? null,
+            'rule_name' => $this->alert['rule_name'] ?? null,
+            'severity' => $this->alert['severity'] ?? 'medium',
+            'message' => $this->alert['message'] ?? '',
+            'trigger_values' => $this->alert['trigger_values'] ?? [],
         ];
     }
 }
