@@ -46,7 +46,7 @@ class CoreRegistrySeeder extends Seeder
         $this->seedZones($tenant);
         $this->seedPipelines($tenant);
         $this->seedAddresses($tenant);
-        $this->seedMeters($tenant);
+        // $this->seedMeters($tenant); // Meters table not created yet
 
         $this->command->info('Core registry seeded with realistic Kenya spatial data');
     }
@@ -315,7 +315,7 @@ class CoreRegistrySeeder extends Seeder
             [
                 'code' => 'ZONE-WEST-01',
                 'name' => 'Westlands Commercial Zone',
-                'zone_type' => 'commercial',
+                'type' => 'commercial',
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
@@ -330,7 +330,7 @@ class CoreRegistrySeeder extends Seeder
             [
                 'code' => 'ZONE-RES-02',
                 'name' => 'Kilimani Residential Zone',
-                'zone_type' => 'residential',
+                'type' => 'residential',
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
@@ -345,7 +345,7 @@ class CoreRegistrySeeder extends Seeder
             [
                 'code' => 'ZONE-IND-03',
                 'name' => 'Industrial Area Zone',
-                'zone_type' => 'industrial',
+                'type' => 'industrial',
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
@@ -360,7 +360,7 @@ class CoreRegistrySeeder extends Seeder
             [
                 'code' => 'ZONE-MIX-04',
                 'name' => 'Upperhill Mixed-Use Zone',
-                'zone_type' => 'mixed',
+                'type' => 'mixed',
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
@@ -398,12 +398,10 @@ class CoreRegistrySeeder extends Seeder
         $pipelines = [
             [
                 'code' => 'PIPE-TR-001',
-                'name' => 'Sasumua-Gigiri Transmission Main',
-                'pipeline_type' => 'transmission',
-                'material' => 'ductile_iron',
+                'material' => 'DI',
                 'diameter_mm' => 800,
-                'length_m' => 15400,
-                'installation_year' => 2015,
+                'install_year' => 2015,
+                'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
                     new Point(-1.10, 36.65),
@@ -413,12 +411,10 @@ class CoreRegistrySeeder extends Seeder
             ],
             [
                 'code' => 'PIPE-DS-002',
-                'name' => 'CBD Distribution Network',
-                'pipeline_type' => 'distribution',
-                'material' => 'pvc',
+                'material' => 'uPVC',
                 'diameter_mm' => 300,
-                'length_m' => 5200,
-                'installation_year' => 2018,
+                'install_year' => 2018,
+                'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
                     new Point(-1.28, 36.81),
@@ -428,12 +424,10 @@ class CoreRegistrySeeder extends Seeder
             ],
             [
                 'code' => 'PIPE-DS-003',
-                'name' => 'Kilimani Residential Mains',
-                'pipeline_type' => 'distribution',
-                'material' => 'hdpe',
+                'material' => 'HDPE',
                 'diameter_mm' => 200,
-                'length_m' => 3800,
-                'installation_year' => 2020,
+                'install_year' => 2020,
+                'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
                     new Point(-1.29, 36.77),
@@ -443,12 +437,10 @@ class CoreRegistrySeeder extends Seeder
             ],
             [
                 'code' => 'PIPE-TR-004',
-                'name' => 'Ruaraka Trunk Main',
-                'pipeline_type' => 'transmission',
-                'material' => 'steel',
+                'material' => 'Steel',
                 'diameter_mm' => 600,
-                'length_m' => 8900,
-                'installation_year' => 2012,
+                'install_year' => 2012,
+                'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
                     new Point(-1.24, 36.78),
@@ -458,12 +450,10 @@ class CoreRegistrySeeder extends Seeder
             ],
             [
                 'code' => 'PIPE-DS-005',
-                'name' => 'Industrial Area Supply',
-                'pipeline_type' => 'distribution',
-                'material' => 'ductile_iron',
+                'material' => 'DI',
                 'diameter_mm' => 400,
-                'length_m' => 6500,
-                'installation_year' => 2016,
+                'install_year' => 2016,
+                'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
                     new Point(-1.31, 36.84),
@@ -496,50 +486,56 @@ class CoreRegistrySeeder extends Seeder
 
         $addresses = [
             [
-                'address_code' => 'ADDR-001',
-                'street_address' => 'Kenyatta Avenue, Plot 45',
+                'premise_code' => 'ADDR-001',
+                'street' => 'Kenyatta Avenue, Plot 45',
                 'city' => 'Nairobi',
-                'postal_code' => '00100',
+                'postcode' => '00100',
+                'country' => 'KE',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.2850, 36.8219, 4326),
             ],
             [
-                'address_code' => 'ADDR-002',
-                'street_address' => 'Waiyaki Way, Westlands',
+                'premise_code' => 'ADDR-002',
+                'street' => 'Waiyaki Way, Westlands',
                 'city' => 'Nairobi',
-                'postal_code' => '00600',
+                'postcode' => '00600',
+                'country' => 'KE',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.2695, 36.8064, 4326),
             ],
             [
-                'address_code' => 'ADDR-003',
-                'street_address' => 'Ngong Road, Kilimani Estate',
+                'premise_code' => 'ADDR-003',
+                'street' => 'Ngong Road, Kilimani Estate',
                 'city' => 'Nairobi',
-                'postal_code' => '00100',
+                'postcode' => '00100',
+                'country' => 'KE',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.2974, 36.7826, 4326),
             ],
             [
-                'address_code' => 'ADDR-004',
-                'street_address' => 'Industrial Area, Enterprise Road',
+                'premise_code' => 'ADDR-004',
+                'street' => 'Industrial Area, Enterprise Road',
                 'city' => 'Nairobi',
-                'postal_code' => '00100',
+                'postcode' => '00100',
+                'country' => 'KE',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.3230, 36.8537, 4326),
             ],
             [
-                'address_code' => 'ADDR-005',
-                'street_address' => 'Upperhill, Ralph Bunche Road',
+                'premise_code' => 'ADDR-005',
+                'street' => 'Upperhill, Ralph Bunche Road',
                 'city' => 'Nairobi',
-                'postal_code' => '00100',
+                'postcode' => '00100',
+                'country' => 'KE',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.2895, 36.8156, 4326),
             ],
             [
-                'address_code' => 'ADDR-006',
-                'street_address' => 'Riverside Drive, Westlands',
+                'premise_code' => 'ADDR-006',
+                'street' => 'Riverside Drive, Westlands',
                 'city' => 'Nairobi',
-                'postal_code' => '00600',
+                'postcode' => '00600',
+                'country' => 'KE',
                 'scheme_id' => $nairobi->id,
                 'location' => new Point(-1.2643, 36.8091, 4326),
             ],
@@ -549,7 +545,7 @@ class CoreRegistrySeeder extends Seeder
             Address::updateOrCreate(
                 [
                     'tenant_id' => $tenant->id,
-                    'address_code' => $data['address_code'],
+                    'premise_code' => $data['premise_code'],
                 ],
                 array_merge($data, ['tenant_id' => $tenant->id])
             );
