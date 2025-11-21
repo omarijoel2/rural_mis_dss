@@ -115,6 +115,14 @@ import { PumpScheduling } from './pages/core-ops/PumpScheduling';
 import { PressureLeakPage } from './pages/core-ops/PressureLeakPage';
 import { TrainingLayout } from './components/layouts/TrainingLayout';
 import { CourseCatalog, MyLearning, KnowledgeBase, SopsPage, SkillsMatrix, CertificatesPage } from './pages/training';
+import { DSALayout } from './components/layouts/DSALayout';
+import ForecastStudioPage from './pages/dsa/ForecastStudioPage';
+import ScenarioWorkbenchPage from './pages/dsa/ScenarioWorkbenchPage';
+import OptimizationConsolePage from './pages/dsa/OptimizationConsolePage';
+import AnomaliesInboxPage from './pages/dsa/AnomaliesInboxPage';
+import AquiferDashboardPage from './pages/dsa/AquiferDashboardPage';
+import TariffSandboxPage from './pages/dsa/TariffSandboxPage';
+import EWSConsolePage from './pages/dsa/EWSConsolePage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -794,6 +802,49 @@ export function AppMIS() {
                 <Route path="sops" element={<SopsPage />} />
                 <Route path="skills" element={<SkillsMatrix />} />
                 <Route path="certificates" element={<CertificatesPage />} />
+              </Route>
+              
+              <Route path="/dsa" element={
+                <ProtectedRoute>
+                  <DSALayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/dsa/forecast" replace />} />
+                <Route path="forecast" element={
+                  <ProtectedRoute requiredPermission="dsa.view_forecast">
+                    <ForecastStudioPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="scenarios" element={
+                  <ProtectedRoute requiredPermission="dsa.view_scenarios">
+                    <ScenarioWorkbenchPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="optimize" element={
+                  <ProtectedRoute requiredPermission="dsa.view_optimization">
+                    <OptimizationConsolePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="anomalies" element={
+                  <ProtectedRoute requiredPermission="dsa.view_anomalies">
+                    <AnomaliesInboxPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="aquifer" element={
+                  <ProtectedRoute requiredPermission="dsa.view_hydro">
+                    <AquiferDashboardPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="tariffs" element={
+                  <ProtectedRoute requiredPermission="dsa.view_tariffs">
+                    <TariffSandboxPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="ews" element={
+                  <ProtectedRoute requiredPermission="dsa.view_ews">
+                    <EWSConsolePage />
+                  </ProtectedRoute>
+                } />
               </Route>
               
               <Route path="*" element={<NotFound />} />
