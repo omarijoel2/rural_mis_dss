@@ -6,7 +6,9 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { CoreRegistryHome } from './pages/core-registry/CoreRegistryHome';
 import { SchemesPage } from './pages/core-registry/SchemesPage';
+import { SchemesExplorerPage } from './pages/core-registry/SchemesExplorerPage';
 import { FacilitiesPage } from './pages/core-registry/FacilitiesPage';
+import { MeterRegistryPage } from './pages/core-registry/MeterRegistryPage';
 import { DmasPage } from './pages/core-registry/DmasPage';
 import { PipelinesPage } from './pages/core-registry/PipelinesPage';
 import { ZonesPage } from './pages/core-registry/ZonesPage';
@@ -110,6 +112,7 @@ import { OutagePlanner } from './pages/core-ops/OutagePlanner';
 import { NRWDashboard } from './pages/core-ops/NRWDashboard';
 import { DosingControl } from './pages/core-ops/DosingControl';
 import { PumpScheduling } from './pages/core-ops/PumpScheduling';
+import { PressureLeakPage } from './pages/core-ops/PressureLeakPage';
 import { TrainingLayout } from './components/layouts/TrainingLayout';
 import { CourseCatalog, MyLearning, KnowledgeBase, SopsPage, SkillsMatrix, CertificatesPage } from './pages/training';
 import NotFound from './pages/not-found';
@@ -137,7 +140,7 @@ export function AppMIS() {
                 <Route index element={<CoreRegistryHome />} />
                 <Route path="schemes" element={
                   <ProtectedRoute requiredPermission="view schemes">
-                    <SchemesPage />
+                    <SchemesExplorerPage />
                   </ProtectedRoute>
                 } />
                 <Route path="facilities" element={
@@ -163,6 +166,11 @@ export function AppMIS() {
                 <Route path="addresses" element={
                   <ProtectedRoute requiredPermission="view addresses">
                     <AddressesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="meters" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <MeterRegistryPage />
                   </ProtectedRoute>
                 } />
               </Route>
@@ -689,6 +697,11 @@ export function AppMIS() {
                 <Route path="scheduling" element={
                   <ProtectedRoute requiredPermission="core_ops.view_scheduling">
                     <PumpScheduling />
+                  </ProtectedRoute>
+                } />
+                <Route path="pressure-leak" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_operations">
+                    <PressureLeakPage />
                   </ProtectedRoute>
                 } />
               </Route>

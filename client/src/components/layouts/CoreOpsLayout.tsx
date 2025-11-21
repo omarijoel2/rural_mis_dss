@@ -6,7 +6,8 @@ import {
   AlertTriangle, 
   TrendingDown, 
   Power, 
-  Calendar 
+  Calendar,
+  Zap
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -16,6 +17,7 @@ const navigation = [
   { name: 'Telemetry & SCADA', href: '/core-ops/telemetry', icon: Activity },
   { name: 'Outage Management', href: '/core-ops/outages', icon: AlertTriangle },
   { name: 'NRW & Water Balance', href: '/core-ops/nrw', icon: TrendingDown },
+  { name: 'Pressure & Leak', href: '/core-ops/pressure-leak', icon: Zap },
   { name: 'Dosing Control', href: '/core-ops/dosing', icon: Droplets },
   { name: 'Pump Scheduling', href: '/core-ops/scheduling', icon: Power },
 ];

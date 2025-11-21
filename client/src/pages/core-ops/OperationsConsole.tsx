@@ -1,17 +1,105 @@
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { coreOpsService } from '../../services/core-ops.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Activity, AlertTriangle, Calendar, Droplets, Power } from 'lucide-react';
+import { Activity, AlertTriangle, Calendar, Droplets, Power, Bell, BellOff, Zap } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '../../components/ui/button';
+
+interface LiveAlarm {
+  id: string;
+  tag_name: string;
+  severity: 'critical' | 'warning' | 'info';
+  message: string;
+  value: number;
+  threshold: number;
+  asset_name?: string;
+  scheme_name?: string;
+  timestamp: string;
+}
 
 export function OperationsConsole() {
+  const [liveAlarms, setLiveAlarms] = useState<LiveAlarm[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [sseEnabled, setSseEnabled] = useState(true);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['operations-dashboard'],
     queryFn: () => coreOpsService.operations.getDashboard(),
     refetchInterval: 30000,
   });
+
+  // SSE connection for live alarms with auto-reconnect
+  useEffect(() => {
+    if (!sseEnabled) return;
+
+    let eventSource: EventSource | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let reconnectAttempts = 0;
+    const maxReconnectDelay = 30000; // 30 seconds max
+
+    const connect = () => {
+      try {
+        eventSource = new EventSource('/api/v1/console/alarms', {
+          withCredentials: true,
+        });
+
+        eventSource.onopen = () => {
+          setIsConnected(true);
+          reconnectAttempts = 0;
+          console.log('SSE connection established');
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const alarm = JSON.parse(event.data) as LiveAlarm;
+            setLiveAlarms(prev => [alarm, ...prev].slice(0, 20)); // Keep last 20 alarms
+          } catch (e) {
+            console.error('Failed to parse SSE message:', e);
+          }
+        };
+
+        eventSource.onerror = (event) => {
+          setIsConnected(false);
+          
+          // Check if this is a fatal error (401, 500, etc.)
+          if (eventSource?.readyState === EventSource.CLOSED) {
+            console.error('SSE connection closed by server');
+            
+            // Implement exponential backoff for reconnection
+            reconnectAttempts++;
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), maxReconnectDelay);
+            
+            console.log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts})`);
+            
+            reconnectTimeout = setTimeout(() => {
+              if (sseEnabled && eventSource?.readyState === EventSource.CLOSED) {
+                connect();
+              }
+            }, delay);
+          }
+          // Otherwise, browser will auto-retry
+        };
+      } catch (error) {
+        console.error('Failed to create SSE connection:', error);
+        setIsConnected(false);
+      }
+    };
+
+    connect();
+
+    return () => {
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (eventSource) {
+        eventSource.close();
+      }
+      setIsConnected(false);
+    };
+  }, [sseEnabled]);
 
   if (isLoading) {
     return (
@@ -74,12 +162,105 @@ export function OperationsConsole() {
     }
   };
 
+  const getSeverityBadge = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return <Badge variant="destructive" className="gap-1"><Zap className="h-3 w-3" />Critical</Badge>;
+      case 'warning':
+        return <Badge className="bg-orange-500 gap-1"><AlertTriangle className="h-3 w-3" />Warning</Badge>;
+      case 'info':
+        return <Badge variant="outline" className="gap-1"><Bell className="h-3 w-3" />Info</Badge>;
+      default:
+        return <Badge variant="outline">{severity}</Badge>;
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6 bg-background">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Operations Console</h1>
-        <p className="text-muted-foreground">Real-time monitoring and control center</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Operations Console</h1>
+          <p className="text-muted-foreground">Real-time monitoring and control center</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm">
+            {isConnected ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-muted-foreground">Live Feed Active</span>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 rounded-full bg-gray-400" />
+                <span className="text-muted-foreground">Disconnected</span>
+              </>
+            )}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSseEnabled(!sseEnabled)}
+          >
+            {sseEnabled ? <Bell className="h-4 w-4 mr-2" /> : <BellOff className="h-4 w-4 mr-2" />}
+            {sseEnabled ? 'Disable' : 'Enable'} Alarms
+          </Button>
+        </div>
       </div>
+
+      {/* Live Alarms Feed */}
+      {sseEnabled && liveAlarms.length > 0 && (
+        <Card className="border-orange-500 bg-orange-50/50 dark:bg-orange-950/20">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-orange-600" />
+                  Live Alarms
+                </CardTitle>
+                <CardDescription>Real-time telemetry threshold violations</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLiveAlarms([])}
+              >
+                Clear All
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {liveAlarms.map((alarm) => (
+                <div key={alarm.id} className="flex items-start gap-3 p-3 rounded-lg bg-background border">
+                  <div className="mt-1">
+                    {getSeverityBadge(alarm.severity)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium text-sm truncate">{alarm.tag_name}</div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {format(new Date(alarm.timestamp), 'HH:mm:ss')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">{alarm.message}</p>
+                    <div className="flex items-center gap-4 mt-2 text-xs">
+                      {alarm.asset_name && (
+                        <span className="text-muted-foreground">Asset: {alarm.asset_name}</span>
+                      )}
+                      {alarm.scheme_name && (
+                        <span className="text-muted-foreground">Scheme: {alarm.scheme_name}</span>
+                      )}
+                      <span className="font-mono">
+                        Value: <span className="font-semibold">{alarm.value}</span> / Threshold: {alarm.threshold}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-card text-card-foreground">
