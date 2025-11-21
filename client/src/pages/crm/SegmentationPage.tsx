@@ -107,7 +107,7 @@ export function SegmentationPage() {
                       id={segment.id}
                       checked={selectedSegments[segment.id]}
                       onCheckedChange={(checked) =>
-                        setSelectedSegments({ ...selectedSegments, [segment.id]: checked })
+                        setSelectedSegments({ ...selectedSegments, [segment.id]: checked === true })
                       }
                     />
                     <Label htmlFor={segment.id} className="cursor-pointer flex-1">

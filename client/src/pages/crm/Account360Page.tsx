@@ -816,6 +816,84 @@ export function Account360Page() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Move-In
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Process Move-In</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Move-In Date</Label>
+                <input type="date" className="w-full border rounded px-3 py-2" />
+              </div>
+              <div className="space-y-2">
+                <Label>Initial Meter Reading (m³)</Label>
+                <input type="number" placeholder="0.00" className="w-full border rounded px-3 py-2" />
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea placeholder="Any special notes..." rows={3} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline">Cancel</Button>
+              <Button onClick={() => toast.success('Move-in processed successfully')}>
+                Complete Move-In
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Move-Out
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Process Move-Out</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Move-Out Date</Label>
+                <input type="date" className="w-full border rounded px-3 py-2" />
+              </div>
+              <div className="space-y-2">
+                <Label>Final Meter Reading (m³)</Label>
+                <input type="number" placeholder="0.00" className="w-full border rounded px-3 py-2" />
+              </div>
+              <div className="space-y-2">
+                <Label>Account Status After Move-Out</Label>
+                <select className="w-full border rounded px-3 py-2">
+                  <option>Disconnected</option>
+                  <option>Suspended</option>
+                  <option>Closed</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea placeholder="Outstanding balance notes, forwarding address, etc..." rows={3} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline">Cancel</Button>
+              <Button onClick={() => toast.success('Move-out processed successfully')} className="bg-orange-600 hover:bg-orange-700">
+                Complete Move-Out
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
