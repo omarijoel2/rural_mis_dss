@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('crm_service_connections', function (Blueprint $table) {
-            $table->string('account_no')->nullable()->unique()->after('connection_no');
+            $table->string('account_no')->nullable()->after('connection_no');
             $table->unsignedBigInteger('customer_id')->nullable()->after('premise_id');
             $table->unsignedBigInteger('tariff_id')->nullable()->after('meter_id');
             
