@@ -11,7 +11,15 @@ const globalModules = [
   { name: 'CMMS', href: '/cmms/dashboard', icon: Wrench, color: 'text-yellow-500' },
   { name: 'Water Quality', href: '/water-quality/samples', icon: Droplet, color: 'text-blue-400' },
   { name: 'GIS Map', href: '/gis/map', icon: Map, color: 'text-red-500' },
-  { name: 'Security', href: '/security/audit', icon: Shield, color: 'text-gray-500' },
+  { name: 'M&E', href: '/me/kpis', icon: Calculator, color: 'text-teal-500' },
+  { name: 'Customer', href: '/customer/tariffs', icon: Users, color: 'text-pink-500' },
+  { name: 'Community', href: '/community/committees', icon: Users, color: 'text-purple-500' },
+  { name: 'Core Ops', href: '/core-ops/console', icon: Calculator, color: 'text-emerald-500' },
+  { name: 'DSA', href: '/dsa/forecast', icon: Calculator, color: 'text-violet-500' },
+  { name: 'Security', href: '/security/audit', icon: Shield, color: 'text-red-500' },
+  { name: 'Admin', href: '/admin/users', icon: Shield, color: 'text-gray-500' },
+  { name: 'Integration', href: '/integration/api', icon: Shield, color: 'text-indigo-500' },
+  { name: 'Training', href: '/training/courses', icon: Shield, color: 'text-amber-500' },
 ];
 
 export function GlobalSidebar() {

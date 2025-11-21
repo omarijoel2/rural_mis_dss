@@ -11,7 +11,15 @@ const globalModules = [
   { name: 'CMMS', href: '/cmms/dashboard', icon: Wrench },
   { name: 'Water Quality', href: '/water-quality/samples', icon: Droplet },
   { name: 'GIS Map', href: '/gis/map', icon: Map },
+  { name: 'M&E', href: '/me/kpis', icon: Calculator },
+  { name: 'Customer', href: '/customer/tariffs', icon: Users },
+  { name: 'Community', href: '/community/committees', icon: Users },
+  { name: 'Core Ops', href: '/core-ops/console', icon: Calculator },
+  { name: 'DSA', href: '/dsa/forecast', icon: Calculator },
   { name: 'Security', href: '/security/audit', icon: Shield },
+  { name: 'Admin', href: '/admin/users', icon: Shield },
+  { name: 'Integration', href: '/integration/api', icon: Shield },
+  { name: 'Training', href: '/training/courses', icon: Shield },
 ];
 
 export function GlobalNav() {
