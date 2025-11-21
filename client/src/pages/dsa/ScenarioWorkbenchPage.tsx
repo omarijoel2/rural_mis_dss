@@ -54,7 +54,7 @@ export default function ScenarioWorkbenchPage() {
 
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
 
-  const { data: schemes } = useQuery({
+  const { data: schemes, isLoading: isSchemesLoading, error: schemesError } = useQuery({
     queryKey: ['schemes'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/schemes');
@@ -62,7 +62,7 @@ export default function ScenarioWorkbenchPage() {
     },
   });
 
-  const { data: scenarios, refetch: refetchScenarios } = useQuery({
+  const { data: scenarios, isLoading: isScenariosLoading, error: scenariosError, refetch: refetchScenarios } = useQuery({
     queryKey: ['scenarios'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/dsa/scenarios');
@@ -138,15 +138,15 @@ export default function ScenarioWorkbenchPage() {
 
   const selectedScenarioData = scenarios?.find(s => s.id === selectedScenario);
 
-  // Sample data for comparison chart
-  const comparisonData = [
-    { metric: 'Deficit', baseline: 0, scenario: selectedScenarioData?.results?.deficit_m3d ?? 0 },
-    { metric: 'Continuity', baseline: 24, scenario: selectedScenarioData?.results?.continuity_hrs ?? 0 },
-    { metric: 'Cost Impact', baseline: 100, scenario: 100 + (selectedScenarioData?.results?.cost_impact ?? 0) },
-    { metric: 'Service Level', baseline: 100, scenario: 100 - (selectedScenarioData?.results?.service_deficit_pct ?? 0) },
-  ];
+  // DEMO DATA - Replace with API integration once backend endpoints are ready
+  const comparisonData = selectedScenarioData?.results ? [
+    { metric: 'Deficit', baseline: 0, scenario: selectedScenarioData.results.deficit_m3d },
+    { metric: 'Continuity', baseline: 24, scenario: selectedScenarioData.results.continuity_hrs },
+    { metric: 'Cost Impact', baseline: 100, scenario: 100 + selectedScenarioData.results.cost_impact },
+    { metric: 'Service Level', baseline: 100, scenario: 100 - selectedScenarioData.results.service_deficit_pct },
+  ] : [];
 
-  // Radar chart data for multi-KPI comparison
+  // DEMO DATA - Multi-KPI radar visualization  
   const radarData = [
     { kpi: 'Supply', value: 85, fullMark: 100 },
     { kpi: 'Pressure', value: 70, fullMark: 100 },

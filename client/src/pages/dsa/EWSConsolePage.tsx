@@ -55,7 +55,7 @@ export default function EWSConsolePage() {
     quiet_hours_end: null as number | null,
   });
 
-  const { data: rules, refetch: refetchRules } = useQuery({
+  const { data: rules, isLoading: isRulesLoading, error: rulesError, refetch: refetchRules } = useQuery({
     queryKey: ['ews-rules'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/dsa/ews/rules');
@@ -63,7 +63,7 @@ export default function EWSConsolePage() {
     },
   });
 
-  const { data: alerts, refetch: refetchAlerts } = useQuery({
+  const { data: alerts, isLoading: isAlertsLoading, error: alertsError, refetch: refetchAlerts } = useQuery({
     queryKey: ['ews-alerts'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/dsa/ews/alerts');

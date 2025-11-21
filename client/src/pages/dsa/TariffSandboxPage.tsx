@@ -39,7 +39,7 @@ export default function TariffSandboxPage() {
     elasticity: 0.15,
   });
 
-  const { data: schemes } = useQuery({
+  const { data: schemes, isLoading: isSchemesLoading, error: schemesError } = useQuery({
     queryKey: ['schemes'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/schemes');
@@ -47,7 +47,7 @@ export default function TariffSandboxPage() {
     },
   });
 
-  const { data: scenarios, refetch } = useQuery({
+  const { data: scenarios, isLoading: isScenariosLoading, error: scenariosError, refetch } = useQuery({
     queryKey: ['tariff-scenarios'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/dsa/tariffs');
@@ -82,7 +82,7 @@ export default function TariffSandboxPage() {
     });
   };
 
-  // Sample results data
+  // DEMO DATA - Replace with real affordability analysis from API
   const affordabilityData = [
     { quintile: 'Q1 (Poorest)', current: 8, proposed: 6 },
     { quintile: 'Q2', current: 5, proposed: 4 },
@@ -91,6 +91,7 @@ export default function TariffSandboxPage() {
     { quintile: 'Q5 (Richest)', current: 1, proposed: 1.5 },
   ];
 
+  // DEMO DATA - Replace with real revenue projection from API
   const revenueData = [
     { category: 'Residential', current: 450000, proposed: 520000 },
     { category: 'Commercial', current: 280000, proposed: 295000 },

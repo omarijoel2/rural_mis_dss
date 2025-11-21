@@ -874,4 +874,41 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Api\OperationsController::class, 'dashboard'])->middleware('permission:view operations dashboard');
         Route::get('/alarms', [\App\Http\Controllers\Api\OperationsController::class, 'alarms'])->middleware('permission:view operations dashboard');
     });
+
+    // Decision Support & Advanced Analytics
+    Route::prefix('dsa')->middleware(['auth:sanctum'])->group(function () {
+        // Forecasting
+        Route::get('/forecast', [\App\Http\Controllers\DSA\ForecastController::class, 'index'])->middleware('permission:view forecasts');
+        Route::post('/forecast', [\App\Http\Controllers\DSA\ForecastController::class, 'store'])->middleware('permission:create forecasts');
+        Route::get('/forecast/{id}', [\App\Http\Controllers\DSA\ForecastController::class, 'show'])->middleware('permission:view forecasts');
+
+        // Scenario Planning
+        Route::get('/scenarios', [\App\Http\Controllers\DSA\ScenarioController::class, 'index'])->middleware('permission:view scenarios');
+        Route::post('/scenarios', [\App\Http\Controllers\DSA\ScenarioController::class, 'store'])->middleware('permission:create scenarios');
+        Route::post('/scenarios/{id}/run', [\App\Http\Controllers\DSA\ScenarioController::class, 'run'])->middleware('permission:run scenarios');
+
+        // Optimization
+        Route::get('/optimize', [\App\Http\Controllers\DSA\OptimizationController::class, 'index'])->middleware('permission:view optimizations');
+        Route::post('/optimize/{type}', [\App\Http\Controllers\DSA\OptimizationController::class, 'optimize'])->middleware('permission:run optimizations');
+        Route::post('/optimize/{id}/publish', [\App\Http\Controllers\DSA\OptimizationController::class, 'publish'])->middleware('permission:publish optimization plans');
+
+        // Anomaly Detection
+        Route::get('/anomalies', [\App\Http\Controllers\DSA\AnomalyController::class, 'index'])->middleware('permission:view anomalies');
+        Route::post('/anomalies/bulk-update', [\App\Http\Controllers\DSA\AnomalyController::class, 'bulkUpdate'])->middleware('permission:manage anomalies');
+        Route::post('/anomalies/{id}/create-work-order', [\App\Http\Controllers\DSA\AnomalyController::class, 'createWorkOrder'])->middleware('permission:create work orders');
+
+        // Hydrogeological Analytics
+        Route::get('/hydro/aquifers', [\App\Http\Controllers\DSA\HydroController::class, 'aquifers'])->middleware('permission:view hydro data');
+        Route::get('/hydro/wellfield', [\App\Http\Controllers\DSA\HydroController::class, 'wellfield'])->middleware('permission:view hydro data');
+
+        // Tariff Simulation
+        Route::get('/tariffs', [\App\Http\Controllers\DSA\TariffController::class, 'index'])->middleware('permission:view tariff scenarios');
+        Route::post('/tariffs', [\App\Http\Controllers\DSA\TariffController::class, 'store'])->middleware('permission:create tariff scenarios');
+
+        // Early Warning System
+        Route::get('/ews/rules', [\App\Http\Controllers\DSA\EWSController::class, 'getRules'])->middleware('permission:view ews rules');
+        Route::post('/ews/rules', [\App\Http\Controllers\DSA\EWSController::class, 'createRule'])->middleware('permission:create ews rules');
+        Route::get('/ews/alerts', [\App\Http\Controllers\DSA\EWSController::class, 'getAlerts'])->middleware('permission:view ews alerts');
+        Route::post('/ews/alerts/{id}/acknowledge', [\App\Http\Controllers\DSA\EWSController::class, 'acknowledgeAlert'])->middleware('permission:manage ews alerts');
+    });
 });

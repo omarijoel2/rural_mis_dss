@@ -45,7 +45,7 @@ export default function OptimizationConsolePage() {
     objective: 'minimize_energy_cost',
   });
 
-  const { data: schemes } = useQuery({
+  const { data: schemes, isLoading: isSchemesLoading, error: schemesError } = useQuery({
     queryKey: ['schemes'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/schemes');
@@ -53,7 +53,7 @@ export default function OptimizationConsolePage() {
     },
   });
 
-  const { data: pumps } = useQuery({
+  const { data: pumps, isLoading: isPumpsLoading } = useQuery({
     queryKey: ['pumps', pumpFormData.scheme_id],
     queryFn: async () => {
       if (!pumpFormData.scheme_id) return [];
@@ -63,7 +63,7 @@ export default function OptimizationConsolePage() {
     enabled: !!pumpFormData.scheme_id,
   });
 
-  const { data: optimRuns, refetch: refetchRuns } = useQuery({
+  const { data: optimRuns, isLoading: isRunsLoading, error: runsError, refetch: refetchRuns } = useQuery({
     queryKey: ['optim-runs', activeTab],
     queryFn: async () => {
       const res = await apiClient.get(`/api/v1/dsa/optimize?type=${activeTab}`);

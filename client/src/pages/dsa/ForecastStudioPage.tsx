@@ -62,7 +62,7 @@ export default function ForecastStudioPage() {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
 
   // Fetch schemes for entity selection
-  const { data: schemes } = useQuery({
+  const { data: schemes, isLoading: isSchemesLoading, error: schemesError } = useQuery({
     queryKey: ['schemes'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/schemes');
@@ -71,7 +71,7 @@ export default function ForecastStudioPage() {
   });
 
   // Fetch forecast jobs
-  const { data: jobs, refetch: refetchJobs } = useQuery({
+  const { data: jobs, isLoading: isJobsLoading, error: jobsError, refetch: refetchJobs } = useQuery({
     queryKey: ['forecast-jobs'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/dsa/forecast');
