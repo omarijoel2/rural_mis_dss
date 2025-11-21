@@ -548,6 +548,57 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [NoteController::class, 'update'])->middleware('permission:edit notes');
             Route::delete('/{id}', [NoteController::class, 'destroy'])->middleware('permission:delete notes');
         });
+
+        Route::prefix('tariffs')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\Crm\TariffController::class, 'index'])->middleware('permission:view tariffs');
+            Route::post('/', [\App\Http\Controllers\Api\Crm\TariffController::class, 'store'])->middleware('permission:create tariffs');
+            Route::get('/{id}', [\App\Http\Controllers\Api\Crm\TariffController::class, 'show'])->middleware('permission:view tariffs');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\Crm\TariffController::class, 'update'])->middleware('permission:edit tariffs');
+            Route::put('/{id}', [\App\Http\Controllers\Api\Crm\TariffController::class, 'update'])->middleware('permission:edit tariffs');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Crm\TariffController::class, 'destroy'])->middleware('permission:delete tariffs');
+            Route::post('/calculate', [\App\Http\Controllers\Api\Crm\TariffController::class, 'calculate'])->middleware('permission:view tariffs');
+        });
+
+        Route::prefix('billing')->group(function () {
+            Route::get('/runs', [\App\Http\Controllers\Api\Crm\BillingController::class, 'runs'])->middleware('permission:view billing runs');
+            Route::post('/preview', [\App\Http\Controllers\Api\Crm\BillingController::class, 'preview'])->middleware('permission:view billing runs');
+            Route::post('/execute', [\App\Http\Controllers\Api\Crm\BillingController::class, 'execute'])->middleware('permission:execute billing runs');
+        });
+
+        Route::prefix('reconciliation')->group(function () {
+            Route::get('/payments', [\App\Http\Controllers\Api\Crm\PaymentReconciliationController::class, 'index'])->middleware('permission:view payments');
+            Route::post('/reconcile', [\App\Http\Controllers\Api\Crm\PaymentReconciliationController::class, 'reconcile'])->middleware('permission:reconcile payments');
+            Route::get('/aging', [\App\Http\Controllers\Api\Crm\PaymentReconciliationController::class, 'aging'])->middleware('permission:view aging reports');
+        });
+
+        Route::prefix('meter-routes')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\Crm\MeterRouteController::class, 'index'])->middleware('permission:view meter routes');
+            Route::post('/', [\App\Http\Controllers\Api\Crm\MeterRouteController::class, 'store'])->middleware('permission:create meter routes');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\Crm\MeterRouteController::class, 'update'])->middleware('permission:edit meter routes');
+            Route::put('/{id}', [\App\Http\Controllers\Api\Crm\MeterRouteController::class, 'update'])->middleware('permission:edit meter routes');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Crm\MeterRouteController::class, 'destroy'])->middleware('permission:delete meter routes');
+            Route::get('/{id}/offline', [\App\Http\Controllers\Api\Crm\MeterRouteController::class, 'downloadOffline'])->middleware('permission:view meter routes');
+            Route::post('/{id}/upload', [\App\Http\Controllers\Api\Crm\MeterRouteController::class, 'uploadReads'])->middleware('permission:upload meter reads');
+        });
+
+        Route::prefix('connections')->group(function () {
+            Route::get('/applications', [\App\Http\Controllers\Api\Crm\ConnectionController::class, 'applications'])->middleware('permission:view connections');
+            Route::post('/apply', [\App\Http\Controllers\Api\Crm\ConnectionController::class, 'submitApplication'])->middleware('permission:create connections');
+            Route::patch('/applications/{id}', [\App\Http\Controllers\Api\Crm\ConnectionController::class, 'updateApplication'])->middleware('permission:edit connections');
+            Route::get('/disconnections', [\App\Http\Controllers\Api\Crm\ConnectionController::class, 'disconnections'])->middleware('permission:view connections');
+            Route::post('/disconnect', [\App\Http\Controllers\Api\Crm\ConnectionController::class, 'requestDisconnection'])->middleware('permission:disconnect accounts');
+            Route::post('/reconnect', [\App\Http\Controllers\Api\Crm\ConnectionController::class, 'reconnect'])->middleware('permission:reconnect accounts');
+        });
+
+        Route::prefix('kiosks')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\Crm\KioskController::class, 'index'])->middleware('permission:view kiosks');
+            Route::post('/', [\App\Http\Controllers\Api\Crm\KioskController::class, 'store'])->middleware('permission:create kiosks');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\Crm\KioskController::class, 'update'])->middleware('permission:edit kiosks');
+            Route::put('/{id}', [\App\Http\Controllers\Api\Crm\KioskController::class, 'update'])->middleware('permission:edit kiosks');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Crm\KioskController::class, 'destroy'])->middleware('permission:delete kiosks');
+            Route::get('/{id}/sales', [\App\Http\Controllers\Api\Crm\KioskController::class, 'sales'])->middleware('permission:view kiosks');
+            Route::get('/trucks', [\App\Http\Controllers\Api\Crm\KioskController::class, 'trucks'])->middleware('permission:view kiosks');
+        });
     });
 
     Route::prefix('hydromet')->group(function () {
