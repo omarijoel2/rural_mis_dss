@@ -9,7 +9,7 @@ import type {
   WorkOrder
 } from '../types/cmms';
 
-const BASE_URL = '/api/v1';
+const BASE_URL = '';
 
 export const assetService = {
   getClasses: () =>

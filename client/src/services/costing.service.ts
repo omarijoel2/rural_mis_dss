@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/api-client';
 
-const BASE_URL = '/api/v1/costing';
+const BASE_URL = '/costing';
 
 export interface GlAccount {
   id: number;

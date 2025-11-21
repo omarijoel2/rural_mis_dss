@@ -1,6 +1,6 @@
 import { apiClient } from '../lib/api-client';
 
-const BASE_URL = '/api/v1/hydromet';
+const BASE_URL = '/hydromet';
 
 export interface SourceKind {
   id: number;

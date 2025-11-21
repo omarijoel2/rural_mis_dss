@@ -8,7 +8,7 @@ import type {
   StockTxn
 } from '../types/cmms';
 
-const BASE_URL = '/api/v1';
+const BASE_URL = '';
 
 export const partService = {
   getParts: (filters?: PartFilters) => {
