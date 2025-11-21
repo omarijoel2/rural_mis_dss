@@ -44,7 +44,10 @@ import {
   MessageSquare,
   Handshake,
   BarChart2,
-  FolderOpen
+  FolderOpen,
+  Zap,
+  FileBarChart,
+  ShoppingCart
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -107,6 +110,12 @@ const moduleNavigation = [
       { name: 'Cost-to-Serve', href: '/costing/cost-to-serve', icon: TrendingUp },
       { name: 'GL Accounts', href: '/costing/gl-accounts', icon: DollarSign },
       { name: 'Cost Centers', href: '/costing/cost-centers', icon: Building2 },
+      { name: 'Energy Tariffs', href: '/costing/energy/tariffs', icon: Zap },
+      { name: 'Energy Readings', href: '/costing/energy/readings', icon: Upload },
+      { name: 'Energy Dashboard', href: '/costing/energy/dashboard', icon: FileBarChart },
+      { name: 'Requisitions', href: '/procurement/requisitions', icon: ClipboardList },
+      { name: 'RFQ Builder', href: '/procurement/rfqs', icon: FileText },
+      { name: 'LPO Management', href: '/procurement/lpos', icon: ShoppingCart },
     ]
   },
   {

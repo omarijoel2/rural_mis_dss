@@ -52,6 +52,12 @@ import { SourcesPage } from './pages/hydromet/SourcesPage';
 import { StationsPage } from './pages/hydromet/StationsPage';
 import { CostingLayout } from './components/layouts/CostingLayout';
 import { BudgetListPage, BudgetDetailPage, AllocationConsolePage, CostToServeDashboard, GlAccountsPage, CostCentersPage } from './pages/costing';
+import { EnergyTariffSetup } from './pages/costing/EnergyTariffSetup';
+import { EnergyReadingsUpload } from './pages/costing/EnergyReadingsUpload';
+import { EnergyCostDashboard } from './pages/costing/EnergyCostDashboard';
+import { RequisitionsPage } from './pages/procurement/RequisitionsPage';
+import { RFQBuilderPage } from './pages/procurement/RFQBuilderPage';
+import { LPOManagementPage } from './pages/procurement/LPOManagementPage';
 import { CoreRegistryLayout } from './components/layouts/CoreRegistryLayout';
 import { HydrometLayout } from './components/layouts/HydrometLayout';
 import { ProjectsLayout } from './components/layouts/ProjectsLayout';
@@ -453,6 +459,44 @@ export function AppMIS() {
                 <Route path="cost-centers" element={
                   <ProtectedRoute requiredPermission="view budgets">
                     <CostCentersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="energy/tariffs" element={
+                  <ProtectedRoute requiredPermission="view energy tariffs">
+                    <EnergyTariffSetup />
+                  </ProtectedRoute>
+                } />
+                <Route path="energy/readings" element={
+                  <ProtectedRoute requiredPermission="upload energy readings">
+                    <EnergyReadingsUpload />
+                  </ProtectedRoute>
+                } />
+                <Route path="energy/dashboard" element={
+                  <ProtectedRoute requiredPermission="view energy dashboard">
+                    <EnergyCostDashboard />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              
+              <Route path="/procurement" element={
+                <ProtectedRoute>
+                  <CostingLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/procurement/requisitions" replace />} />
+                <Route path="requisitions" element={
+                  <ProtectedRoute requiredPermission="view requisitions">
+                    <RequisitionsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="rfqs" element={
+                  <ProtectedRoute requiredPermission="view rfqs">
+                    <RFQBuilderPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="lpos" element={
+                  <ProtectedRoute requiredPermission="view lpos">
+                    <LPOManagementPage />
                   </ProtectedRoute>
                 } />
               </Route>
