@@ -24,10 +24,18 @@ class CoreRegistrySeeder extends Seeder
      */
     public function run(): void
     {
+        // Auto-create tenant if none exists
         $tenant = Tenant::first();
         if (!$tenant) {
-            $this->command->error('No tenant found. Please create a tenant first.');
-            return;
+            $tenant = Tenant::create([
+                'name' => 'Nairobi Water & Sewerage Company',
+                'short_code' => 'NWSC',
+                'country' => 'KE',
+                'timezone' => 'Africa/Nairobi',
+                'currency' => 'KES',
+                'status' => 'active',
+            ]);
+            $this->command->info('Created default tenant: ' . $tenant->name);
         }
 
         $org = Organization::where('tenant_id', $tenant->id)->first();
@@ -62,14 +70,14 @@ class CoreRegistrySeeder extends Seeder
                 'population_estimate' => 1500000,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.25, 36.75),
-                        new Point(-1.25, 36.85),
-                        new Point(-1.35, 36.85),
-                        new Point(-1.35, 36.75),
-                        new Point(-1.25, 36.75),
+                        new Point(36.75, -1.25),
+                        new Point(36.85, -1.25),
+                        new Point(36.85, -1.35),
+                        new Point(36.75, -1.35),
+                        new Point(36.75, -1.25),
                     ], 4326)
                 ], 4326),
-                'centroid' => new Point(-1.30, 36.80, 4326),
+                'centroid' => new Point(36.80, -1.30, 4326),
             ],
             [
                 'code' => 'WWSS-002',
@@ -79,14 +87,14 @@ class CoreRegistrySeeder extends Seeder
                 'population_estimate' => 450000,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.24, 36.78),
-                        new Point(-1.24, 36.83),
-                        new Point(-1.28, 36.83),
-                        new Point(-1.28, 36.78),
-                        new Point(-1.24, 36.78),
+                        new Point(36.78, -1.24),
+                        new Point(36.83, -1.24),
+                        new Point(36.83, -1.28),
+                        new Point(36.78, -1.28),
+                        new Point(36.78, -1.24),
                     ], 4326)
                 ], 4326),
-                'centroid' => new Point(-1.26, 36.805, 4326),
+                'centroid' => new Point(36.805, -1.26, 4326),
             ],
             [
                 'code' => 'KRWP-003',
@@ -96,14 +104,14 @@ class CoreRegistrySeeder extends Seeder
                 'population_estimate' => 85000,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.20, 36.62),
-                        new Point(-1.20, 36.72),
-                        new Point(-1.28, 36.72),
-                        new Point(-1.28, 36.62),
-                        new Point(-1.20, 36.62),
+                        new Point(36.62, -1.20),
+                        new Point(36.72, -1.20),
+                        new Point(36.72, -1.28),
+                        new Point(36.62, -1.28),
+                        new Point(36.62, -1.20),
                     ], 4326)
                 ], 4326),
-                'centroid' => new Point(-1.24, 36.67, 4326),
+                'centroid' => new Point(36.67, -1.24, 4326),
             ],
             [
                 'code' => 'TWSS-004',
@@ -113,14 +121,14 @@ class CoreRegistrySeeder extends Seeder
                 'population_estimate' => 250000,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.00, 37.05),
-                        new Point(-1.00, 37.15),
-                        new Point(-1.08, 37.15),
-                        new Point(-1.08, 37.05),
-                        new Point(-1.00, 37.05),
+                        new Point(37.05, -1.00),
+                        new Point(37.15, -1.00),
+                        new Point(37.15, -1.08),
+                        new Point(37.05, -1.08),
+                        new Point(37.05, -1.00),
                     ], 4326)
                 ], 4326),
-                'centroid' => new Point(-1.04, 37.10, 4326),
+                'centroid' => new Point(37.10, -1.04, 4326),
             ],
         ];
 
@@ -140,13 +148,15 @@ class CoreRegistrySeeder extends Seeder
 
     private function seedDmas(Tenant $tenant): void
     {
-        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        // Use deterministic lookup for base scheme
+        $nairobi = Scheme::where('tenant_id', $tenant->id)
+            ->where('code', 'NCWSS-001')
+            ->first();
         
-        if ($schemes->isEmpty()) {
+        if (!$nairobi) {
+            $this->command->warn('Base scheme NCWSS-001 not found. Skipping DMAs.');
             return;
         }
-
-        $nairobi = $schemes->first();
         
         $dmas = [
             [
@@ -158,11 +168,11 @@ class CoreRegistrySeeder extends Seeder
                 'pressure_target_bar' => 3.5,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.28, 36.80),
-                        new Point(-1.28, 36.83),
-                        new Point(-1.30, 36.83),
-                        new Point(-1.30, 36.80),
-                        new Point(-1.28, 36.80),
+                        new Point(36.80, -1.28),
+                        new Point(36.83, -1.28),
+                        new Point(36.83, -1.30),
+                        new Point(36.80, -1.30),
+                        new Point(36.80, -1.28),
                     ], 4326)
                 ], 4326),
             ],
@@ -175,11 +185,11 @@ class CoreRegistrySeeder extends Seeder
                 'pressure_target_bar' => 4.0,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.29, 36.76),
-                        new Point(-1.29, 36.80),
-                        new Point(-1.32, 36.80),
-                        new Point(-1.32, 36.76),
-                        new Point(-1.29, 36.76),
+                        new Point(36.76, -1.29),
+                        new Point(36.80, -1.29),
+                        new Point(36.80, -1.32),
+                        new Point(36.76, -1.32),
+                        new Point(36.76, -1.29),
                     ], 4326)
                 ], 4326),
             ],
@@ -192,11 +202,11 @@ class CoreRegistrySeeder extends Seeder
                 'pressure_target_bar' => 3.0,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.26, 36.85),
-                        new Point(-1.26, 36.90),
-                        new Point(-1.30, 36.90),
-                        new Point(-1.30, 36.85),
-                        new Point(-1.26, 36.85),
+                        new Point(36.85, -1.26),
+                        new Point(36.90, -1.26),
+                        new Point(36.90, -1.30),
+                        new Point(36.85, -1.30),
+                        new Point(36.85, -1.26),
                     ], 4326)
                 ], 4326),
             ],
@@ -215,13 +225,15 @@ class CoreRegistrySeeder extends Seeder
 
     private function seedFacilities(Tenant $tenant): void
     {
-        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        // Use deterministic lookup for base scheme
+        $nairobi = Scheme::where('tenant_id', $tenant->id)
+            ->where('code', 'NCWSS-001')
+            ->first();
         
-        if ($schemes->isEmpty()) {
+        if (!$nairobi) {
+            $this->command->warn('Base scheme NCWSS-001 not found. Skipping facilities.');
             return;
         }
-
-        $nairobi = $schemes->first();
 
         $facilities = [
             [
@@ -230,7 +242,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'treatment',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.10, 36.65, 4326),
+                'location' => new Point(36.65, -1.10, 4326),
             ],
             [
                 'code' => 'FAC-NSS-002',
@@ -238,7 +250,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'source',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.08, 36.68, 4326),
+                'location' => new Point(36.68, -1.08, 4326),
             ],
             [
                 'code' => 'FAC-GPS-003',
@@ -246,7 +258,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'pumpstation',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.24, 36.78, 4326),
+                'location' => new Point(36.78, -1.24, 4326),
             ],
             [
                 'code' => 'FAC-RSR-004',
@@ -254,7 +266,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'reservoir',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.25, 36.88, 4326),
+                'location' => new Point(36.88, -1.25, 4326),
             ],
             [
                 'code' => 'FAC-KBS-005',
@@ -262,7 +274,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'pumpstation',
                 'status' => 'standby',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.26, 36.73, 4326),
+                'location' => new Point(36.73, -1.26, 4326),
             ],
             [
                 'code' => 'FAC-KWQL-006',
@@ -270,7 +282,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'lab',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.25, 36.82, 4326),
+                'location' => new Point(36.82, -1.25, 4326),
             ],
             [
                 'code' => 'FAC-NDS-007',
@@ -278,7 +290,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'source',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-0.75, 37.05, 4326),
+                'location' => new Point(37.05, -0.75, 4326),
             ],
             [
                 'code' => 'FAC-CPR-008',
@@ -286,7 +298,7 @@ class CoreRegistrySeeder extends Seeder
                 'category' => 'reservoir',
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.27, 36.83, 4326),
+                'location' => new Point(36.83, -1.27, 4326),
             ],
         ];
 
@@ -303,13 +315,15 @@ class CoreRegistrySeeder extends Seeder
 
     private function seedZones(Tenant $tenant): void
     {
-        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        // Use deterministic lookup for base scheme
+        $nairobi = Scheme::where('tenant_id', $tenant->id)
+            ->where('code', 'NCWSS-001')
+            ->first();
         
-        if ($schemes->isEmpty()) {
+        if (!$nairobi) {
+            $this->command->warn('Base scheme NCWSS-001 not found. Skipping zones.');
             return;
         }
-
-        $nairobi = $schemes->first();
 
         $zones = [
             [
@@ -319,11 +333,11 @@ class CoreRegistrySeeder extends Seeder
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.26, 36.80),
-                        new Point(-1.26, 36.82),
-                        new Point(-1.28, 36.82),
-                        new Point(-1.28, 36.80),
-                        new Point(-1.26, 36.80),
+                        new Point(36.80, -1.26),
+                        new Point(36.82, -1.26),
+                        new Point(36.82, -1.28),
+                        new Point(36.80, -1.28),
+                        new Point(36.80, -1.26),
                     ], 4326)
                 ], 4326),
             ],
@@ -334,11 +348,11 @@ class CoreRegistrySeeder extends Seeder
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.29, 36.77),
-                        new Point(-1.29, 36.79),
-                        new Point(-1.31, 36.79),
-                        new Point(-1.31, 36.77),
-                        new Point(-1.29, 36.77),
+                        new Point(36.77, -1.29),
+                        new Point(36.79, -1.29),
+                        new Point(36.79, -1.31),
+                        new Point(36.77, -1.31),
+                        new Point(36.77, -1.29),
                     ], 4326)
                 ], 4326),
             ],
@@ -349,11 +363,11 @@ class CoreRegistrySeeder extends Seeder
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.31, 36.84),
-                        new Point(-1.31, 36.87),
-                        new Point(-1.34, 36.87),
-                        new Point(-1.34, 36.84),
-                        new Point(-1.31, 36.84),
+                        new Point(36.84, -1.31),
+                        new Point(36.87, -1.31),
+                        new Point(36.87, -1.34),
+                        new Point(36.84, -1.34),
+                        new Point(36.84, -1.31),
                     ], 4326)
                 ], 4326),
             ],
@@ -364,11 +378,11 @@ class CoreRegistrySeeder extends Seeder
                 'scheme_id' => $nairobi->id,
                 'geom' => new Polygon([
                     new LineString([
-                        new Point(-1.28, 36.81),
-                        new Point(-1.28, 36.83),
-                        new Point(-1.30, 36.83),
-                        new Point(-1.30, 36.81),
-                        new Point(-1.28, 36.81),
+                        new Point(36.81, -1.28),
+                        new Point(36.83, -1.28),
+                        new Point(36.83, -1.30),
+                        new Point(36.81, -1.30),
+                        new Point(36.81, -1.28),
                     ], 4326)
                 ], 4326),
             ],
@@ -387,13 +401,15 @@ class CoreRegistrySeeder extends Seeder
 
     private function seedPipelines(Tenant $tenant): void
     {
-        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        // Use deterministic lookup for base scheme
+        $nairobi = Scheme::where('tenant_id', $tenant->id)
+            ->where('code', 'NCWSS-001')
+            ->first();
         
-        if ($schemes->isEmpty()) {
+        if (!$nairobi) {
+            $this->command->warn('Base scheme NCWSS-001 not found. Skipping pipelines.');
             return;
         }
-
-        $nairobi = $schemes->first();
 
         $pipelines = [
             [
@@ -404,9 +420,9 @@ class CoreRegistrySeeder extends Seeder
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
-                    new Point(-1.10, 36.65),
-                    new Point(-1.17, 36.71),
-                    new Point(-1.24, 36.78),
+                    new Point(36.65, -1.10),
+                    new Point(36.71, -1.17),
+                    new Point(36.78, -1.24),
                 ], 4326),
             ],
             [
@@ -417,9 +433,9 @@ class CoreRegistrySeeder extends Seeder
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
-                    new Point(-1.28, 36.81),
-                    new Point(-1.29, 36.82),
-                    new Point(-1.30, 36.82),
+                    new Point(36.81, -1.28),
+                    new Point(36.82, -1.29),
+                    new Point(36.82, -1.30),
                 ], 4326),
             ],
             [
@@ -430,9 +446,9 @@ class CoreRegistrySeeder extends Seeder
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
-                    new Point(-1.29, 36.77),
-                    new Point(-1.30, 36.78),
-                    new Point(-1.31, 36.79),
+                    new Point(36.77, -1.29),
+                    new Point(36.78, -1.30),
+                    new Point(36.79, -1.31),
                 ], 4326),
             ],
             [
@@ -443,9 +459,9 @@ class CoreRegistrySeeder extends Seeder
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
-                    new Point(-1.24, 36.78),
-                    new Point(-1.25, 36.84),
-                    new Point(-1.25, 36.88),
+                    new Point(36.78, -1.24),
+                    new Point(36.84, -1.25),
+                    new Point(36.88, -1.25),
                 ], 4326),
             ],
             [
@@ -456,9 +472,9 @@ class CoreRegistrySeeder extends Seeder
                 'status' => 'active',
                 'scheme_id' => $nairobi->id,
                 'geom' => new LineString([
-                    new Point(-1.31, 36.84),
-                    new Point(-1.32, 36.85),
-                    new Point(-1.34, 36.86),
+                    new Point(36.84, -1.31),
+                    new Point(36.85, -1.32),
+                    new Point(36.86, -1.34),
                 ], 4326),
             ],
         ];
@@ -476,13 +492,15 @@ class CoreRegistrySeeder extends Seeder
 
     private function seedAddresses(Tenant $tenant): void
     {
-        $schemes = Scheme::where('tenant_id', $tenant->id)->get();
+        // Use deterministic lookup for base scheme
+        $nairobi = Scheme::where('tenant_id', $tenant->id)
+            ->where('code', 'NCWSS-001')
+            ->first();
         
-        if ($schemes->isEmpty()) {
+        if (!$nairobi) {
+            $this->command->warn('Base scheme NCWSS-001 not found. Skipping addresses.');
             return;
         }
-
-        $nairobi = $schemes->first();
 
         $addresses = [
             [
@@ -492,7 +510,7 @@ class CoreRegistrySeeder extends Seeder
                 'postcode' => '00100',
                 'country' => 'KE',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.2850, 36.8219, 4326),
+                'location' => new Point(36.8219, -1.2850, 4326),
             ],
             [
                 'premise_code' => 'ADDR-002',
@@ -501,7 +519,7 @@ class CoreRegistrySeeder extends Seeder
                 'postcode' => '00600',
                 'country' => 'KE',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.2695, 36.8064, 4326),
+                'location' => new Point(36.8064, -1.2695, 4326),
             ],
             [
                 'premise_code' => 'ADDR-003',
@@ -510,7 +528,7 @@ class CoreRegistrySeeder extends Seeder
                 'postcode' => '00100',
                 'country' => 'KE',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.2974, 36.7826, 4326),
+                'location' => new Point(36.7826, -1.2974, 4326),
             ],
             [
                 'premise_code' => 'ADDR-004',
@@ -519,7 +537,7 @@ class CoreRegistrySeeder extends Seeder
                 'postcode' => '00100',
                 'country' => 'KE',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.3230, 36.8537, 4326),
+                'location' => new Point(36.8537, -1.3230, 4326),
             ],
             [
                 'premise_code' => 'ADDR-005',
@@ -528,7 +546,7 @@ class CoreRegistrySeeder extends Seeder
                 'postcode' => '00100',
                 'country' => 'KE',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.2895, 36.8156, 4326),
+                'location' => new Point(36.8156, -1.2895, 4326),
             ],
             [
                 'premise_code' => 'ADDR-006',
@@ -537,7 +555,7 @@ class CoreRegistrySeeder extends Seeder
                 'postcode' => '00600',
                 'country' => 'KE',
                 'scheme_id' => $nairobi->id,
-                'location' => new Point(-1.2643, 36.8091, 4326),
+                'location' => new Point(36.8091, -1.2643, 4326),
             ],
         ];
 
