@@ -47,7 +47,12 @@ import {
   FolderOpen,
   Zap,
   FileBarChart,
-  ShoppingCart
+  ShoppingCart,
+  Brain,
+  LineChart,
+  Cpu,
+  Sparkles,
+  Bell
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -205,6 +210,21 @@ const moduleNavigation = [
       { name: 'Open Data Catalog', href: '/community/open-data', icon: FolderOpen },
       { name: 'Dataset Builder', href: '/community/dataset-builder', icon: Settings },
       { name: 'Public Maps', href: '/community/public-maps', icon: Map },
+    ]
+  },
+  {
+    name: 'Decision Support & Analytics',
+    href: '/dsa',
+    icon: Brain,
+    color: 'text-violet-500',
+    subPages: [
+      { name: 'Forecast Studio', href: '/dsa/forecast', icon: LineChart },
+      { name: 'Scenario Workbench', href: '/dsa/scenarios', icon: Cpu },
+      { name: 'Optimization Console', href: '/dsa/optimize', icon: Sparkles },
+      { name: 'Anomalies Inbox', href: '/dsa/anomalies', icon: AlertTriangle },
+      { name: 'Aquifer Dashboard', href: '/dsa/aquifer', icon: Droplet },
+      { name: 'Tariff Sandbox', href: '/dsa/tariffs', icon: DollarSign },
+      { name: 'EWS Console', href: '/dsa/ews', icon: Bell },
     ]
   },
   {
