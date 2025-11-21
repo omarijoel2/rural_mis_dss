@@ -80,7 +80,7 @@ export default function ForecastStudioPage() {
   });
 
   // Fetch specific job result
-  const { data: jobResult } = useQuery({
+  const { data: jobResult, isLoading: isLoadingJobResult, error: jobResultError } = useQuery({
     queryKey: ['forecast-job', selectedJob],
     queryFn: async () => {
       if (!selectedJob) return null;
@@ -340,7 +340,24 @@ export default function ForecastStudioPage() {
           </Card>
 
           {/* Forecast Visualization */}
-          {selectedJobData && jobResult && (
+          {selectedJob && isLoadingJobResult && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading forecast results...</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {selectedJob && jobResultError && (
+            <Card>
+              <CardContent className="py-12 text-center text-destructive">
+                <p>Error loading forecast: {(jobResultError as Error).message}</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {selectedJobData && jobResult && jobResult.historical && jobResult.forecast && (
             <>
               <Card>
                 <CardHeader>
