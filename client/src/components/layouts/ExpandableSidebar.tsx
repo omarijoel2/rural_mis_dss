@@ -71,6 +71,8 @@ const moduleNavigation = [
       { name: 'Customers', href: '/crm/customers', icon: Users },
       { name: 'Account Search', href: '/crm/accounts/search', icon: Home },
       { name: 'Complaints', href: '/crm/complaints', icon: AlertTriangle },
+      { name: 'Interactions', href: '/crm/interactions', icon: MessageSquare },
+      { name: 'Segmentation', href: '/crm/segmentation', icon: BarChart3 },
       { name: 'Revenue Assurance', href: '/crm/ra', icon: AlertTriangle },
       { name: 'Dunning & Collections', href: '/crm/dunning', icon: Receipt },
       { name: 'Import Center', href: '/crm/import', icon: Upload },
