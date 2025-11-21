@@ -14,13 +14,19 @@ class ConnectionController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         
-        $query = CrmConnectionApplication::query()
+        $paginator = CrmConnectionApplication::query()
             ->when($request->filled('status'), function ($q) use ($request) {
                 $q->where('status', $request->input('status'));
             })
-            ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
-        return response()->json($query->paginate($perPage));
+        return response()->json([
+            'data' => $paginator->items(),
+            'total' => $paginator->total(),
+            'per_page' => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+        ]);
     }
 
     public function submitApplication(Request $request): JsonResponse
