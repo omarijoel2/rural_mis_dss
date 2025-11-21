@@ -49,24 +49,41 @@ class PumpOptimizer
             $availableHours = $period['duration'];
             $hoursToSchedule = min($availableHours, $requiredHours - $hoursScheduled);
 
+            // Prevent negative hours
+            if ($hoursToSchedule <= 0) {
+                continue;
+            }
+
             // Check storage constraints
             $volumeToPump = $hoursToSchedule * $pumpCapacity;
             
             // Don't overfill reservoir
             if ($storageLevel + $volumeToPump > $reservoirLimits['max']) {
-                $maxVolume = $reservoirLimits['max'] - $storageLevel;
-                $hoursToSchedule = ceil($maxVolume / $pumpCapacity);
+                $maxVolume = max(0, $reservoirLimits['max'] - $storageLevel);
+                if ($maxVolume <= 0) {
+                    continue; // Reservoir already full
+                }
+                // Recalculate hours, ensuring we don't exceed available or remaining
+                $hoursToSchedule = min(
+                    floor($maxVolume / $pumpCapacity),
+                    $availableHours,
+                    $requiredHours - $hoursScheduled
+                );
                 $volumeToPump = $hoursToSchedule * $pumpCapacity;
             }
 
             if ($hoursToSchedule > 0) {
+                // Calculate power consumption: assume pump uses 0.5 kWh per m³
+                $powerConsumption = $volumeToPump * 0.5; // kWh
+                $energyCost = $powerConsumption * $period['rate']; // Cost in currency
+                
                 $optimizedWindows[] = [
                     'start_hour' => $period['start_hour'],
                     'duration_hours' => $hoursToSchedule,
                     'volume_m3' => $volumeToPump,
                     'tariff_band' => $period['band'],
                     'tariff_rate' => $period['rate'],
-                    'cost' => $hoursToSchedule * $period['rate'] * ($pumpCapacity / 100), // Assume power consumption
+                    'cost' => $energyCost,
                 ];
 
                 $totalVolume += $volumeToPump;
@@ -282,7 +299,12 @@ class PumpOptimizer
             }
         }
 
-        return $hours * $standardRate * ($capacity / 100);
+        // Calculate power consumption: 0.5 kWh per m³
+        $volumePerHour = $capacity;
+        $totalVolume = $hours * $volumePerHour;
+        $powerConsumption = $totalVolume * 0.5; // kWh
+        
+        return $powerConsumption * $standardRate;
     }
 
     /**

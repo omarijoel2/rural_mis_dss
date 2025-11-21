@@ -20,12 +20,17 @@ class TelemetryIngestService
             $this->validateHmacSignature($measurements, $signature, $tenantId);
         }
 
-        // Check idempotency - prevent duplicate processing
+        // Check idempotency - prevent duplicate processing (tenant-scoped)
         if ($idempotencyKey) {
             $cacheKey = "telemetry_ingest:{$tenantId}:{$idempotencyKey}";
             
+            // Return cached result only if it was successful
             if (Cache::has($cacheKey)) {
-                return Cache::get($cacheKey);
+                $cachedResult = Cache::get($cacheKey);
+                // Only return if the previous operation was successful
+                if ($cachedResult && isset($cachedResult['inserted'])) {
+                    return $cachedResult;
+                }
             }
         }
 
@@ -39,7 +44,7 @@ class TelemetryIngestService
             foreach ($measurements as $measurement) {
                 try {
                     // Scope tag lookup to tenant for security
-                    $tag = TelemetryTag::where('tag_name', $measurement['tag'])
+                    $tag = TelemetryTag::where('tag', $measurement['tag'])
                         ->where('tenant_id', $tenantId)
                         ->first();
                     
@@ -53,9 +58,9 @@ class TelemetryIngestService
                         continue;
                     }
 
-                    // Validate data type
-                    if (!$this->validateDataType($tag, $measurement['value'])) {
-                        $failed[] = "Invalid data type for tag '{$measurement['tag']}'";
+                    // Validate value is numeric for analog inputs
+                    if (in_array($tag->io_type, ['AI', 'AO']) && !is_numeric($measurement['value'])) {
+                        $failed[] = "Invalid value type for tag '{$measurement['tag']}': expected numeric";
                         continue;
                     }
 
@@ -97,8 +102,8 @@ class TelemetryIngestService
             'errors' => array_slice($failed, 0, 10), // Limit error list
         ];
 
-        // Cache result for idempotency (24 hours)
-        if ($idempotencyKey) {
+        // Cache result for idempotency (24 hours) only if successful
+        if ($idempotencyKey && $inserted > 0) {
             $cacheKey = "telemetry_ingest:{$tenantId}:{$idempotencyKey}";
             Cache::put($cacheKey, $result, 86400);
         }
@@ -107,15 +112,23 @@ class TelemetryIngestService
     }
 
     /**
-     * Validate HMAC signature for request authenticity
+     * Validate HMAC signature for request authenticity using tenant-specific secret
      */
     private function validateHmacSignature(array $payload, string $signature, string $tenantId): void
     {
-        // Get tenant's HMAC secret from config or database
-        $secret = config('telemetry.hmac_secret') ?? env('TELEMETRY_HMAC_SECRET');
+        // Get tenant-specific HMAC secret from tenant metadata
+        $tenant = \App\Models\Tenant::find($tenantId);
+        
+        if (!$tenant) {
+            throw new \Exception('Tenant not found');
+        }
+
+        // Retrieve tenant-specific HMAC secret from meta JSON (safely handle null)
+        $meta = $tenant->meta ?? [];
+        $secret = is_array($meta) ? ($meta['telemetry_hmac_secret'] ?? null) : null;
         
         if (!$secret) {
-            throw new \Exception('HMAC secret not configured');
+            throw new \Exception('HMAC secret not configured for this tenant. Please configure in tenant settings.');
         }
 
         // Compute expected signature
@@ -128,18 +141,17 @@ class TelemetryIngestService
     }
 
     /**
-     * Validate data type matches tag configuration
+     * Validate data type based on IO type
      */
     private function validateDataType(TelemetryTag $tag, $value): bool
     {
-        switch ($tag->data_type) {
-            case 'float':
-            case 'integer':
+        switch ($tag->io_type) {
+            case 'AI': // Analog Input
+            case 'AO': // Analog Output
                 return is_numeric($value);
-            case 'boolean':
-                return is_bool($value) || in_array($value, [0, 1, '0', '1', 'true', 'false']);
-            case 'string':
-                return is_string($value);
+            case 'DI': // Digital Input
+            case 'DO': // Digital Output
+                return is_bool($value) || in_array($value, [0, 1, '0', '1', 'true', 'false'], true);
             default:
                 return true;
         }
@@ -185,7 +197,7 @@ class TelemetryIngestService
                 'type' => 'hihi',
                 'value' => $value,
                 'threshold' => $tag->thresholds['hiHi'],
-                'message' => "{$tag->tag_name} exceeded critical high threshold: {$value} > {$tag->thresholds['hiHi']}",
+                'message' => "{$tag->tag} exceeded critical high threshold: {$value} > {$tag->thresholds['hiHi']}",
             ];
         } 
         // Warning high alarm
@@ -195,7 +207,7 @@ class TelemetryIngestService
                 'type' => 'hi',
                 'value' => $value,
                 'threshold' => $tag->thresholds['hi'],
-                'message' => "{$tag->tag_name} exceeded warning high threshold: {$value} > {$tag->thresholds['hi']}",
+                'message' => "{$tag->tag} exceeded warning high threshold: {$value} > {$tag->thresholds['hi']}",
             ];
         }
 
@@ -206,7 +218,7 @@ class TelemetryIngestService
                 'type' => 'lolo',
                 'value' => $value,
                 'threshold' => $tag->thresholds['loLo'],
-                'message' => "{$tag->tag_name} below critical low threshold: {$value} < {$tag->thresholds['loLo']}",
+                'message' => "{$tag->tag} below critical low threshold: {$value} < {$tag->thresholds['loLo']}",
             ];
         } 
         // Warning low alarm
@@ -216,7 +228,7 @@ class TelemetryIngestService
                 'type' => 'lo',
                 'value' => $value,
                 'threshold' => $tag->thresholds['lo'],
-                'message' => "{$tag->tag_name} below warning low threshold: {$value} < {$tag->thresholds['lo']}",
+                'message' => "{$tag->tag} below warning low threshold: {$value} < {$tag->thresholds['lo']}",
             ];
         }
 
@@ -246,7 +258,7 @@ class TelemetryIngestService
             // Broadcast to SSE listeners (Operations Console)
             // This would integrate with your SSE implementation
             event(new \App\Events\TelemetryAlarmTriggered([
-                'tag_name' => $tag->tag_name,
+                'tag_name' => $tag->tag,
                 'severity' => $alarm['level'],
                 'message' => $alarm['message'],
                 'value' => $alarm['value'],

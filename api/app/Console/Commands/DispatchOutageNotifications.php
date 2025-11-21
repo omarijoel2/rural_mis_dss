@@ -103,8 +103,10 @@ class DispatchOutageNotifications extends Command
         // 4. Send reminder notifications for long-running outages
         $longRunning = Outage::where('state', 'live')
             ->where('starts_at', '<=', $now->copy()->subHours(6))
-            ->whereNull('last_reminder_at')
-            ->orWhere('last_reminder_at', '<=', $now->copy()->subHours(6))
+            ->where(function ($query) use ($now) {
+                $query->whereNull('last_reminder_at')
+                      ->orWhere('last_reminder_at', '<=', $now->copy()->subHours(6));
+            })
             ->get();
 
         foreach ($longRunning as $outage) {
