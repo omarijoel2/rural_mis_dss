@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CrmServiceConnection extends Model
 {
@@ -13,10 +14,15 @@ class CrmServiceConnection extends Model
         'premise_id',
         'customer_id',
         'account_no',
+        'connection_no',
+        'tariff_id',
+        'meter_id',
+        'connection_type',
         'service_type',
         'status',
         'install_date',
         'disconnect_date',
+        'notes',
         'meta',
     ];
 
@@ -71,5 +77,15 @@ class CrmServiceConnection extends Model
     public function balances(): HasMany
     {
         return $this->hasMany(CrmBalance::class, 'account_no', 'account_no');
+    }
+
+    public function tariff(): BelongsTo
+    {
+        return $this->belongsTo(CrmTariff::class, 'tariff_id');
+    }
+
+    public function meter(): BelongsTo
+    {
+        return $this->belongsTo(CrmMeter::class, 'meter_id');
     }
 }
