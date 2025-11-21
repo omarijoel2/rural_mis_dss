@@ -2,6 +2,20 @@
 
 This project is a hybrid monorepo containing two applications: **EcoVillage** (an inactive sustainability education game) and **Rural Water Supply MIS**. The primary focus is the **Rural Water Supply MIS**, a Laravel-based Management Information System designed for rural water infrastructure. Its core mission is to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities through multi-tenancy, spatial data, and robust security features.
 
+## Recent Updates (Nov 21, 2025)
+
+### Customer 360° Enhancements
+- ✅ **Complaints Tab**: Full CRUD operations for customer complaints with category, priority, and status management
+- ✅ **Consumption Chart**: 12-month consumption trend visualization using Recharts with average and trend indicators
+- ✅ **Notes Feature**: Complete backend (model, controller, routes, migration) and frontend (CRUD UI) for account notes
+  - Backend migration blocked by pre-existing FK type mismatches in modeling module (`2025_11_10_070300_create_modeling_handover_tables.php`)
+  - Code is complete and ready to deploy once migration blocker is resolved
+
+### Known Issues
+- **Database Migration Blocker**: Migration `2025_11_10_070300_create_modeling_handover_tables.php` has FK type mismatch (`gl_account_id` UUID vs bigint) preventing subsequent migrations from running
+- **Training Migration**: Fixed FK type issues (reverted course_id, enrollment_id, lesson_id, etc. from foreignUuid to foreignId)
+- **Notes Migration**: Fixed to reference 'tenants' table instead of 'organizations'
+
 Key capabilities include:
 - Comprehensive spatial features (PostGIS integration, MapLibre GL MapConsole).
 - Role-Based Access Control (RBAC) and audit logging.
