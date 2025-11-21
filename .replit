@@ -28,6 +28,10 @@ localPort = 38163
 externalPort = 4200
 
 [[ports]]
+localPort = 39263
+externalPort = 5000
+
+[[ports]]
 localPort = 41519
 externalPort = 3002
 
@@ -55,3 +59,9 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[userenv]
+
+[userenv.development]
+QUEUE_CONNECTION = "redis"
+HORIZON_PREFIX = "horizon:"
