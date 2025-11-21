@@ -140,10 +140,10 @@ export default function ScenarioWorkbenchPage() {
 
   // Sample data for comparison chart
   const comparisonData = [
-    { metric: 'Deficit', baseline: 0, scenario: selectedScenarioData?.results?.deficit_m3d || 0 },
-    { metric: 'Continuity', baseline: 24, scenario: selectedScenarioData?.results?.continuity_hrs || 0 },
-    { metric: 'Cost Impact', baseline: 100, scenario: 100 + (selectedScenarioData?.results?.cost_impact || 0) },
-    { metric: 'Service Level', baseline: 100, scenario: 100 - (selectedScenarioData?.results?.service_deficit_pct || 0) },
+    { metric: 'Deficit', baseline: 0, scenario: selectedScenarioData?.results?.deficit_m3d ?? 0 },
+    { metric: 'Continuity', baseline: 24, scenario: selectedScenarioData?.results?.continuity_hrs ?? 0 },
+    { metric: 'Cost Impact', baseline: 100, scenario: 100 + (selectedScenarioData?.results?.cost_impact ?? 0) },
+    { metric: 'Service Level', baseline: 100, scenario: 100 - (selectedScenarioData?.results?.service_deficit_pct ?? 0) },
   ];
 
   // Radar chart data for multi-KPI comparison
