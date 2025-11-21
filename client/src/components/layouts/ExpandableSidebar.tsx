@@ -214,6 +214,22 @@ const moduleNavigation = [
     ]
   },
   {
+    name: 'Core Operations',
+    href: '/core-ops',
+    icon: Activity,
+    color: 'text-emerald-500',
+    subPages: [
+      { name: 'Operations Console', href: '/core-ops/console', icon: Gauge },
+      { name: 'Topology Viewer', href: '/core-ops/topology', icon: Globe },
+      { name: 'Telemetry Dashboard', href: '/core-ops/telemetry', icon: BarChart2 },
+      { name: 'Outage Planner', href: '/core-ops/outage', icon: AlertTriangle },
+      { name: 'NRW Dashboard', href: '/core-ops/nrw', icon: Droplet },
+      { name: 'Dosing Control', href: '/core-ops/dosing', icon: TestTube },
+      { name: 'Pump Scheduling', href: '/core-ops/scheduling', icon: Clock },
+      { name: 'Pressure & Leak', href: '/core-ops/pressure-leak', icon: Gauge },
+    ]
+  },
+  {
     name: 'Decision Support & Analytics',
     href: '/dsa',
     icon: Brain,
@@ -229,9 +245,27 @@ const moduleNavigation = [
     ]
   },
   {
-    name: 'Security & Admin',
-    href: '/admin',
+    name: 'Security',
+    href: '/security',
     icon: Shield,
+    color: 'text-red-500',
+    subPages: [
+      { name: 'Audit Logs', href: '/security/audit', icon: FileText },
+      { name: 'Security Alerts', href: '/security/alerts', icon: AlertTriangle },
+      { name: 'Roles', href: '/security/roles', icon: Key },
+      { name: 'API Keys', href: '/security/api-keys', icon: Lock },
+      { name: 'DSR Requests', href: '/security/dsr', icon: FileText },
+      { name: 'Consents', href: '/security/consents', icon: Shield },
+      { name: 'Key Management', href: '/security/kms', icon: Lock },
+      { name: 'Retention Policies', href: '/security/retention', icon: Clock },
+      { name: 'Data Catalog', href: '/security/data-catalog', icon: Database },
+      { name: '2FA Setup', href: '/security/2fa', icon: Shield },
+    ]
+  },
+  {
+    name: 'Admin',
+    href: '/admin',
+    icon: Settings,
     color: 'text-gray-500',
     subPages: [
       { name: 'Users Management', href: '/admin/users', icon: Users },
