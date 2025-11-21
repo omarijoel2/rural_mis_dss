@@ -69,6 +69,7 @@ const moduleNavigation = [
       { name: 'Pipelines', href: '/core/pipelines' },
       { name: 'Zones', href: '/core/zones' },
       { name: 'Addresses', href: '/core/addresses' },
+      { name: 'Meters', href: '/core/meters' },
     ]
   },
   {
