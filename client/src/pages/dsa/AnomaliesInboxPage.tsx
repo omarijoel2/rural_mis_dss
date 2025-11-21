@@ -38,7 +38,7 @@ export default function AnomaliesInboxPage() {
   const [selectedAnomalies, setSelectedAnomalies] = useState<Set<string>>(new Set());
   const [selectedAnomaly, setSelectedAnomaly] = useState<string | null>(null);
 
-  const { data: anomalies, refetch } = useQuery({
+  const { data: anomalies, isLoading: isAnomaliesLoading, error: anomaliesError, refetch } = useQuery({
     queryKey: ['anomalies', filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -92,12 +92,12 @@ export default function AnomaliesInboxPage() {
     });
   };
 
-  // Sample signal data for visualization
+  // DEMO DATA - Signal visualization (replace with real time-series data from API)
   const selectedAnomalyData = anomalies?.find(a => a.id === selectedAnomaly);
   const signalData = selectedAnomalyData ? [
     { ts: '00:00', value: 120, threshold: 150 },
     { ts: '04:00', value: 125, threshold: 150 },
-    { ts: '08:00', value: 280, threshold: 150 }, // Anomaly
+    { ts: '08:00', value: 280, threshold: 150 }, // Anomaly spike
     { ts: '12:00', value: 130, threshold: 150 },
     { ts: '16:00', value: 135, threshold: 150 },
     { ts: '20:00', value: 128, threshold: 150 },

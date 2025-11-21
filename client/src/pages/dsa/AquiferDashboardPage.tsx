@@ -21,7 +21,7 @@ export default function AquiferDashboardPage() {
   const [selectedScheme, setSelectedScheme] = useState('');
   const [selectedAquifer, setSelectedAquifer] = useState('');
 
-  const { data: schemes } = useQuery({
+  const { data: schemes, isLoading: isSchemesLoading, error: schemesError } = useQuery({
     queryKey: ['schemes'],
     queryFn: async () => {
       const res = await apiClient.get('/api/v1/schemes');
@@ -29,7 +29,7 @@ export default function AquiferDashboardPage() {
     },
   });
 
-  const { data: kpis } = useQuery({
+  const { data: kpis, isLoading: isKpisLoading, error: kpisError } = useQuery({
     queryKey: ['hydro-kpis', selectedScheme],
     queryFn: async () => {
       const params = selectedScheme ? `?scheme_id=${selectedScheme}` : '';
@@ -38,7 +38,7 @@ export default function AquiferDashboardPage() {
     },
   });
 
-  const { data: wellfield } = useQuery({
+  const { data: wellfield, isLoading: isWellfieldLoading } = useQuery({
     queryKey: ['wellfield', selectedScheme, selectedAquifer],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -50,7 +50,7 @@ export default function AquiferDashboardPage() {
     enabled: !!selectedScheme,
   });
 
-  // Sample trend data
+  // DEMO DATA - Replace with real aquifer recharge/abstraction trends from API
   const trendData = [
     { month: 'Jan', recharge: 45, abstraction: 3200, storage: 75 },
     { month: 'Feb', recharge: 52, abstraction: 3150, storage: 78 },
