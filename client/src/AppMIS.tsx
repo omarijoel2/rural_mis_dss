@@ -128,7 +128,7 @@ export function AppMIS() {
                   <CoreRegistryLayout />
                 </ProtectedRoute>
               }>
-                <Route index element={<Navigate to="/core/schemes" replace />} />
+                <Route index element={<CoreRegistryHome />} />
                 <Route path="schemes" element={
                   <ProtectedRoute requiredPermission="view schemes">
                     <SchemesPage />
