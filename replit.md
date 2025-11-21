@@ -2,6 +2,44 @@
 
 This project is a hybrid monorepo containing two applications: **EcoVillage** (an inactive sustainability education game) and **Rural Water Supply MIS**. The primary focus is the **Rural Water Supply MIS**, a Laravel-based Management Information System designed for rural water infrastructure. Its core mission is to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities through multi-tenancy, spatial data, and robust security features.
 
+## Recent Updates (Nov 21, 2025 - Session 3)
+
+### Decision Support & Advanced Analytics Module - UI Scaffolding COMPLETED
+
+**Frontend Pages Created (7 pages):**
+- ✅ **Forecast Studio**: ML-powered time-series forecasting with ARIMA/ETS/Prophet/LSTM models, confidence intervals, backtesting metrics
+- ✅ **Scenario Workbench**: Stress testing and resilience planning with Monte-Carlo simulation, playbook management, KPI comparison
+- ✅ **Optimization Console**: Multi-resource optimization (pumps/valves/dosing/logistics) with Gantt charts and savings dashboard
+- ✅ **Anomalies Inbox**: ML-based anomaly detection triage with signal explorer, bulk actions, work order creation
+- ✅ **Aquifer Dashboard**: Hydrogeological analytics with recharge/abstraction trends, wellfield view, risk scoring
+- ✅ **Tariff Sandbox**: Revenue modeling with block tariff builder, affordability analysis, equity outcomes
+- ✅ **EWS Console**: Early warning system with threshold rules builder, real-time alerts feed, escalation chains
+
+**Database Schema:**
+- ✅ Created comprehensive migrations for forecast_jobs, scenarios, optim_runs, anomalies, tariff_scenarios, ews_rules, alerts tables
+
+**Backend Service Fixes COMPLETED:**
+- ✅ **TelemetryIngestService**: Tenant-scoped HMAC validation, correct telemetry_tag column names, null-safe metadata access
+- ✅ **NrwCalculator**: IWA-compliant water balance calculations with auto snapshots
+- ✅ **PumpOptimizer**: Fixed negative hours bug with guards and floor() bounds, corrected energy cost calculation
+- ✅ **ComputeDailyKpis**: Metadata-aware energy tag detection, fixed SQL queries, proper scheme filtering
+- ✅ **DispatchOutageNotifications**: Corrected OR clause scoping
+
+**Production Hardening Required (Before Backend Integration):**
+- ⏳ Add comprehensive defensive rendering (loading/error states, null guards) to all DSA pages
+- ⏳ Implement DTO transformation layers for form submissions
+- ⏳ Replace demonstration chart data with API bindings or feature flags
+- ⏳ Add comprehensive type safety with proper interfaces
+
+**Documentation:**
+- ✅ Created detailed integration guide: `client/src/pages/dsa/README_DSA_INTEGRATION.md`
+- Documented known issues, required improvements, testing requirements, migration path
+
+**Next Steps:**
+- Backend API implementation (Tasks 18-24 for forecast, scenarios, optimization, anomalies, hydro, tariffs, EWS endpoints)
+- Production hardening of frontend pages
+- End-to-end integration testing
+
 ## Recent Updates (Nov 21, 2025 - Session 2)
 
 ### CRM Enhancements - COMPLETED
