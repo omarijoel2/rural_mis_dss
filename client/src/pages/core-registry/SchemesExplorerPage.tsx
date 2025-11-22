@@ -110,22 +110,6 @@ export function SchemesExplorerPage() {
     }
   };
 
-  if (isLoading && !schemesData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading schemes...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-600">Error loading schemes: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
@@ -211,7 +195,21 @@ export function SchemesExplorerPage() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
-        {viewMode === 'map' ? (
+        {isLoading && !schemesData ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-lg text-muted-foreground">Loading schemes...</p>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-lg text-red-600 mb-2">Error loading schemes</p>
+              <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
+              <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+                Try Again
+              </Button>
+            </div>
+          </div>
+        ) : viewMode === 'map' ? (
           <Map
             initialViewState={{
               longitude: 36.8219,
