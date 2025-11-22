@@ -159,11 +159,15 @@ const moduleNavigation = [
     ]
   },
   {
-    name: 'GIS Map',
-    href: '/gis/map',
+    name: 'GIS',
+    href: '/gis',
     icon: Map,
     color: 'text-red-500',
-    subPages: []
+    subPages: [
+      { name: 'Map Console', href: '/gis', icon: Map },
+      { name: 'Files & Layers', href: '/gis', icon: Upload },
+      { name: 'Settings', href: '/gis', icon: Settings },
+    ]
   },
   {
     name: 'M&E & Service Levels',
