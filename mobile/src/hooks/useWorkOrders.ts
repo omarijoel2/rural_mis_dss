@@ -4,6 +4,7 @@ import { database } from '../database';
 import WorkOrder from '../database/models/WorkOrder';
 import { syncEngine } from '../lib/sync-engine';
 import { useAuthStore } from '../lib/auth-store';
+import { usePermissionCheck } from './useBiometricAuth';
 
 interface SerializedWorkOrder {
   id: string;

@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\Hydromet\StationController;
 use App\Http\Controllers\Api\V1\Costing\BudgetController;
 use App\Http\Controllers\Api\V1\Costing\AllocationController;
 use App\Http\Controllers\Api\V1\Costing\CostingKpiController;
+use App\Http\Controllers\Api\V1\Attachments\WorkOrderPhotoController;
 use App\Http\Controllers\Api\ZoneController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\InvestmentController;
@@ -263,6 +264,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/{workOrder}/checklist', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addChecklist'])->middleware('permission:edit work orders');
         Route::patch('/checklist-items/{itemId}', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'updateChecklistItem'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/attachments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addAttachment'])->middleware('permission:edit work orders');
+        Route::post('/{workOrder}/photos', [WorkOrderPhotoController::class, 'store'])->middleware('permission:edit work orders');
+        Route::get('/{workOrder}/photos', [WorkOrderPhotoController::class, 'index'])->middleware('permission:view work orders');
+        Route::delete('/{workOrder}/photos/{attachment}', [WorkOrderPhotoController::class, 'destroy'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/assignments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addAssignment'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/comments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addComment'])->middleware('permission:view work orders');
     });
