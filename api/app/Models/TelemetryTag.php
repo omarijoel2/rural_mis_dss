@@ -37,7 +37,7 @@ class TelemetryTag extends Model
 
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(Organization::class, 'tenant_id');
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
     public function scheme(): BelongsTo
