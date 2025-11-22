@@ -35,22 +35,6 @@ export function DmasPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading DMAs...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-600">Error loading DMAs: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
@@ -69,6 +53,19 @@ export function DmasPage() {
         </div>
       </div>
 
+      {isLoading && !data ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-lg text-muted-foreground">Loading DMAs...</p>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-lg text-red-600 mb-2">Error loading DMAs</p>
+            <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
+          </div>
+        </div>
+      ) : (
+        <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {data?.data.map((dma) => (
           <Card key={dma.id} className="hover:shadow-lg transition-shadow">
@@ -120,6 +117,8 @@ export function DmasPage() {
             </RequirePerm>
           </CardContent>
         </Card>
+      )}
+        </>
       )}
     </div>
   );

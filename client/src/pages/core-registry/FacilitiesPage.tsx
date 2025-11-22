@@ -35,22 +35,6 @@ export function FacilitiesPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading facilities...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-red-600">Error loading facilities: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   const categoryColors: Record<string, string> = {
     source: 'bg-blue-500',
     treatment: 'bg-green-500',
@@ -78,56 +62,71 @@ export function FacilitiesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data?.data.map((facility) => (
-          <Card key={facility.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>{facility.name}</CardTitle>
-                  <CardDescription>Code: {facility.code}</CardDescription>
-                </div>
-                <Badge className={categoryColors[facility.category] || 'bg-gray-500'}>
-                  {facility.category}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status:</span>
-                  <span className={`font-medium capitalize ${
-                    facility.status === 'active' ? 'text-green-600' : 
-                    facility.status === 'standby' ? 'text-yellow-600' : 'text-gray-600'
-                  }`}>
-                    {facility.status}
-                  </span>
-                </div>
-                {facility.scheme && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Scheme:</span>
-                    <span className="font-medium truncate ml-2">{facility.scheme.name}</span>
+      {isLoading && !data ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-lg text-muted-foreground">Loading facilities...</p>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-lg text-red-600 mb-2">Error loading facilities</p>
+            <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {data?.data.map((facility) => (
+              <Card key={facility.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>{facility.name}</CardTitle>
+                      <CardDescription>Code: {facility.code}</CardDescription>
+                    </div>
+                    <Badge className={categoryColors[facility.category] || 'bg-gray-500'}>
+                      {facility.category}
+                    </Badge>
                   </div>
-                )}
-                {facility.commissioned_on && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Commissioned:</span>
-                    <span className="font-medium">{new Date(facility.commissioned_on).toLocaleDateString()}</span>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className={`font-medium capitalize ${
+                        facility.status === 'active' ? 'text-green-600' : 
+                        facility.status === 'standby' ? 'text-yellow-600' : 'text-gray-600'
+                      }`}>
+                        {facility.status}
+                      </span>
+                    </div>
+                    {facility.scheme && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Scheme:</span>
+                        <span className="font-medium truncate ml-2">{facility.scheme.name}</span>
+                      </div>
+                    )}
+                    {facility.commissioned_on && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Commissioned:</span>
+                        <span className="font-medium">{new Date(facility.commissioned_on).toLocaleDateString()}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      {data?.data.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-12">
-            <p className="text-lg text-muted-foreground mb-4">No facilities found</p>
-            <Button>Create Your First Facility</Button>
-          </CardContent>
-        </Card>
+          {data?.data.length === 0 && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center p-12">
+                <p className="text-lg text-muted-foreground mb-4">No facilities found</p>
+                <Button>Create Your First Facility</Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );
