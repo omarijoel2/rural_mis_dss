@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dmaService } from '../../services/dma.service';
+import { dmaService, type DmaFilters } from '../../services/dma.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RequirePerm } from '../../components/RequirePerm';
 import { Download, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Dma } from '../../types/core-registry';
 
 export function DmasPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -26,7 +27,7 @@ export function DmasPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => dmaService.create(data),
+    mutationFn: (data: Partial<Dma>) => dmaService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dmas'] });
       setDialogOpen(false);
@@ -44,7 +45,11 @@ export function DmasPage() {
       toast.error('Please fill in all required fields');
       return;
     }
-    createMutation.mutate(formData);
+    createMutation.mutate({
+      code: formData.code,
+      name: formData.name,
+      status: formData.status as 'active' | 'planned' | 'retired',
+    });
   };
 
   const handleExport = async () => {

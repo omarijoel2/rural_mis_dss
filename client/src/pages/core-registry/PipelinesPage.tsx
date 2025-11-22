@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pipelineService } from '../../services/pipeline.service';
+import { pipelineService, type PipelineFilters } from '../../services/pipeline.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -10,12 +10,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RequirePerm } from '../../components/RequirePerm';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Pipeline } from '../../types/core-registry';
 
 export function PipelinesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
-    material: 'PVC',
+    material: 'uPVC',
     diameter_mm: '50',
     status: 'active',
   });
@@ -27,7 +28,7 @@ export function PipelinesPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => pipelineService.create(data),
+    mutationFn: (data: Partial<Pipeline>) => pipelineService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pipelines'] });
       setDialogOpen(false);
@@ -46,8 +47,10 @@ export function PipelinesPage() {
       return;
     }
     createMutation.mutate({
-      ...formData,
+      code: formData.code,
+      material: formData.material as 'uPVC' | 'HDPE' | 'DI' | 'AC' | 'GI' | 'Steel' | 'Other',
       diameter_mm: parseInt(formData.diameter_mm),
+      status: formData.status as 'active' | 'leak' | 'rehab' | 'abandoned',
     });
   };
 
@@ -90,10 +93,13 @@ export function PipelinesPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="PVC">PVC</SelectItem>
+                        <SelectItem value="uPVC">uPVC</SelectItem>
                         <SelectItem value="HDPE">HDPE</SelectItem>
                         <SelectItem value="Steel">Steel</SelectItem>
-                        <SelectItem value="Asbestos">Asbestos</SelectItem>
+                        <SelectItem value="DI">DI</SelectItem>
+                        <SelectItem value="AC">AC</SelectItem>
+                        <SelectItem value="GI">GI</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

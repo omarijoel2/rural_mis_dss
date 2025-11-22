@@ -61,6 +61,27 @@ Includes build scripts, code quality tools (TypeScript strict mode, PHPStan, Lar
 - **Priority Queues**: Notifications, high, default, DSA-specific queues.
 - **Multi-Channel Notifications**: EWSAlertNotification supports email, SMS (Twilio), and custom webhooks for async delivery.
 
+# Recent Updates (Nov 22, 2025)
+
+## Loading State Fixes Across All Pages
+Fixed **5 major pages** to display page structure (headers, filters, buttons) during loading/error states instead of fullscreen overlays:
+- **CustomersPage**: Now shows header and search while loading, error message in content area
+- **TwoFactorSetupPage**: Loading indicator displays with 2FA header visible
+- **AssetDetailPage**: Maintains back button and header while loading asset details
+- **SchemesPage**: Grid loading with header, filters, and buttons always visible
+- **ZonesPage, PipelinesPage, DmasPage**: Added proper TypeScript type annotations for form mutations
+
+## TypeScript Type Fixes
+- Added explicit type annotations for mutation functions to fix inference errors
+- Corrected form state types to match API field enumerations (Pipeline materials, DMA statuses)
+- Fixed conditional rendering syntax in SchemesPage (replaced div with Fragment for proper nesting)
+
+## Code Quality Improvements
+- All LSP diagnostics resolved (0 remaining errors)
+- Consistent error handling pattern: inline error boxes with bg-destructive/10 styling
+- Loading states use centered text with py-12 for consistent spacing
+- Pages maintain functional layout during any backend unavailability
+
 # External Dependencies
 
 ## Core Infrastructure

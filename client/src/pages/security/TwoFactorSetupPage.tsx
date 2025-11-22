@@ -82,14 +82,6 @@ export function TwoFactorSetupPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container max-w-3xl py-8">
-        <div className="text-center text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="container max-w-3xl py-8">
       <div className="space-y-6">
@@ -100,6 +92,12 @@ export function TwoFactorSetupPage() {
           </p>
         </div>
 
+        {isLoading && !status ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-lg text-muted-foreground">Loading 2FA status...</p>
+          </div>
+        ) : (
+          <>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -216,32 +214,34 @@ export function TwoFactorSetupPage() {
           </CardContent>
         </Card>
 
-        {(recoveryCodes.length > 0 || (status?.recovery_codes && status.recovery_codes.length > 0)) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Recovery Codes</CardTitle>
-              <CardDescription>
-                Save these recovery codes in a safe place. You can use them to access your account if you lose your authenticator device.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {recoveryCodes.length > 0 
-                    ? 'Save these recovery codes now! They will not be shown again.'
-                    : 'Each recovery code can only be used once. Store them securely.'}
-                </AlertDescription>
-              </Alert>
-              <div className="grid grid-cols-2 gap-2">
-                {(recoveryCodes.length > 0 ? recoveryCodes : status?.recovery_codes || []).map((code, index) => (
-                  <code key={index} className="block p-2 bg-muted rounded text-sm font-mono">
-                    {code}
-                  </code>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+            {(recoveryCodes.length > 0 || (status?.recovery_codes && status.recovery_codes.length > 0)) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recovery Codes</CardTitle>
+                  <CardDescription>
+                    Save these recovery codes in a safe place. You can use them to access your account if you lose your authenticator device.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Alert className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {recoveryCodes.length > 0 
+                        ? 'Save these recovery codes now! They will not be shown again.'
+                        : 'Each recovery code can only be used once. Store them securely.'}
+                    </AlertDescription>
+                  </Alert>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(recoveryCodes.length > 0 ? recoveryCodes : status?.recovery_codes || []).map((code, index) => (
+                      <code key={index} className="block p-2 bg-muted rounded text-sm font-mono">
+                        {code}
+                      </code>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+        </>
         )}
       </div>
     </div>
