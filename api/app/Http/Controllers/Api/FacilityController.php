@@ -16,8 +16,15 @@ class FacilityController extends Controller
     {
         $query = Facility::query();
         
-        if (auth()->user()) {
+        if (auth()->check()) {
             $query->where('tenant_id', auth()->user()->tenant_id);
+        } else {
+            // Default to first tenant for public access
+            $defaultTenant = \App\Models\Tenant::first();
+            if (!$defaultTenant) {
+                return response()->json(['data' => [], 'total' => 0, 'per_page' => 15]);
+            }
+            $query->where('tenant_id', $defaultTenant->id);
         }
         
         $query->with(['scheme', 'tenant']);
@@ -103,7 +110,12 @@ class FacilityController extends Controller
         if (auth()->check()) {
             $query->where('tenant_id', auth()->user()->tenant_id);
         } else {
-            $query->where('tenant_id', 1);
+            // Default to first tenant for public access
+            $defaultTenant = \App\Models\Tenant::first();
+            if (!$defaultTenant) {
+                return response()->json(['error' => 'No tenant found'], 404);
+            }
+            $query->where('tenant_id', $defaultTenant->id);
         }
 
         if ($request->has('bbox')) {
@@ -197,7 +209,19 @@ class FacilityController extends Controller
 
     public function export(Request $request)
     {
-        $query = Facility::where('tenant_id', auth()->user()->tenant_id);
+        // Determine tenant for export
+        if (auth()->check()) {
+            $tenantId = auth()->user()->tenant_id;
+        } else {
+            // Default to first tenant for public access
+            $defaultTenant = \App\Models\Tenant::first();
+            if (!$defaultTenant) {
+                return response()->json(['error' => 'No tenant found'], 404);
+            }
+            $tenantId = $defaultTenant->id;
+        }
+
+        $query = Facility::where('tenant_id', $tenantId);
 
         if ($request->has('bbox')) {
             $query = SpatialQueryService::applyBboxFilter($query, $request->bbox, 'location');
