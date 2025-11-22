@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { GlobalSidebar } from './GlobalSidebar';
 import { 
   Activity, 
   Network, 
@@ -27,6 +28,7 @@ export function CoreOpsLayout() {
 
   return (
     <div className="flex h-screen bg-background">
+      <GlobalSidebar />
       <aside className="w-64 border-r border-border bg-card">
         <div className="p-6 border-b border-border">
           <h2 className="text-xl font-bold text-foreground">Core Operations</h2>
