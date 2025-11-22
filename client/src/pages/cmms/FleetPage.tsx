@@ -101,7 +101,15 @@ export function FleetPage() {
   });
 
   const serviceLogMutation = useMutation({
-    mutationFn: fleetService.logService,
+    mutationFn: ({ fleet_asset_id, service_type, performed_at, notes, cost, odometer_reading }: 
+      { fleet_asset_id: number; service_type: string; performed_at: string; notes: string; cost: number; odometer_reading?: number }) =>
+      fleetService.createServiceSchedule(fleet_asset_id, { 
+        service_type, 
+        performed_at, 
+        notes, 
+        cost, 
+        odometer_reading 
+      } as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fleet-assets'] });
       queryClient.invalidateQueries({ queryKey: ['fleet-utilization'] });
@@ -112,7 +120,14 @@ export function FleetPage() {
   });
 
   const fuelLogMutation = useMutation({
-    mutationFn: fleetService.logFuel,
+    mutationFn: ({ fleet_asset_id, liters, cost, odometer_reading, filled_at }: 
+      { fleet_asset_id: number; liters: number; cost: number; odometer_reading: number; filled_at: string }) =>
+      fleetService.logFuel(fleet_asset_id, { 
+        odometer: odometer_reading, 
+        liters, 
+        cost, 
+        filled_at 
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fleet-assets'] });
       setFuelDialogOpen(false);
@@ -154,18 +169,6 @@ export function FleetPage() {
 
   const activeCount = data?.data?.filter(v => v.status === 'active').length || 0;
   const maintenanceCount = data?.data?.filter(v => v.status === 'maintenance').length || 0;
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">Failed to load fleet data</h3>
-          <p className="text-muted-foreground">Please try again later</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

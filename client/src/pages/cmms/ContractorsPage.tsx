@@ -163,18 +163,6 @@ export function ContractorsPage() {
   const activeCount = data?.data?.filter(c => c.status === 'active').length || 0;
   const totalValue = data?.data?.reduce((sum, c) => sum + (c.value || 0), 0) || 0;
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">Failed to load contracts data</h3>
-          <p className="text-muted-foreground">Please try again later</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
