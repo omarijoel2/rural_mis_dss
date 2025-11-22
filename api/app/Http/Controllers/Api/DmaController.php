@@ -94,7 +94,12 @@ class DmaController extends Controller
         if (auth()->check()) {
             $query->where('tenant_id', auth()->user()->tenant_id);
         } else {
-            $query->where('tenant_id', 1);
+            // Default to first tenant for public access
+            $defaultTenant = \App\Models\Tenant::first();
+            if (!$defaultTenant) {
+                return response()->json(['error' => 'No tenant found'], 404);
+            }
+            $query->where('tenant_id', $defaultTenant->id);
         }
 
         if ($request->has('bbox')) {
