@@ -14,10 +14,6 @@ class ZoneController extends Controller
     public function index(Request $request)
     {
         $query = Zone::with(['scheme', 'tenant']);
-        
-        if (auth()->user()) {
-            $query->where('tenant_id', auth()->user()->tenant_id);
-        }
 
         if ($request->has('scheme_id')) {
             $query->where('scheme_id', $request->scheme_id);
