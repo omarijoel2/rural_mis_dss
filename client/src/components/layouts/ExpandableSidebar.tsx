@@ -222,7 +222,7 @@ const moduleNavigation = [
       { name: 'Operations Console', href: '/core-ops/console', icon: Gauge },
       { name: 'Topology Viewer', href: '/core-ops/topology', icon: Globe },
       { name: 'Telemetry Dashboard', href: '/core-ops/telemetry', icon: BarChart2 },
-      { name: 'Outage Planner', href: '/core-ops/outage', icon: AlertTriangle },
+      { name: 'Outage Planner', href: '/core-ops/outages', icon: AlertTriangle },
       { name: 'NRW Dashboard', href: '/core-ops/nrw', icon: Droplet },
       { name: 'Dosing Control', href: '/core-ops/dosing', icon: TestTube },
       { name: 'Pump Scheduling', href: '/core-ops/scheduling', icon: Clock },

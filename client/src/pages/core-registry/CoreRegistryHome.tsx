@@ -5,6 +5,13 @@ import { Button } from '../../components/ui/button';
 export function CoreRegistryHome() {
   const modules = [
     {
+      title: 'Core Operations',
+      description: 'Real-time monitoring, SCADA, outages, and NRW management',
+      path: '/core-ops/console',
+      icon: '⚡',
+      featured: true,
+    },
+    {
       title: 'Map Console',
       description: 'Interactive GIS map with layers and spatial analysis',
       path: '/gis/map',
