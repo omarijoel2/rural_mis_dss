@@ -30,6 +30,8 @@ use App\Http\Controllers\Api\V1\Costing\BudgetController;
 use App\Http\Controllers\Api\V1\Costing\AllocationController;
 use App\Http\Controllers\Api\V1\Costing\CostingKpiController;
 use App\Http\Controllers\Api\V1\Attachments\WorkOrderPhotoController;
+use App\Http\Controllers\Api\V1\GIS\ShapeFileController;
+use App\Http\Controllers\Api\V1\GIS\VectorLayerController;
 use App\Http\Controllers\Api\ZoneController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\InvestmentController;
@@ -269,6 +271,29 @@ Route::prefix('v1')->group(function () {
         Route::delete('/{workOrder}/photos/{attachment}', [WorkOrderPhotoController::class, 'destroy'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/assignments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addAssignment'])->middleware('permission:edit work orders');
         Route::post('/{workOrder}/comments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addComment'])->middleware('permission:view work orders');
+    });
+
+    // GIS Module - Shape Files and Vector Layers
+    Route::prefix('gis')->group(function () {
+        // Shape files management
+        Route::prefix('shape-files')->group(function () {
+            Route::get('/', [ShapeFileController::class, 'index'])->middleware('permission:view gis');
+            Route::post('/', [ShapeFileController::class, 'store'])->middleware('permission:create gis');
+            Route::get('/{shapeFile}', [ShapeFileController::class, 'show'])->middleware('permission:view gis');
+            Route::patch('/{shapeFile}', [ShapeFileController::class, 'update'])->middleware('permission:edit gis');
+            Route::delete('/{shapeFile}', [ShapeFileController::class, 'destroy'])->middleware('permission:delete gis');
+            Route::get('/{shapeFile}/preview', [ShapeFileController::class, 'getGeoJsonPreview'])->middleware('permission:view gis');
+            Route::get('/{shapeFile}/download', [ShapeFileController::class, 'download'])->middleware('permission:view gis');
+
+            // Vector layers for each shape file
+            Route::prefix('{shapeFile}/layers')->group(function () {
+                Route::get('/', [VectorLayerController::class, 'index'])->middleware('permission:view gis');
+                Route::post('/', [VectorLayerController::class, 'store'])->middleware('permission:edit gis');
+                Route::patch('{layer}', [VectorLayerController::class, 'update'])->middleware('permission:edit gis');
+                Route::delete('{layer}', [VectorLayerController::class, 'destroy'])->middleware('permission:edit gis');
+                Route::get('{layer}/config', [VectorLayerController::class, 'getConfig'])->middleware('permission:view gis');
+            });
+        });
     });
 
     Route::prefix('water-quality-tests')->group(function () {
