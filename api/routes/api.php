@@ -65,6 +65,9 @@ Route::prefix('v1/gis')->group(function () {
     Route::get('/schemes/geojson', [SchemeController::class, 'geojson']);
     Route::get('/dmas/geojson', [DmaController::class, 'geojson']);
     Route::get('/facilities/geojson', [FacilityController::class, 'geojson']);
+    Route::get('/pipelines/geojson', [PipelineController::class, 'geojson']);
+    Route::get('/zones/geojson', [ZoneController::class, 'geojson']);
+    Route::get('/addresses/geojson', [AddressController::class, 'geojson']);
 });
 
 Route::prefix('v1')->group(function () {

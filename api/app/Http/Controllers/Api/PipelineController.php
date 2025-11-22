@@ -78,4 +78,36 @@ class PipelineController extends Controller
         $pipeline->delete();
         return response()->json(['message' => 'Pipeline deleted successfully'], 204);
     }
+
+    public function geojson(Request $request)
+    {
+        $query = Pipeline::query();
+        
+        if (auth()->check()) {
+            $query->whereHas('scheme', function ($q) {
+                $q->where('tenant_id', auth()->user()->tenant_id);
+            });
+        } else {
+            // Default to first tenant for public access
+            $defaultTenant = \App\Models\Tenant::first();
+            if (!$defaultTenant) {
+                return response()->json(['error' => 'No tenant found'], 404);
+            }
+            $query->whereHas('scheme', function ($q) use ($defaultTenant) {
+                $q->where('tenant_id', $defaultTenant->id);
+            });
+        }
+
+        if ($request->has('material')) {
+            $query->where('material', $request->material);
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $pipelines = $query->limit($request->get('limit', 1000))->get();
+
+        return response()->json(\App\Services\SpatialQueryService::buildMapLayers('pipeline', $pipelines));
+    }
 }
