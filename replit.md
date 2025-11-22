@@ -63,24 +63,45 @@ Includes build scripts, code quality tools (TypeScript strict mode, PHPStan, Lar
 
 # Recent Updates (Nov 22, 2025)
 
-## Loading State Fixes Across All Pages
-Fixed **5 major pages** to display page structure (headers, filters, buttons) during loading/error states instead of fullscreen overlays:
-- **CustomersPage**: Now shows header and search while loading, error message in content area
-- **TwoFactorSetupPage**: Loading indicator displays with 2FA header visible
-- **AssetDetailPage**: Maintains back button and header while loading asset details
-- **SchemesPage**: Grid loading with header, filters, and buttons always visible
-- **ZonesPage, PipelinesPage, DmasPage**: Added proper TypeScript type annotations for form mutations
+## Mobile App Development (In Progress)
+Building offline-first iOS/Android companion app for field operations:
+- **React Native Expo Workspace**: Complete setup with TypeScript, NativeWind (Tailwind), Expo Router
+- **Offline Storage**: WatermelonDB configured with multi-tenant database schema for offline-first operations
+- **Authentication**: Secure token storage with Expo SecureStore, tenant switcher, refresh token handling
+- **Sync Engine**: Queue-based mutation system with conflict resolution and automatic background sync
+- **Customer Module**: Full CRUD with offline search, edit capabilities, and automatic sync when online
+- **Architecture**: File-based routing, TanStack Query for caching, Zustand for auth state management
 
-## TypeScript Type Fixes
-- Added explicit type annotations for mutation functions to fix inference errors
-- Corrected form state types to match API field enumerations (Pipeline materials, DMA statuses)
-- Fixed conditional rendering syntax in SchemesPage (replaced div with Fragment for proper nesting)
+### Mobile App Features Completed
+1. ✅ Expo workspace with proper TypeScript & NativeWind configuration
+2. ✅ WatermelonDB schema with 5 tables (customers, work_orders, assets, water_quality_tests, sync_queue)
+3. ✅ Auth flow (login, tenant selection, secure token storage)
+4. ✅ API client with automatic token refresh and tenant-aware headers
+5. ✅ Customer module with offline list, search, detail view, and edit functionality
+6. ✅ Sync engine foundation with mutation queuing
 
-## Code Quality Improvements
-- All LSP diagnostics resolved (0 remaining errors)
-- Consistent error handling pattern: inline error boxes with bg-destructive/10 styling
-- Loading states use centered text with py-12 for consistent spacing
-- Pages maintain functional layout during any backend unavailability
+### Mobile App Pending
+- Work Orders module with photo capture
+- Asset Inspections with GPS tagging
+- Water Quality sampling module
+- Laravel backend endpoints for mobile sync
+- Security hardening (encrypted DB, biometric auth)
+- EAS build configuration for deployment
+
+## Web Application Fixes
+
+### Loading State Improvements
+Fixed **5 major pages** to display page structure (headers, filters, buttons) during loading/error states:
+- **CustomersPage**: Shows header and search while loading
+- **TwoFactorSetupPage**: Loading indicator with header visible
+- **AssetDetailPage**: Maintains back button and header
+- **SchemesPage**: Grid loading with header/filters always visible
+- **ZonesPage, PipelinesPage, DmasPage**: Proper TypeScript type annotations
+
+### Code Quality
+- All LSP diagnostics resolved (0 errors in web app)
+- Consistent error handling with inline error messages
+- Pages maintain layout during backend unavailability
 
 # External Dependencies
 
