@@ -9,34 +9,28 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useWorkOrders, useSyncWorkOrders } from '@/hooks/useWorkOrders';
+import { useAssets, useSyncAssets } from '@/hooks/useAssets';
 
-const STATUS_FILTERS = [
+const CATEGORY_FILTERS = [
   { value: 'all', label: 'All' },
-  { value: 'open', label: 'Open' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
+  { value: 'pump', label: 'Pumps' },
+  { value: 'pipeline', label: 'Pipelines' },
+  { value: 'tank', label: 'Tanks' },
+  { value: 'meter', label: 'Meters' },
 ];
 
-const PRIORITY_COLORS = {
-  low: 'bg-blue-100 text-blue-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-orange-100 text-orange-800',
-  urgent: 'bg-red-100 text-red-800',
-};
-
 const STATUS_COLORS = {
-  open: 'bg-gray-100 text-gray-800',
-  in_progress: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
+  operational: 'bg-green-100 text-green-800',
+  maintenance: 'bg-yellow-100 text-yellow-800',
+  repair: 'bg-orange-100 text-orange-800',
+  decommissioned: 'bg-red-100 text-red-800',
 };
 
-export default function WorkOrdersScreen() {
+export default function AssetsScreen() {
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState('all');
-  const { data: workOrders, isLoading, refetch } = useWorkOrders(statusFilter);
-  const syncMutation = useSyncWorkOrders();
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const { data: assets, isLoading } = useAssets(categoryFilter);
+  const syncMutation = useSyncAssets();
 
   const handleSync = async () => {
     try {
@@ -50,7 +44,7 @@ export default function WorkOrdersScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="#0284c7" />
-        <Text className="text-gray-600 mt-4">Loading work orders...</Text>
+        <Text className="text-gray-600 mt-4">Loading assets...</Text>
       </View>
     );
   }
@@ -58,20 +52,20 @@ export default function WorkOrdersScreen() {
   return (
     <View className="flex-1 bg-gray-50">
       <View className="bg-white px-4 py-3 border-b border-gray-200">
-        <View className="flex-row gap-2">
-          {STATUS_FILTERS.map((filter) => (
+        <View className="flex-row gap-2 flex-wrap">
+          {CATEGORY_FILTERS.map((filter) => (
             <TouchableOpacity
               key={filter.value}
               className={`px-4 py-2 rounded-lg ${
-                statusFilter === filter.value
+                categoryFilter === filter.value
                   ? 'bg-sky-600'
                   : 'bg-gray-100'
               }`}
-              onPress={() => setStatusFilter(filter.value)}
+              onPress={() => setCategoryFilter(filter.value)}
             >
               <Text
                 className={`text-sm font-medium ${
-                  statusFilter === filter.value
+                  categoryFilter === filter.value
                     ? 'text-white'
                     : 'text-gray-700'
                 }`}
@@ -84,7 +78,7 @@ export default function WorkOrdersScreen() {
       </View>
 
       <FlatList
-        data={workOrders || []}
+        data={assets || []}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16 }}
         refreshControl={
@@ -95,9 +89,9 @@ export default function WorkOrdersScreen() {
         }
         ListEmptyComponent={() => (
           <View className="items-center justify-center py-12">
-            <Ionicons name="clipboard-outline" size={64} color="#d1d5db" />
+            <Ionicons name="construct-outline" size={64} color="#d1d5db" />
             <Text className="text-gray-500 mt-4 text-center">
-              {statusFilter === 'all' ? 'No work orders yet' : `No ${statusFilter.replace('_', ' ')} work orders`}
+              {categoryFilter === 'all' ? 'No assets yet' : `No ${categoryFilter} assets`}
             </Text>
             <TouchableOpacity
               className="mt-4 bg-sky-600 px-6 py-3 rounded-lg"
@@ -110,52 +104,50 @@ export default function WorkOrdersScreen() {
         renderItem={({ item }) => (
           <TouchableOpacity
             className="bg-white rounded-lg p-4 mb-3 border border-gray-200"
-            onPress={() => router.push(`/(app)/work-orders/${item.id}`)}
+            onPress={() => router.push(`/(app)/assets/${item.id}`)}
           >
             <View className="flex-row justify-between items-start mb-2">
               <View className="flex-1 mr-2">
-                <Text className="text-sm text-gray-500 mb-1">{item.code}</Text>
+                <Text className="text-sm text-gray-500 mb-1">{item.assetTag}</Text>
                 <Text className="text-lg font-semibold text-gray-900">
-                  {item.title}
+                  {item.name}
                 </Text>
               </View>
               <View
                 className={`px-2 py-1 rounded ${
-                  PRIORITY_COLORS[item.priority as keyof typeof PRIORITY_COLORS]
-                }`}
-              >
-                <Text className="text-xs font-medium capitalize">
-                  {item.priority}
-                </Text>
-              </View>
-            </View>
-
-            {item.description && (
-              <Text className="text-sm text-gray-600 mb-3" numberOfLines={2}>
-                {item.description}
-              </Text>
-            )}
-
-            <View className="flex-row items-center justify-between">
-              <View
-                className={`px-3 py-1 rounded ${
                   STATUS_COLORS[item.status as keyof typeof STATUS_COLORS]
                 }`}
               >
                 <Text className="text-xs font-medium capitalize">
-                  {item.status.replace('_', ' ')}
+                  {item.status}
                 </Text>
               </View>
-
-              {item.dueDate && (
-                <View className="flex-row items-center">
-                  <Ionicons name="calendar-outline" size={14} color="#6b7280" />
-                  <Text className="text-xs text-gray-600 ml-1">
-                    Due: {new Date(item.dueDate).toLocaleDateString()}
-                  </Text>
-                </View>
-              )}
             </View>
+
+            <View className="flex-row items-center mb-2">
+              <Ionicons name="pricetag-outline" size={14} color="#6b7280" />
+              <Text className="text-sm text-gray-600 ml-1 capitalize">
+                {item.category}
+              </Text>
+            </View>
+
+            {item.location && (
+              <View className="flex-row items-center mb-2">
+                <Ionicons name="location-outline" size={14} color="#6b7280" />
+                <Text className="text-sm text-gray-600 ml-1">
+                  {item.location}
+                </Text>
+              </View>
+            )}
+
+            {item.latitude && item.longitude && (
+              <View className="flex-row items-center">
+                <Ionicons name="navigate-outline" size={14} color="#6b7280" />
+                <Text className="text-xs text-gray-500 ml-1">
+                  {item.latitude.toFixed(6)}, {item.longitude.toFixed(6)}
+                </Text>
+              </View>
+            )}
 
             {item.syncedAt && (
               <View className="flex-row items-center mt-2 pt-2 border-t border-gray-100">

@@ -118,6 +118,7 @@ export function useSyncCustomers() {
   return useMutation({
     mutationFn: async () => {
       if (!activeTenant) throw new Error('No active tenant');
+      await syncEngine.processSyncQueue(activeTenant.id);
       await syncEngine.pullFromServer(activeTenant.id);
     },
     onSuccess: () => {
