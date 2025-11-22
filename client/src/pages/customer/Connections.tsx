@@ -14,14 +14,14 @@ import { toast } from 'sonner';
 
 export function Connections() {
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [wizardStep, setWizardStep] = useState(1);
   const queryClient = useQueryClient();
 
   const { data: applicationsData, isLoading } = useQuery({
     queryKey: ['connection-applications', statusFilter],
     queryFn: () => commercialService.getConnectionApplications({
-      status: statusFilter || undefined,
+      status: statusFilter && statusFilter !== 'all' ? statusFilter : undefined,
       per_page: 50,
     }),
   });
@@ -231,7 +231,7 @@ export function Connections() {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Applications</SelectItem>
+                <SelectItem value="all">All Applications</SelectItem>
                 <SelectItem value="kyc_pending">KYC Pending</SelectItem>
                 <SelectItem value="pending_approval">Pending Approval</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
