@@ -45,22 +45,6 @@ export function AssetDetailPage() {
     enabled: !!assetId && !isNaN(assetId),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-lg">Loading asset details...</p>
-      </div>
-    );
-  }
-
-  if (error || !asset) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-lg text-red-600">Error loading asset: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -72,14 +56,32 @@ export function AssetDetailPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">{asset.name}</h1>
-            <p className="text-muted-foreground">{asset.code}</p>
+            <h1 className="text-3xl font-bold">{asset?.name || 'Asset Details'}</h1>
+            <p className="text-muted-foreground">{asset?.code || ''}</p>
           </div>
         </div>
-        <Badge className={STATUS_COLORS[asset.status]}>
-          {asset.status.replace('_', ' ')}
-        </Badge>
+        {asset && (
+          <Badge className={STATUS_COLORS[asset.status]}>
+            {asset.status.replace('_', ' ')}
+          </Badge>
+        )}
       </div>
+
+      {isLoading && !asset ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-lg text-muted-foreground">Loading asset details...</p>
+        </div>
+      ) : error ? (
+        <div className="p-6 bg-destructive/10 border border-destructive rounded-lg">
+          <p className="text-lg text-destructive">Error loading asset: {(error as Error).message}</p>
+        </div>
+      ) : !asset ? (
+        <div className="p-6 bg-yellow-100 border border-yellow-600 rounded-lg">
+          <p className="text-lg text-yellow-800">Asset not found</p>
+        </div>
+      ) : (
+        <>
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
@@ -260,27 +262,29 @@ export function AssetDetailPage() {
         </CardContent>
       </Card>
 
-      {maintenanceHistory && maintenanceHistory.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Maintenance History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {maintenanceHistory.map((record: any) => (
-                <div key={record.id} className="border-l-2 border-gray-200 pl-4 pb-4">
-                  <p className="font-medium">{record.description || record.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(record.completed_at || record.created_at).toLocaleDateString()}
-                  </p>
-                  {record.notes && (
-                    <p className="text-sm mt-2">{record.notes}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {maintenanceHistory && maintenanceHistory.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Maintenance History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {maintenanceHistory.map((record: any) => (
+                  <div key={record.id} className="border-l-2 border-gray-200 pl-4 pb-4">
+                    <p className="font-medium">{record.description || record.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(record.completed_at || record.created_at).toLocaleDateString()}
+                    </p>
+                    {record.notes && (
+                      <p className="text-sm mt-2">{record.notes}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        </>
       )}
     </div>
   );

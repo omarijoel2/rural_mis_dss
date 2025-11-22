@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { zoneService } from '../../services/zone.service';
+import { zoneService, type ZoneFilters } from '../../services/zone.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RequirePerm } from '../../components/RequirePerm';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Zone } from '../../types/core-registry';
 
 export function ZonesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -26,7 +27,7 @@ export function ZonesPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => zoneService.create(data),
+    mutationFn: (data: Partial<Zone>) => zoneService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['zones'] });
       setDialogOpen(false);
