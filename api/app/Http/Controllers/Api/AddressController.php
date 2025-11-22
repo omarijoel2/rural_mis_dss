@@ -80,4 +80,32 @@ class AddressController extends Controller
         $address->delete();
         return response()->json(['message' => 'Address deleted successfully'], 204);
     }
+
+    public function geojson(Request $request)
+    {
+        $query = Address::query();
+        
+        if (auth()->check()) {
+            $query->whereHas('scheme', function ($q) {
+                $q->where('tenant_id', auth()->user()->tenant_id);
+            });
+        } else {
+            // Default to first tenant for public access
+            $defaultTenant = \App\Models\Tenant::first();
+            if (!$defaultTenant) {
+                return response()->json(['error' => 'No tenant found'], 404);
+            }
+            $query->whereHas('scheme', function ($q) use ($defaultTenant) {
+                $q->where('tenant_id', $defaultTenant->id);
+            });
+        }
+
+        if ($request->has('city')) {
+            $query->where('city', 'ilike', "%{$request->city}%");
+        }
+
+        $addresses = $query->limit($request->get('limit', 1000))->get();
+
+        return response()->json(\App\Services\SpatialQueryService::buildMapLayers('address', $addresses));
+    }
 }
