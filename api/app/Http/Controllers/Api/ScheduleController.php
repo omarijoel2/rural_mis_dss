@@ -41,7 +41,7 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'asset_id' => 'required|uuid|exists:assets,id',
+            'asset_id' => 'required|integer|exists:assets,id',
             'scheme_id' => 'required|uuid|exists:schemes,id',
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',

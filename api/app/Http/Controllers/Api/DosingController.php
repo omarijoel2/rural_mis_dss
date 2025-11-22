@@ -32,7 +32,7 @@ class DosingController extends Controller
     {
         $validated = $request->validate([
             'scheme_id' => 'required|uuid|exists:schemes,id',
-            'asset_id' => 'nullable|uuid|exists:assets,id',
+            'asset_id' => 'nullable|integer|exists:assets,id',
             'chemical' => 'nullable|string',
             'flow_bands' => 'nullable|array',
             'thresholds' => 'nullable|array',

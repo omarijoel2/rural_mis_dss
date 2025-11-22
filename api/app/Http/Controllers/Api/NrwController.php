@@ -78,12 +78,15 @@ class NrwController extends Controller
     {
         $validated = $request->validate([
             'dma_id' => 'nullable|uuid|exists:dmas,id',
-            'asset_id' => 'nullable|uuid|exists:assets,id',
+            'asset_id' => 'nullable|integer|exists:assets,id',
             'type' => 'required|in:leak_repair,meter_replacement,prv_tuning,sectorization,campaign,other',
             'date' => 'required|date',
             'estimated_savings_m3d' => 'nullable|numeric',
+            'realized_savings_m3d' => 'nullable|numeric',
             'cost' => 'nullable|numeric',
             'responsible' => 'nullable|string',
+            'follow_up_at' => 'nullable|date',
+            'evidence' => 'nullable|array',
             'notes' => 'nullable|string',
         ]);
 

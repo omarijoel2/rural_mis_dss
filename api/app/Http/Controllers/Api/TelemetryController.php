@@ -44,7 +44,7 @@ class TelemetryController extends Controller
     {
         $validated = $request->validate([
             'scheme_id' => 'nullable|uuid|exists:schemes,id',
-            'asset_id' => 'nullable|uuid|exists:assets,id',
+            'asset_id' => 'nullable|integer|exists:assets,id',
             'network_node_id' => 'nullable|uuid|exists:network_nodes,id',
             'tag' => 'required|string|unique:telemetry_tags,tag',
             'io_type' => 'required|in:AI,DI,DO,AO',
