@@ -101,26 +101,6 @@ export function OperationsConsole() {
     };
   }, [sseEnabled]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">Loading operations console...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Alert variant="destructive">
-          <AlertDescription>
-            Error loading operations dashboard: {(error as Error).message}
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   const getCauseIcon = (cause: string) => {
     switch (cause) {
       case 'planned':
@@ -207,6 +187,18 @@ export function OperationsConsole() {
         </div>
       </div>
 
+      {isLoading && !data ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-lg text-muted-foreground">Loading operations console...</p>
+        </div>
+      ) : error ? (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Error loading operations dashboard: {(error as Error).message}
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <>
       {/* Live Alarms Feed */}
       {sseEnabled && liveAlarms.length > 0 && (
         <Card className="border-orange-500 bg-orange-50/50 dark:bg-orange-950/20">
@@ -459,6 +451,8 @@ export function OperationsConsole() {
           )}
         </CardContent>
       </Card>
+        </>
+      )}
     </div>
   );
 }

@@ -36,14 +36,6 @@ export function TelemetryDashboard() {
     return tag.thresholds && Object.keys(tag.thresholds).length > 0;
   };
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-destructive">Error loading telemetry: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6 space-y-6 bg-background">
       <div>
@@ -88,9 +80,13 @@ export function TelemetryDashboard() {
         </CardContent>
       </Card>
 
-      {isLoading ? (
+      {isLoading && !tags ? (
         <div className="flex items-center justify-center py-12">
           <p className="text-lg text-muted-foreground">Loading telemetry tags...</p>
+        </div>
+      ) : error ? (
+        <div className="p-6 bg-destructive/10 border border-destructive rounded-lg">
+          <p className="text-lg text-destructive">Error loading telemetry: {(error as Error).message}</p>
         </div>
       ) : (
         <>
