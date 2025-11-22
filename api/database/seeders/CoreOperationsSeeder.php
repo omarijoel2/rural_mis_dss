@@ -15,8 +15,9 @@ use App\Models\Scheme;
 use App\Models\Facility;
 use App\Models\Asset;
 use App\Models\Dma;
-use App\Models\Organization;
+use App\Models\Tenant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
@@ -27,13 +28,13 @@ class CoreOperationsSeeder extends Seeder
 {
     public function run(): void
     {
-        $org = Organization::first();
-        if (!$org) {
-            $this->command->warn('No organization found. Run CoreRegistrySeeder first.');
+        $tenant = Tenant::first();
+        if (!$tenant) {
+            $this->command->warn('No tenant found. Run CoreRegistrySeeder first.');
             return;
         }
 
-        $tenantId = $org->tenant_id;
+        $tenantId = $tenant->id;
         $scheme = Scheme::where('tenant_id', $tenantId)->first();
         $dmas = Dma::where('tenant_id', $tenantId)->get();
         $facilities = Facility::where('tenant_id', $tenantId)->get();
@@ -43,6 +44,17 @@ class CoreOperationsSeeder extends Seeder
             $this->command->warn('Missing core registry data. Run CoreRegistrySeeder first.');
             return;
         }
+
+        $this->command->info('Truncating existing Core Operations data for idempotent seeding...');
+        DB::table('telemetry_measurements')->truncate();
+        DB::table('telemetry_tags')->delete();
+        DB::table('nrw_snapshots')->delete();
+        DB::table('interventions')->delete();
+        DB::table('outages')->delete();
+        DB::table('dose_plans')->delete();
+        DB::table('chemical_stocks')->delete();
+        DB::table('pump_schedules')->delete();
+        DB::table('network_nodes')->delete();
 
         $this->command->info('Seeding Core Operations data...');
 
@@ -126,8 +138,8 @@ class CoreOperationsSeeder extends Seeder
         $now = Carbon::now();
 
         foreach ($tags as $tag) {
-            for ($i = 0; $i < 288; $i++) {
-                $timestamp = $now->copy()->subMinutes($i * 5);
+            for ($i = 0; $i < 12; $i++) {
+                $timestamp = $now->copy()->subHours($i);
                 
                 $baseValue = match ($tag->io_type) {
                     'AI' => match (true) {
@@ -196,7 +208,7 @@ class CoreOperationsSeeder extends Seeder
     {
         $this->command->info('Creating NRW interventions...');
 
-        $interventionTypes = ['leak_repair', 'meter_replacement', 'prv_tuning', 'pressure_management', 'pipe_replacement'];
+        $interventionTypes = ['leak_repair', 'meter_replacement', 'prv_tuning', 'sectorization', 'campaign'];
         
         foreach ($dmas as $dma) {
             for ($i = 0; $i < rand(2, 5); $i++) {
@@ -207,16 +219,18 @@ class CoreOperationsSeeder extends Seeder
                     'leak_repair' => rand(5000, 15000),
                     'meter_replacement' => rand(3000, 8000),
                     'prv_tuning' => rand(2000, 5000),
-                    'pressure_management' => rand(10000, 25000),
-                    'pipe_replacement' => rand(50000, 150000),
+                    'sectorization' => rand(10000, 25000),
+                    'campaign' => rand(2000, 8000),
+                    default => rand(5000, 10000),
                 };
 
                 $savingsM3Day = match ($type) {
                     'leak_repair' => rand(50, 200),
                     'meter_replacement' => rand(10, 50),
                     'prv_tuning' => rand(30, 100),
-                    'pressure_management' => rand(100, 300),
-                    'pipe_replacement' => rand(200, 500),
+                    'sectorization' => rand(100, 300),
+                    'campaign' => rand(20, 80),
+                    default => rand(50, 150),
                 };
 
                 Intervention::create([
@@ -224,13 +238,12 @@ class CoreOperationsSeeder extends Seeder
                     'tenant_id' => $tenantId,
                     'dma_id' => $dma->id,
                     'type' => $type,
-                    'description' => ucfirst(str_replace('_', ' ', $type)) . ' in ' . $dma->name,
-                    'implemented_date' => $implementedDate,
+                    'date' => $implementedDate,
+                    'estimated_savings_m3d' => $savingsM3Day,
+                    'realized_savings_m3d' => $implementedDate->diffInDays(Carbon::now()) > 30 ? $savingsM3Day * (rand(80, 120) / 100) : null,
                     'cost' => $cost,
-                    'estimated_savings_m3_day' => $savingsM3Day,
-                    'actual_savings_m3_day' => $implementedDate->diffInDays(Carbon::now()) > 30 ? $savingsM3Day * (rand(80, 120) / 100) : null,
-                    'status' => rand(0, 100) > 30 ? 'completed' : 'in_progress',
-                    'geom' => new Point(36.817 + rand(-10, 10) / 1000, -1.286 + rand(-10, 10) / 1000, 4326),
+                    'responsible' => 'Operations Team',
+                    'notes' => ucfirst(str_replace('_', ' ', $type)) . ' in ' . $dma->name,
                 ]);
             }
         }
@@ -260,12 +273,16 @@ class CoreOperationsSeeder extends Seeder
                     'starts_at' => $scheduledStart,
                     'ends_at' => $scheduledEnd,
                     'actual_restored_at' => $state === 'completed' ? $scheduledEnd->copy()->addMinutes(rand(-30, 60)) : null,
-                    'estimated_customers_affected' => rand(50, 500),
-                    'actual_customers_affected' => $state === 'completed' ? rand(40, 520) : null,
-                    'notifications' => ['sms' => rand(50, 500), 'email' => rand(20, 200)],
-                    'affected_geom' => new MultiPolygon([[
-                        [[36.817, -1.286], [36.818, -1.286], [36.818, -1.287], [36.817, -1.287], [36.817, -1.286]]
-                    ]]),
+                    'customers_affected' => rand(50, 500),
+                    'geom' => new Polygon([
+                        new LineString([
+                            new Point(36.817, -1.286, 4326),
+                            new Point(36.818, -1.286, 4326),
+                            new Point(36.818, -1.287, 4326),
+                            new Point(36.817, -1.287, 4326),
+                            new Point(36.817, -1.286, 4326),
+                        ]),
+                    ], 4326),
                 ]);
             }
         }
