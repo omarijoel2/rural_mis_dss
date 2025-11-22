@@ -52,19 +52,27 @@ export class SyncEngine {
       for (const mutation of pendingMutations) {
         try {
           const changes = JSON.parse(mutation.changes);
+          const url = `/${mutation.tableName}/${mutation.recordId}`;
 
-          await apiClient.put(`/${mutation.tableName}/${mutation.recordId}`, changes);
+          // Handle different HTTP methods based on operation type
+          if (mutation.operation === 'create') {
+            await apiClient.post(`/${mutation.tableName}`, changes);
+          } else if (mutation.operation === 'update') {
+            await apiClient.put(url, changes);
+          } else if (mutation.operation === 'delete') {
+            await apiClient.delete(url);
+          }
 
           await database.write(async () => {
             await mutation.destroyPermanently();
           });
 
-          console.log(`Synced ${mutation.operation} for ${mutation.tableName}`);
+          console.log(`Synced ${mutation.operation} for ${mutation.tableName}:${mutation.recordId}`);
         } catch (error) {
           console.error(`Failed to sync mutation:`, error);
 
           await database.write(async () => {
-            await mutation.update((record) => {
+            await mutation.update((record: SyncQueue) => {
               record.retryCount = (mutation.retryCount || 0) + 1;
             });
           });

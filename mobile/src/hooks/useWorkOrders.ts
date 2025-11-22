@@ -23,7 +23,7 @@ interface SerializedWorkOrder {
 
 function serializeWorkOrder(workOrder: WorkOrder): SerializedWorkOrder {
   return {
-    id: workOrder.id,
+    id: workOrder.id as string,
     serverId: workOrder.serverId,
     code: workOrder.code,
     title: workOrder.title,
@@ -31,7 +31,7 @@ function serializeWorkOrder(workOrder: WorkOrder): SerializedWorkOrder {
     status: workOrder.status,
     priority: workOrder.priority,
     assignedTo: workOrder.assignedTo,
-    dueDate: workOrder.dueDate,
+    dueDate: workOrder.dueDate instanceof Date ? workOrder.dueDate : (workOrder.dueDate ? new Date(workOrder.dueDate) : undefined),
     tenantId: workOrder.tenantId,
     syncedAt: workOrder.syncedAt,
     createdAt: workOrder.createdAt,

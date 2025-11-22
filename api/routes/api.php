@@ -267,6 +267,15 @@ Route::prefix('v1')->group(function () {
         Route::post('/{workOrder}/comments', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'addComment'])->middleware('permission:view work orders');
     });
 
+    Route::prefix('water-quality-tests')->group(function () {
+        Route::get('/', [\App\Http\Controllers\API\V1\WaterQualityTestController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\API\V1\WaterQualityTestController::class, 'store']);
+        Route::get('/{waterQualityTest}', [\App\Http\Controllers\API\V1\WaterQualityTestController::class, 'show']);
+        Route::patch('/{waterQualityTest}', [\App\Http\Controllers\API\V1\WaterQualityTestController::class, 'update']);
+        Route::put('/{waterQualityTest}', [\App\Http\Controllers\API\V1\WaterQualityTestController::class, 'update']);
+        Route::delete('/{waterQualityTest}', [\App\Http\Controllers\API\V1\WaterQualityTestController::class, 'destroy']);
+    });
+
     Route::prefix('cmms')->group(function () {
         Route::prefix('job-plans')->group(function () {
             Route::get('/', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'index']);

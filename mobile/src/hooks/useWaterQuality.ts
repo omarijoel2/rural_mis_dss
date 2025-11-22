@@ -24,7 +24,7 @@ interface SerializedWaterQualityTest {
 
 function serializeWaterQualityTest(test: WaterQualityTest): SerializedWaterQualityTest {
   return {
-    id: test.id,
+    id: test.id as string,
     serverId: test.serverId,
     sampleId: test.sampleId,
     location: test.location,
@@ -32,7 +32,7 @@ function serializeWaterQualityTest(test: WaterQualityTest): SerializedWaterQuali
     turbidity: test.turbidity,
     chlorine: test.chlorine,
     eColi: test.eColi,
-    testDate: test.testDate,
+    testDate: test.testDate instanceof Date ? test.testDate : new Date(test.testDate),
     testedBy: test.testedBy,
     tenantId: test.tenantId,
     syncedAt: test.syncedAt,
@@ -87,10 +87,11 @@ export function useCreateWaterQualityTest() {
       const testsCollection = database.get<WaterQualityTest>('water_quality_tests');
 
       let newTest: WaterQualityTest | null = null;
+      const localId = `local-${Date.now()}`;
 
       await database.write(async () => {
-        newTest = await testsCollection.create((test) => {
-          test.serverId = `local-${Date.now()}`;
+        newTest = await testsCollection.create((test: WaterQualityTest) => {
+          test.serverId = localId;
           test.sampleId = data.sampleId || `S-${Date.now()}`;
           test.location = data.location || '';
           test.ph = data.ph;
@@ -106,9 +107,18 @@ export function useCreateWaterQualityTest() {
       if (newTest) {
         await syncEngine.queueMutation(
           'water_quality_tests',
-          newTest.serverId,
+          localId,
           'create',
-          data as Record<string, unknown>,
+          {
+            sample_id: data.sampleId || `S-${Date.now()}`,
+            location: data.location || '',
+            ph: data.ph,
+            turbidity: data.turbidity,
+            chlorine: data.chlorine,
+            e_coli: data.eColi,
+            test_date: data.testDate || new Date(),
+            tested_by: user?.name || 'Unknown',
+          },
           activeTenant?.id || ''
         );
       }

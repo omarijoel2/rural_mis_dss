@@ -23,7 +23,7 @@ interface SerializedAsset {
 
 function serializeAsset(asset: Asset): SerializedAsset {
   return {
-    id: asset.id,
+    id: asset.id as string,
     serverId: asset.serverId,
     assetTag: asset.assetTag,
     name: asset.name,
