@@ -53,12 +53,12 @@ async function enrollInCourse(courseId: number) {
 
 export default function CourseCatalog() {
   const [search, setSearch] = useState('');
-  const [domain, setDomain] = useState<string>('');
-  const [level, setLevel] = useState<string>('');
+  const [domain, setDomain] = useState<string>('all');
+  const [level, setLevel] = useState<string>('all');
 
   const { data, isLoading } = useQuery({
     queryKey: ['courses', domain, level, search],
-    queryFn: () => fetchCourses(domain, level, search),
+    queryFn: () => fetchCourses(domain !== 'all' ? domain : undefined, level !== 'all' ? level : undefined, search),
     staleTime: 60000,
   });
 
@@ -97,7 +97,7 @@ export default function CourseCatalog() {
             <SelectValue placeholder="All Domains" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Domains</SelectItem>
+            <SelectItem value="all">All Domains</SelectItem>
             <SelectItem value="Ops">Operations</SelectItem>
             <SelectItem value="Lab">Laboratory</SelectItem>
             <SelectItem value="HSE">Health & Safety</SelectItem>
@@ -110,7 +110,7 @@ export default function CourseCatalog() {
             <SelectValue placeholder="All Levels" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Levels</SelectItem>
+            <SelectItem value="all">All Levels</SelectItem>
             <SelectItem value="basic">Basic</SelectItem>
             <SelectItem value="intermediate">Intermediate</SelectItem>
             <SelectItem value="advanced">Advanced</SelectItem>

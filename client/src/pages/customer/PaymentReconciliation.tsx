@@ -12,16 +12,16 @@ import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export function PaymentReconciliation() {
-  const [channelFilter, setChannelFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [channelFilter, setChannelFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const queryClient = useQueryClient();
 
   const { data: paymentsData, isLoading } = useQuery({
     queryKey: ['payments', channelFilter, statusFilter, searchTerm],
     queryFn: () => commercialService.getPayments({
-      channel: channelFilter || undefined,
-      status: statusFilter || undefined,
+      channel: channelFilter !== 'all' ? channelFilter : undefined,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
       search: searchTerm || undefined,
       per_page: 50,
     }),
@@ -151,7 +151,7 @@ export function PaymentReconciliation() {
                   <SelectValue placeholder="Channel" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="cash">Cash</SelectItem>
                   <SelectItem value="bank">Bank</SelectItem>
                   <SelectItem value="mpesa">M-Pesa</SelectItem>
@@ -164,7 +164,7 @@ export function PaymentReconciliation() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="reconciled">Reconciled</SelectItem>
                   <SelectItem value="unreconciled">Unreconciled</SelectItem>
                 </SelectContent>
