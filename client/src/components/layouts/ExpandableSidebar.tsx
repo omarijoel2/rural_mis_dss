@@ -384,33 +384,46 @@ export function ExpandableSidebar() {
           const isExpanded = expandedModules.has(module.name);
           const shouldShowSubPages = hasSubPages && isExpanded;
           
+          const moduleButtonClass = cn(
+            'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
+            isActive
+              ? 'bg-primary/10 text-primary'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          );
+          
           return (
             <div key={module.name}>
               {/* Module Main Link */}
-              <button
-                onClick={(e) => {
-                  if (hasSubPages) {
-                    e.preventDefault();
-                    toggleModule(module.name);
-                  }
-                }}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
-                aria-expanded={shouldShowSubPages}
-                aria-label={`${module.name} ${hasSubPages ? (isExpanded ? 'expanded' : 'collapsed') : ''}`}
-              >
-                <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
-                <span className="flex-1 text-left">{module.name}</span>
-                {hasSubPages && (
-                  isExpanded 
+              {hasSubPages ? (
+                <button
+                  onClick={() => toggleModule(module.name)}
+                  className={moduleButtonClass}
+                  aria-expanded={shouldShowSubPages}
+                  aria-label={`${module.name} ${isExpanded ? 'expanded' : 'collapsed'}`}
+                >
+                  <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
+                  <span className="flex-1 text-left">{module.name}</span>
+                  {isExpanded 
                     ? <ChevronDown className="h-4 w-4" />
                     : <ChevronRight className="h-4 w-4" />
-                )}
-              </button>
+                  }
+                </button>
+              ) : (
+                <NavLink
+                  to={module.href}
+                  className={({ isActive: isNavActive }) =>
+                    cn(
+                      'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
+                      isNavActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    )
+                  }
+                >
+                  <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
+                  <span className="flex-1 text-left">{module.name}</span>
+                </NavLink>
+              )}
 
               {/* Sub-pages (only shown when expanded) */}
               {shouldShowSubPages && (
