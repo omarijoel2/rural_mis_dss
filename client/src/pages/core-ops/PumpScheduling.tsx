@@ -151,14 +151,6 @@ export function PumpScheduling() {
     });
   };
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-destructive">Error loading schedules: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-start">
@@ -305,9 +297,13 @@ export function PumpScheduling() {
         </CardContent>
       </Card>
 
-      {isLoading ? (
+      {isLoading && !data ? (
         <div className="flex items-center justify-center py-12">
           <p className="text-lg text-muted-foreground">Loading pump schedules...</p>
+        </div>
+      ) : error ? (
+        <div className="p-6 bg-destructive/10 border border-destructive rounded-lg">
+          <p className="text-lg text-destructive">Error loading schedules: {(error as Error).message}</p>
         </div>
       ) : viewMode === 'calendar' ? (
         <Card>
