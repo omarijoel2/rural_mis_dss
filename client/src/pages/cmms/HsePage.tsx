@@ -105,7 +105,7 @@ export function HsePage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = {
-      permit_type: formData.get('permit_type') as 'hot_work' | 'confined_space' | 'height_work' | 'excavation' | 'other',
+      permit_type: formData.get('permit_type') as 'hot_work' | 'confined_space' | 'excavation' | 'loto' | 'working_at_height',
       description: formData.get('description') as string,
       location: formData.get('location') as string,
       valid_from: formData.get('valid_from') as string,
@@ -119,7 +119,7 @@ export function HsePage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = {
-      category: formData.get('category') as 'injury' | 'spill' | 'damage' | 'near_miss' | 'other',
+      category: formData.get('category') as 'injury' | 'near_miss' | 'property_damage' | 'environmental' | 'other',
       severity: formData.get('severity') as 'minor' | 'moderate' | 'serious' | 'fatal',
       description: formData.get('description') as string,
       location: formData.get('location') as string,
@@ -132,10 +132,10 @@ export function HsePage() {
   const handleCreateCapa = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const assignedTo = parseInt(formData.get('assigned_to') as string);
+    const assignedTo = formData.get('assigned_to') as string;
     
-    if (isNaN(assignedTo)) {
-      toast.error('Please enter a valid user ID');
+    if (!assignedTo) {
+      toast.error('Please enter a user ID');
       e.currentTarget.reset();
       return;
     }
@@ -153,18 +153,6 @@ export function HsePage() {
   const pendingPermits = permits?.data?.filter(p => p.status === 'pending').length || 0;
   const openIncidents = incidents?.data?.filter(i => i.status === 'open').length || 0;
   const openCapas = capas?.data?.filter(c => c.status === 'open').length || 0;
-
-  if (permitsError || incidentsError || capasError) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">Failed to load HSE data</h3>
-          <p className="text-muted-foreground">Please try again later</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -277,9 +265,9 @@ export function HsePage() {
                             <SelectContent>
                               <SelectItem value="hot_work">Hot Work</SelectItem>
                               <SelectItem value="confined_space">Confined Space</SelectItem>
-                              <SelectItem value="height_work">Height Work</SelectItem>
+                              <SelectItem value="working_at_height">Working at Height</SelectItem>
+                              <SelectItem value="loto">LOTO</SelectItem>
                               <SelectItem value="excavation">Excavation</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -408,8 +396,8 @@ export function HsePage() {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="injury">Injury</SelectItem>
-                                <SelectItem value="spill">Spill</SelectItem>
-                                <SelectItem value="damage">Damage</SelectItem>
+                                <SelectItem value="property_damage">Property Damage</SelectItem>
+                                <SelectItem value="environmental">Environmental</SelectItem>
                                 <SelectItem value="near_miss">Near Miss</SelectItem>
                                 <SelectItem value="other">Other</SelectItem>
                               </SelectContent>

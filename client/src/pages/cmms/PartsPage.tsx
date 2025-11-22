@@ -34,22 +34,6 @@ export function PartsPage() {
     setFilters({ ...filters, search, page: 1 });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-lg">Loading parts...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-lg text-red-600">Error loading parts: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -66,6 +50,16 @@ export function PartsPage() {
         </Button>
       </div>
 
+      {isLoading && !data ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-lg text-muted-foreground">Loading parts...</p>
+        </div>
+      ) : error ? (
+        <div className="p-6 bg-destructive/10 border border-destructive rounded-lg">
+          <p className="text-lg text-destructive">Error loading parts: {(error as Error).message}</p>
+        </div>
+      ) : (
+        <>
       <Card>
         <CardContent className="pt-6">
           <div className="flex gap-4 mb-6">
@@ -215,6 +209,8 @@ export function PartsPage() {
         }}
         part={editingPart}
       />
+        </>
+      )}
     </div>
   );
 }

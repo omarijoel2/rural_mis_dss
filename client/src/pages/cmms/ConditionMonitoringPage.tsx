@@ -137,18 +137,6 @@ export function ConditionMonitoringPage() {
   const warningCount = data?.data?.filter(t => t.health_status === 'warning').length || 0;
   const criticalCount = data?.data?.filter(t => t.health_status === 'critical' || t.health_status === 'alarm').length || 0;
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">Failed to load monitoring data</h3>
-          <p className="text-muted-foreground">Please try again later</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

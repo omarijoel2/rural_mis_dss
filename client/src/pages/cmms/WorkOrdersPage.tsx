@@ -106,22 +106,6 @@ export function WorkOrdersPage() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-lg">Loading work orders...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-lg text-red-600">Error loading work orders: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -138,6 +122,16 @@ export function WorkOrdersPage() {
         </Button>
       </div>
 
+      {isLoading && !data ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-lg text-muted-foreground">Loading work orders...</p>
+        </div>
+      ) : error ? (
+        <div className="p-6 bg-destructive/10 border border-destructive rounded-lg">
+          <p className="text-lg text-destructive">Error loading work orders: {(error as Error).message}</p>
+        </div>
+      ) : (
+        <>
       <Card>
         <CardContent className="pt-6">
           <div className="flex gap-4 mb-6 flex-wrap">
@@ -317,6 +311,8 @@ export function WorkOrdersPage() {
         }}
         workOrder={editingWorkOrder}
       />
+        </>
+      )}
     </div>
   );
 }
