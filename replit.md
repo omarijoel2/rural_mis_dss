@@ -22,7 +22,7 @@ The project employs a monorepo structure comprising `/client` (React frontend), 
 
 The MIS operates with two concurrent servers:
 - **Express server (port 5000)**: Serves the React frontend and proxies `/api/*` requests to Laravel.
-- **Laravel API server (port 8000)**: Handles backend logic, database interactions, and spatial queries.
+- **Laravel API server (port 8001)**: Handles backend logic, database interactions, and spatial queries.
 
 ## Database Architecture
 
@@ -75,48 +75,3 @@ Includes build scripts, code quality tools (TypeScript strict mode, PHPStan, Lar
 - **Backend Libraries (PHP)**: Laravel Framework 11, Laravel Sanctum, Spatie Laravel Permission, Google2FA Laravel, Laravel Eloquent Spatial, laravel-notification-channels/twilio.
 - **Development Tools**: Vite, esbuild, PostCSS, Autoprefixer, TailwindCSS.
 - **Integrations**: SendGrid (email), Twilio (SMS).
-
-# Recent Changes & Status
-
-## Core Registry Module - Completed ✅
-
-**All 5 Core Registry pages fully functional and verified (Nov 22, 2025):**
-
-### Sidebar Navigation Routes (Verified & Correct)
-Located in `client/src/components/layouts/ExpandableSidebar.tsx` (lines 64-73):
-
-| Page | Route | Component | Status |
-|------|-------|-----------|--------|
-| Schemes | `/core/schemes` | SchemesExplorerPage | ✅ Working |
-| Facilities | `/core/facilities` | FacilitiesPage | ✅ Working |
-| DMAs | `/core/dmas` | DmasPage | ✅ Working |
-| Pipelines | `/core/pipelines` | PipelinesPage | ✅ Working |
-| Zones | `/core/zones` | ZonesPage | ✅ Working |
-| Addresses | `/core/addresses` | AddressesPage | ✅ Working |
-| Meters | `/core/meters` | MeterRegistryPage | ✅ Working |
-
-### API Endpoints (All HTTP 200 - Working)
-- `/api/v1/facilities` - 13 total records (8 Nairobi, 5 Garissa)
-- `/api/v1/dmas` - 6 total records (3 each tenant)
-- `/api/v1/zones` - 6 total records (4 Nairobi, 2 Garissa)
-- `/api/v1/pipelines` - 8 total records (5 Nairobi, 3 Garissa)
-- `/api/v1/addresses` - 9 total records (6 Nairobi, 3 Garissa)
-
-### Controllers Fixed for Multi-Tenancy
-- ✅ FacilityController: tenant_id filtering in geojson()
-- ✅ DmaController: tenant_id filtering in geojson()
-- ✅ PipelineController: tenant_id filtering in index() & geojson()
-- ✅ ZoneController: tenant_id filtering in index() & geojson()
-- ✅ AddressController: tenant_id filtering in index() & geojson()
-
-### Data Summary
-- **Nairobi Tenant (NWSC)**: 8 facilities, 3 DMAs, 4 zones, 5 pipelines, 6 addresses
-- **Garissa Tenant (GWC)**: 5 facilities, 3 DMAs, 2 zones, 3 pipelines, 3 addresses
-- **Total**: 13 facilities, 6 DMAs, 6 zones, 8 pipelines, 9 addresses
-
-### Key Implementation Details
-- UUID tenant_id filtering implemented across all 5 controllers
-- GeoJSON endpoints return proper FeatureCollection format
-- Multi-tenant data isolation verified and working
-- React Select components with proper placeholder text
-- All routes protected with RBAC permissions
