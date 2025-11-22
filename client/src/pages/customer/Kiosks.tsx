@@ -16,14 +16,14 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 export function Kiosks() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedKioskId, setSelectedKioskId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const { data: kiosksData, isLoading } = useQuery({
     queryKey: ['kiosks', statusFilter],
     queryFn: () => commercialService.getKiosks({
-      status: statusFilter || undefined,
+      status: statusFilter && statusFilter !== 'all' ? statusFilter : undefined,
       per_page: 50,
     }),
   });
@@ -229,7 +229,7 @@ export function Kiosks() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="suspended">Suspended</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
