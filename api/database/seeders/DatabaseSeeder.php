@@ -27,12 +27,13 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             CoreRegistrySeeder::class,
+            GarissaTenantSeeder::class,
             OperationsPermissionSeeder::class,
             OperationsSeeder::class,
             CostingPermissionSeeder::class,
             CostingSeeder::class,
         ]);
 
-        $this->command->info('Database seeded successfully with Kenya spatial data, Operations, and Costing demo data');
+        $this->command->info('Database seeded successfully with Nairobi and Garissa county data');
     }
 }
