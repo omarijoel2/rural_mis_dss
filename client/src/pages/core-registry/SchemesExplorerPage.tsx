@@ -49,7 +49,7 @@ export function SchemesExplorerPage() {
     queryKey: ['schemes-geojson', statusFilter],
     queryFn: async () => {
       const response = await fetch(
-        `/api/v1/schemes/geojson${statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`,
+        `/api/v1/gis/schemes/geojson${statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`,
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error('Failed to fetch GeoJSON');
@@ -164,7 +164,7 @@ export function SchemesExplorerPage() {
             <label className="text-sm font-medium mb-2 block">Status</label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select status..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -179,7 +179,7 @@ export function SchemesExplorerPage() {
             <label className="text-sm font-medium mb-2 block">Type</label>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select type..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
