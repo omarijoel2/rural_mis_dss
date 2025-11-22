@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import { apiClient } from './api-client';
+import { apiClient, setAuthToken, setTenantId } from './api-client';
 
 interface User {
   id: string;
@@ -26,7 +26,7 @@ interface AuthState {
   initializeAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   activeTenant: null,
   token: null,
@@ -43,7 +43,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const user = JSON.parse(userJson);
         const tenant = tenantJson ? JSON.parse(tenantJson) : null;
         
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setAuthToken(token);
+        if (tenant) {
+          setTenantId(tenant.id);
+        }
         
         set({
           token,
@@ -68,12 +71,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password,
       });
 
-      const { token, user } = response.data;
+      const { token, refresh_token, user } = response.data;
 
       await SecureStore.setItemAsync('auth_token', token);
+      if (refresh_token) {
+        await SecureStore.setItemAsync('refresh_token', refresh_token);
+      }
       await SecureStore.setItemAsync('user', JSON.stringify(user));
 
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setAuthToken(token);
 
       set({
         token,
@@ -93,10 +99,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Logout API call failed:', error);
     } finally {
       await SecureStore.deleteItemAsync('auth_token');
+      await SecureStore.deleteItemAsync('refresh_token');
       await SecureStore.deleteItemAsync('user');
       await SecureStore.deleteItemAsync('active_tenant');
 
-      delete apiClient.defaults.headers.common['Authorization'];
+      setAuthToken(null);
+      setTenantId(null);
 
       set({
         user: null,
@@ -110,12 +118,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setActiveTenant: async (tenant: Tenant) => {
     try {
       await SecureStore.setItemAsync('active_tenant', JSON.stringify(tenant));
-      
-      const currentToken = get().token;
-      if (currentToken) {
-        apiClient.defaults.headers.common['X-Tenant-ID'] = tenant.id;
-      }
-      
+      setTenantId(tenant.id);
       set({ activeTenant: tenant });
     } catch (error) {
       console.error('Failed to set active tenant:', error);

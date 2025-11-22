@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
@@ -10,6 +11,22 @@ export const apiClient = axios.create({
     'Accept': 'application/json',
   },
 });
+
+export const setAuthToken = (token: string | null) => {
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete apiClient.defaults.headers.common['Authorization'];
+  }
+};
+
+export const setTenantId = (tenantId: string | null) => {
+  if (tenantId) {
+    apiClient.defaults.headers.common['X-Tenant-ID'] = tenantId;
+  } else {
+    delete apiClient.defaults.headers.common['X-Tenant-ID'];
+  }
+};
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -52,15 +69,35 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await apiClient.post('/auth/refresh');
-        const { token } = data;
+        const refreshToken = await SecureStore.getItemAsync('refresh_token');
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
 
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const { data } = await apiClient.post('/auth/refresh', {
+          refresh_token: refreshToken,
+        });
+
+        const { token, refresh_token } = data;
+
+        await SecureStore.setItemAsync('auth_token', token);
+        await SecureStore.setItemAsync('refresh_token', refresh_token);
+
+        setAuthToken(token);
         processQueue(null, token);
 
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
+        
+        await SecureStore.deleteItemAsync('auth_token');
+        await SecureStore.deleteItemAsync('refresh_token');
+        await SecureStore.deleteItemAsync('user');
+        await SecureStore.deleteItemAsync('active_tenant');
+        
+        setAuthToken(null);
+        setTenantId(null);
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
