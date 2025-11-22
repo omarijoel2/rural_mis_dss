@@ -1,15 +1,51 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dmaService } from '../../services/dma.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { RequirePerm } from '../../components/RequirePerm';
-import { Download } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function DmasPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    code: '',
+    name: '',
+    status: 'active',
+  });
+  const queryClient = useQueryClient();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['dmas'],
     queryFn: () => dmaService.getAll({ per_page: 50 }),
   });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => dmaService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dmas'] });
+      setDialogOpen(false);
+      setFormData({ code: '', name: '', status: 'active' });
+      toast.success('DMA created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create DMA');
+    },
+  });
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.code || !formData.name) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    createMutation.mutate(formData);
+  };
 
   const handleExport = async () => {
     try {
@@ -48,7 +84,63 @@ export function DmasPage() {
             Export GeoJSON
           </Button>
           <RequirePerm permission="create dmas">
-            <Button>Create DMA</Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create DMA
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New DMA</DialogTitle>
+                  <DialogDescription>Add a new District Metered Area to the system</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreateSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="code">Code*</Label>
+                    <Input
+                      id="code"
+                      placeholder="e.g. DMA-001"
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="name">Name*</Label>
+                    <Input
+                      id="name"
+                      placeholder="DMA name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="planned">Planned</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createMutation.isPending}>
+                      {createMutation.isPending ? 'Creating...' : 'Create DMA'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </RequirePerm>
         </div>
       </div>

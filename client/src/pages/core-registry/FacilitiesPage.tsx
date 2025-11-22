@@ -1,15 +1,53 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { facilityService } from '../../services/facility.service';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Download } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Download, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function FacilitiesPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    code: '',
+    name: '',
+    category: '',
+    status: 'active',
+    scheme_id: '',
+  });
+  const queryClient = useQueryClient();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['facilities'],
     queryFn: () => facilityService.getAll({ per_page: 50 }),
   });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => facilityService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['facilities'] });
+      setDialogOpen(false);
+      setFormData({ code: '', name: '', category: '', status: 'active', scheme_id: '' });
+      toast.success('Facility created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create facility');
+    },
+  });
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.code || !formData.name || !formData.category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    createMutation.mutate(formData);
+  };
 
   const handleExport = async () => {
     try {
@@ -58,7 +96,94 @@ export function FacilitiesPage() {
             <Download className="mr-2 h-4 w-4" />
             Export GeoJSON
           </Button>
-          <Button>Create Facility</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Facility
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Facility</DialogTitle>
+                <DialogDescription>Add a new water infrastructure facility to the registry</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCreateSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="code">Code*</Label>
+                    <Input
+                      id="code"
+                      placeholder="e.g. FAC-001"
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category*</Label>
+                    <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="source">Water Source</SelectItem>
+                        <SelectItem value="treatment">Treatment Plant</SelectItem>
+                        <SelectItem value="pumpstation">Pump Station</SelectItem>
+                        <SelectItem value="reservoir">Reservoir</SelectItem>
+                        <SelectItem value="office">Office</SelectItem>
+                        <SelectItem value="workshop">Workshop</SelectItem>
+                        <SelectItem value="warehouse">Warehouse</SelectItem>
+                        <SelectItem value="lab">Lab</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="name">Name*</Label>
+                  <Input
+                    id="name"
+                    placeholder="Facility name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="standby">Standby</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="scheme_id">Scheme ID</Label>
+                    <Input
+                      id="scheme_id"
+                      placeholder="Optional"
+                      value={formData.scheme_id}
+                      onChange={(e) => setFormData({ ...formData, scheme_id: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? 'Creating...' : 'Create Facility'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
