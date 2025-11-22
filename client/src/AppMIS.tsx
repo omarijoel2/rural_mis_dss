@@ -14,6 +14,7 @@ import { PipelinesPage } from './pages/core-registry/PipelinesPage';
 import { ZonesPage } from './pages/core-registry/ZonesPage';
 import { AddressesPage } from './pages/core-registry/AddressesPage';
 import { MapConsolePage } from './pages/gis/MapConsolePage';
+import { GISPage } from './pages/gis/index';
 import { SecurityLayout } from './components/layouts/SecurityLayout';
 import { AuditPage } from './pages/security/AuditPage';
 import { SecurityAlertsPage } from './pages/security/SecurityAlertsPage';
@@ -182,6 +183,12 @@ export function AppMIS() {
                   </ProtectedRoute>
                 } />
               </Route>
+              
+              <Route path="/gis" element={
+                <ProtectedRoute requiredPermission="view gis">
+                  <GISPage />
+                </ProtectedRoute>
+              } />
               
               <Route path="/gis/map" element={
                 <ProtectedRoute requiredPermission="view schemes">
