@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rural Water MIS - Mobile App Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            background: #000;
+            border-radius: 50px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 375px;
+            height: 812px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 28px;
+            background: #000;
+            border-radius: 0 0 40px 40px;
+            z-index: 10;
+        }
+
+        .screen {
+            background: #fff;
+            border-radius: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .status-bar {
+            background: #fff;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #000;
+            height: 44px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .screen-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 60px;
+        }
+
+        .tab-bar {
+            position: absolute;
+            bottom: 0;
+            width: calc(100% - 24px);
+            height: 60px;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 0 12px;
+            border-radius: 0 0 35px 35px;
+        }
+
+        .tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+            height: 100%;
+            justify-content: center;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+
+        .tab:hover {
+            background: #f3f4f6;
+        }
+
+        .tab.active {
+            color: #0284c7;
+        }
+
+        .tab-icon {
+            font-size: 24px;
+        }
+
+        .tab-label {
+            font-size: 11px;
+        }
+
+        /* Login Screen */
+        .login-container {
+            padding: 60px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .login-container h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .login-container p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .form-group input {
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .btn {
+            padding: 12px;
+            background: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #0369a1;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+            padding: 24px;
+            gap: 8px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Dashboard */
+        .dashboard-content {
+            padding: 16px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .action-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .action-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .info-card {
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 12px;
+            margin: 16px 0;
+            border-radius: 4px;
+        }
+
+        .info-card-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .info-card-text {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        /* List */
+        .search-box {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #fff;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .search-box input::placeholder {
+            color: #9ca3af;
+        }
+
+        .list-item {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .list-item:active {
+            background: #f9fafb;
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .list-item-subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .list-item-status {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .list-item-status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .list-item-status.critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .sync-btn {
+            padding: 10px 16px;
+            background: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .sync-btn:hover {
+            background: #0369a1;
+        }
+
+        /* Tenant Screen */
+        .tenant-list {
+            padding: 20px;
+        }
+
+        .tenant-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tenant-card:active {
+            background: #f9fafb;
+        }
+
+        .tenant-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .tenant-info {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Scrollbar */
+        .screen-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .screen-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .screen-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            padding: 8px 12px;
+            background: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .control-btn:hover {
+            background: #0369a1;
+        }
+
+        .screen-label {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>📶</span>
+        </div>
+
+        <!-- Login Screen -->
+        <div class="screen active" id="login-screen">
+            <div class="login-container">
+                <div>
+                    <h1>Rural Water MIS</h1>
+                    <p>Sign in to access field operations</p>
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="you@example.com" value="operator@water.ke">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" placeholder="Enter your password" value="password123">
+                    </div>
+                    <button class="btn" onclick="showScreen('tenant-screen')">Sign In</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tenant Selection -->
+        <div class="screen" id="tenant-screen">
+            <div class="header">
+                <h1>Select Tenant</h1>
+                <p>Choose your water utility</p>
+            </div>
+            <div class="screen-content">
+                <div class="tenant-list">
+                    <div class="tenant-card" onclick="showScreen('dashboard')">
+                        <div class="tenant-name">Nairobi Water Company</div>
+                        <div class="tenant-info">Central Region • Est. 2010</div>
+                    </div>
+                    <div class="tenant-card">
+                        <div class="tenant-name">Garissa Water & Sewerage</div>
+                        <div class="tenant-info">North East Region • Est. 2015</div>
+                    </div>
+                    <div class="tenant-card">
+                        <div class="tenant-name">Kisii Water Services</div>
+                        <div class="tenant-info">Western Region • Est. 2012</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Home -->
+        <div class="screen" id="dashboard">
+            <div class="header">
+                <h1>Welcome back</h1>
+                <p>Operator • Nairobi Water</p>
+            </div>
+            <div class="screen-content">
+                <div class="dashboard-content">
+                    <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 12px;">Quick Actions</div>
+                    <div class="quick-actions">
+                        <div class="action-card" onclick="showScreen('customers')">
+                            <div class="action-icon">👥</div>
+                            <div class="action-label">Customers</div>
+                        </div>
+                        <div class="action-card" onclick="showScreen('work-orders')">
+                            <div class="action-icon">📋</div>
+                            <div class="action-label">Work Orders</div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon">📦</div>
+                            <div class="action-label">Assets</div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon">💧</div>
+                            <div class="action-label">Water Quality</div>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">⚪ Offline Mode Active</div>
+                        <div class="info-card-text">Your data will sync when you're back online</div>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 24px; margin-bottom: 12px;">Statistics</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="action-card" style="cursor: default;">
+                            <div style="font-size: 24px; font-weight: bold; color: #0284c7;">245</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Active Customers</div>
+                        </div>
+                        <div class="action-card" style="cursor: default;">
+                            <div style="font-size: 24px; font-weight: bold; color: #dc2626;">12</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Open Work Orders</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-bar">
+                <div class="tab active" onclick="showTab('dashboard')">
+                    <div class="tab-icon">🏠</div>
+                    <div class="tab-label">Home</div>
+                </div>
+                <div class="tab" onclick="showTab('customers')">
+                    <div class="tab-icon">👥</div>
+                    <div class="tab-label">Customers</div>
+                </div>
+                <div class="tab" onclick="showTab('work-orders')">
+                    <div class="tab-icon">📋</div>
+                    <div class="tab-label">Orders</div>
+                </div>
+                <div class="tab" onclick="showTab('profile')">
+                    <div class="tab-icon">👤</div>
+                    <div class="tab-label">Profile</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customers List -->
+        <div class="screen" id="customers">
+            <div class="header">
+                <h1>Customers</h1>
+                <p>Manage customer accounts</p>
+            </div>
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" placeholder="Search by name...">
+            </div>
+            <div class="screen-content">
+                <div class="list-item" onclick="showScreen('customer-detail')">
+                    <div class="list-item-title">John Karanja</div>
+                    <div class="list-item-subtitle">Account: ACC-2024-001</div>
+                    <span class="list-item-status">Active</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-title">Mary Kipchoge</div>
+                    <div class="list-item-subtitle">Account: ACC-2024-002</div>
+                    <span class="list-item-status">Active</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-title">Peter Omondi</div>
+                    <div class="list-item-subtitle">Account: ACC-2024-003</div>
+                    <span class="list-item-status pending">Pending</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-title">Grace Mutua</div>
+                    <div class="list-item-subtitle">Account: ACC-2024-004</div>
+                    <span class="list-item-status">Active</span>
+                </div>
+            </div>
+            <div class="tab-bar">
+                <div class="tab" onclick="showTab('dashboard')">
+                    <div class="tab-icon">🏠</div>
+                    <div class="tab-label">Home</div>
+                </div>
+                <div class="tab active" onclick="showTab('customers')">
+                    <div class="tab-icon">👥</div>
+                    <div class="tab-label">Customers</div>
+                </div>
+                <div class="tab" onclick="showTab('work-orders')">
+                    <div class="tab-icon">📋</div>
+                    <div class="tab-label">Orders</div>
+                </div>
+                <div class="tab" onclick="showTab('profile')">
+                    <div class="tab-icon">👤</div>
+                    <div class="tab-label">Profile</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Detail -->
+        <div class="screen" id="customer-detail">
+            <div class="header">
+                <h1>John Karanja</h1>
+                <p>Customer Details</p>
+            </div>
+            <div class="screen-content">
+                <div style="padding: 16px; gap: 12px; display: flex; flex-direction: column;">
+                    <div style="background: #f9fafb; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Account Number</div>
+                        <div style="font-weight: 600; color: #1f2937;">ACC-2024-001</div>
+                    </div>
+                    <div style="background: #f9fafb; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Email</div>
+                        <div style="font-weight: 600; color: #1f2937;">john@example.com</div>
+                    </div>
+                    <div style="background: #f9fafb; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Phone</div>
+                        <div style="font-weight: 600; color: #1f2937;">+254 712 345 678</div>
+                    </div>
+                    <div style="background: #f9fafb; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Address</div>
+                        <div style="font-weight: 600; color: #1f2937;">Nairobi, Kenya</div>
+                    </div>
+                    <div style="background: #f9fafb; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Status</div>
+                        <div style="font-weight: 600; color: #16a34a;">✓ Active</div>
+                    </div>
+                    <button class="btn" style="margin-top: 20px;">Edit Customer</button>
+                    <button class="btn" style="background: #6b7280; margin-top: 8px;" onclick="showScreen('customers')">Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Orders -->
+        <div class="screen" id="work-orders">
+            <div class="header">
+                <h1>Work Orders</h1>
+                <p>Maintenance & Repairs</p>
+            </div>
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" placeholder="Search orders...">
+            </div>
+            <div class="screen-content">
+                <div class="list-item">
+                    <div class="list-item-title">Replace Water Meter</div>
+                    <div class="list-item-subtitle">WO-2024-089 • Urgent</div>
+                    <span class="list-item-status critical">Critical</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-title">Pipe Leak Repair</div>
+                    <div class="list-item-subtitle">WO-2024-088 • High</div>
+                    <span class="list-item-status">In Progress</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-title">Pump Maintenance</div>
+                    <div class="list-item-subtitle">WO-2024-087 • Medium</div>
+                    <span class="list-item-status pending">Open</span>
+                </div>
+                <div class="list-item">
+                    <div class="list-item-title">Valve Inspection</div>
+                    <div class="list-item-subtitle">WO-2024-086 • Low</div>
+                    <span class="list-item-status">Completed</span>
+                </div>
+            </div>
+            <div class="tab-bar">
+                <div class="tab" onclick="showTab('dashboard')">
+                    <div class="tab-icon">🏠</div>
+                    <div class="tab-label">Home</div>
+                </div>
+                <div class="tab" onclick="showTab('customers')">
+                    <div class="tab-icon">👥</div>
+                    <div class="tab-label">Customers</div>
+                </div>
+                <div class="tab active" onclick="showTab('work-orders')">
+                    <div class="tab-icon">📋</div>
+                    <div class="tab-label">Orders</div>
+                </div>
+                <div class="tab" onclick="showTab('profile')">
+                    <div class="tab-icon">👤</div>
+                    <div class="tab-label">Profile</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="screen" id="profile">
+            <div class="header">
+                <h1>Profile</h1>
+                <p>User Settings</p>
+            </div>
+            <div class="screen-content">
+                <div style="padding: 24px; text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">👤</div>
+                    <div style="font-weight: 600; font-size: 18px; color: #1f2937; margin-bottom: 4px;">Operator Account</div>
+                    <div style="color: #6b7280; margin-bottom: 24px;">operator@water.ke</div>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px; text-align: left; margin-bottom: 16px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">ACTIVE TENANT</div>
+                        <div style="font-weight: 600; color: #1f2937;">Nairobi Water Company</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Central Region</div>
+                    </div>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px; text-align: left; margin-bottom: 16px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">PERMISSIONS</div>
+                        <div style="font-size: 13px; color: #1f2937;">✓ Customer Management<br>✓ Work Order Tracking<br>✓ Water Quality Testing</div>
+                    </div>
+                    <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="font-size: 12px; color: #92400e;">🔄 Last Sync: 2 minutes ago</div>
+                    </div>
+                    <button class="btn" style="background: #6b7280; width: 100%;">Sign Out</button>
+                </div>
+            </div>
+            <div class="tab-bar">
+                <div class="tab" onclick="showTab('dashboard')">
+                    <div class="tab-icon">🏠</div>
+                    <div class="tab-label">Home</div>
+                </div>
+                <div class="tab" onclick="showTab('customers')">
+                    <div class="tab-icon">👥</div>
+                    <div class="tab-label">Customers</div>
+                </div>
+                <div class="tab" onclick="showTab('work-orders')">
+                    <div class="tab-icon">📋</div>
+                    <div class="tab-label">Orders</div>
+                </div>
+                <div class="tab active" onclick="showTab('profile')">
+                    <div class="tab-icon">👤</div>
+                    <div class="tab-label">Profile</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" onclick="showScreen('login-screen')">Login</button>
+        <button class="control-btn" onclick="showScreen('dashboard')">Dashboard</button>
+        <button class="control-btn" onclick="showScreen('customers')">Customers</button>
+        <button class="control-btn" onclick="showScreen('work-orders')">Orders</button>
+        <button class="control-btn" onclick="showScreen('profile')">Profile</button>
+    </div>
+
+    <div class="screen-label" id="current-screen">Login</div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            const labels = {
+                'login-screen': 'Login',
+                'tenant-screen': 'Tenant Selection',
+                'dashboard': 'Dashboard',
+                'customers': 'Customers',
+                'customer-detail': 'Customer Detail',
+                'work-orders': 'Work Orders',
+                'profile': 'Profile'
+            };
+            
+            document.getElementById('current-screen').textContent = labels[screenId] || screenId;
+        }
+
+        function showTab(tabName) {
+            const screenMap = {
+                'dashboard': 'dashboard',
+                'customers': 'customers',
+                'work-orders': 'work-orders',
+                'profile': 'profile'
+            };
+            if (screenMap[tabName]) {
+                showScreen(screenMap[tabName]);
+            }
+        }
+    </script>
+</body>
+</html>
