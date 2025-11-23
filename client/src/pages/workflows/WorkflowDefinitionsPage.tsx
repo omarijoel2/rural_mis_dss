@@ -56,8 +56,13 @@ export function WorkflowDefinitionsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Workflow Definitions</h1>
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold mb-2">Workflow Definitions</h1>
+          <p className="text-muted-foreground max-w-2xl">
+            Define automated workflows as code to automate business processes. Create state machines that define how work progresses through different states, with automatic actions, SLA tracking, and escalation rules. Templates are available for Work Orders, Incidents, Complaints, Procurement, and more.
+          </p>
+        </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
@@ -124,7 +129,7 @@ export function WorkflowDefinitionsPage() {
         <p>Loading...</p>
       ) : (
         <div className="grid gap-4">
-          {definitions.map((def) => (
+          {definitions.map((def: WorkflowDef) => (
             <Card key={def.id}>
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
