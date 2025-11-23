@@ -52,7 +52,9 @@ import {
   LineChart,
   Cpu,
   Sparkles,
-  Bell
+  Bell,
+  BookOpen,
+  AlertCircle
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -231,6 +233,11 @@ const moduleNavigation = [
       { name: 'Dosing Control', href: '/core-ops/dosing', icon: TestTube },
       { name: 'Pump Scheduling', href: '/core-ops/scheduling', icon: Clock },
       { name: 'Pressure & Leak', href: '/core-ops/pressure-leak', icon: Gauge },
+      { name: 'Shifts', href: '/core-ops/shifts', icon: Clock },
+      { name: 'Events', href: '/core-ops/events', icon: AlertCircle },
+      { name: 'Checklists', href: '/core-ops/checklists', icon: ClipboardList },
+      { name: 'Playbooks', href: '/core-ops/playbooks', icon: BookOpen },
+      { name: 'Escalation Policies', href: '/core-ops/escalation-policies', icon: Bell },
     ]
   },
   {
