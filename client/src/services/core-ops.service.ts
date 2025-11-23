@@ -290,4 +290,21 @@ export const coreOpsService = {
     findMatching: (filters?: any) =>
       apiClient.get<any>('/operations/playbooks/find-matching', filters),
   },
+
+  escalationPolicies: {
+    list: (filters?: any) =>
+      apiClient.get<PaginatedResponse<any>>('/operations/escalation-policies', filters),
+
+    create: (data: any) =>
+      apiClient.post<any>('/operations/escalation-policies', data),
+
+    get: (id: number) =>
+      apiClient.get<any>(`/operations/escalation-policies/${id}`),
+
+    update: (id: number, data: any) =>
+      apiClient.patch<any>(`/operations/escalation-policies/${id}`, data),
+
+    delete: (id: number) =>
+      apiClient.delete<any>(`/operations/escalation-policies/${id}`),
+  },
 };

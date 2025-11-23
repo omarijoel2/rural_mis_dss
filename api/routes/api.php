@@ -451,6 +451,15 @@ Route::prefix('v1')->group(function () {
             Route::put('/{run}', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'updateRun'])->middleware('permission:edit checklist runs');
             Route::post('/{run}/complete', [\App\Http\Controllers\Api\V1\Operations\ChecklistController::class, 'completeRun'])->middleware('permission:edit checklist runs');
         });
+
+        Route::prefix('escalation-policies')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Operations\EscalationPolicyController::class, 'index'])->middleware('permission:view escalation policies');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Operations\EscalationPolicyController::class, 'store'])->middleware('permission:create escalation policies');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Operations\EscalationPolicyController::class, 'show'])->middleware('permission:view escalation policies');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\V1\Operations\EscalationPolicyController::class, 'update'])->middleware('permission:edit escalation policies');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Operations\EscalationPolicyController::class, 'update'])->middleware('permission:edit escalation policies');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Operations\EscalationPolicyController::class, 'destroy'])->middleware('permission:delete escalation policies');
+        });
     });
 
     Route::prefix('water-quality')->group(function () {
