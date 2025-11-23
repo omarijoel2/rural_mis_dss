@@ -61,6 +61,60 @@ Includes build scripts, code quality tools (TypeScript strict mode, PHPStan, Lar
 - **Priority Queues**: Notifications, high, default, DSA-specific queues.
 - **Multi-Channel Notifications**: EWSAlertNotification supports email, SMS (Twilio), and custom webhooks for async delivery.
 
+# Recent Updates (Nov 23, 2025)
+
+## Core Operations P0 Implementation (NEW - MVP Ready)
+Completed critical items for event correlation, SLA enforcement, and operations UI:
+
+### Backend Services & Jobs Created
+1. ✅ **EscalateEventJob** (`api/app/Jobs/Operations/EscalateEventJob.php`)
+   - Monitors SLA timers and escalates overdue events
+   - Creates escalation audit trail
+   - Integrates with NotificationService
+   - Supports repeat escalation with 30-min cooldown
+
+2. ✅ **NotificationService** (`api/app/Services/Operations/NotificationService.php`)
+   - Multi-channel notification delivery (email, SMS, webhook, push)
+   - Queueing and retry logic with max 3 attempts
+   - Integration with Twilio (SMS), Firebase (push), webhooks
+   - Notification tracking and status management
+
+3. ✅ **ShiftController Enhancement**
+   - Added `getEntries()` endpoint for shift logbook entries
+   - Paginated shift entries retrieval with creator info
+   - Route: `GET /operations/shifts/{shift}/entries`
+
+### React Pages (Core Operations Module)
+1. ✅ **ShiftsPage** - 24/7 shift scheduling and logbook management
+2. ✅ **EventsPage** - Event monitoring with severity/status filters
+3. ✅ **ChecklistsPage** - Template-based checklists and run tracking
+4. ✅ **PlaybooksPage** - Event response automation and runbooks
+
+### API & Service Updates
+1. ✅ **core-ops.service.ts Extensions**
+   - Added `shifts.*` methods (list, create, get, close, getEntries, addEntry)
+   - Added `events.*` methods (list, create, acknowledge, resolve, link)
+   - Added `checklists.*` methods (CRUD, runs management)
+   - Added `playbooks.*` methods (CRUD, find matching)
+
+2. ✅ **Route Registration**
+   - Registered shift entries GET endpoint: `GET /operations/shifts/{shift}/entries`
+   - All event, checklist, and playbook routes already registered
+
+### Event Correlation (Already Implemented)
+- EventService has full correlation logic: `generateCorrelationKey()`, `findCorrelatedEvent()`, `calculateSlaDueAt()`
+- Handles duplicate detection by external_id + source
+- 30-minute correlation window for aggregating similar events
+- Multi-tenant safe with tenant_id scoping on all queries
+
+### P0 MVP Status
+- ✅ Event correlation and deduplication
+- ✅ SLA tracking and escalation
+- ✅ Shift entries logging
+- ✅ Events console UI
+- ✅ Playbook execution framework
+- ✅ All TypeScript compilation successful
+
 # Recent Updates (Nov 22, 2025)
 
 ## GIS Module Enhancement (NEW - Complete)
