@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Progress } from '../../components/ui/progress';
+import { ScrollArea } from '../../components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
-import { Plus, Award, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Plus, Trophy, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Assessment {
@@ -30,9 +31,11 @@ export function CapacityAssessmentPage() {
     topic: 'operation',
     score: '',
   });
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   const { data, isLoading } = useQuery({
-    queryKey: ['capacity-assessments'],
+    queryKey: ['capacity-assessments', page],
     queryFn: () => apiClient.get('/training/assessments'),
   });
 
@@ -183,14 +186,20 @@ export function CapacityAssessmentPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Assessments</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Recent Assessments</CardTitle>
+            <span className="text-sm text-muted-foreground">
+              {assessments.length} assessments
+            </span>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {isLoading ? (
-              <p>Loading assessments...</p>
-            ) : (
-              assessments.slice(0, 5).map((assessment: Assessment) => (
+          <ScrollArea className="h-[500px] pr-4">
+            <div className="space-y-4">
+              {isLoading ? (
+                <p>Loading assessments...</p>
+              ) : (
+                assessments.slice((page - 1) * pageSize, page * pageSize).map((assessment: Assessment) => (
                 <div key={assessment.id} className="p-4 border rounded-lg">
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -217,8 +226,35 @@ export function CapacityAssessmentPage() {
                   )}
                 </div>
               ))
-            )}
-          </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {assessments.length > pageSize && (
+            <div className="flex justify-between items-center mt-6 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {Math.ceil(assessments.length / pageSize)}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(Math.min(Math.ceil(assessments.length / pageSize), page + 1))}
+                  disabled={page >= Math.ceil(assessments.length / pageSize)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

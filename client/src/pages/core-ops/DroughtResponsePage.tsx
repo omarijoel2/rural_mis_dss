@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+import { ScrollArea } from '../../components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
-import { Plus, AlertTriangle, Zap, TrendingUp } from 'lucide-react';
+import { Plus, AlertTriangle, Zap, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DroughtEvent {
@@ -25,9 +26,11 @@ export function DroughtResponsePage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newDrought, setNewDrought] = useState({ name: '', severity: 'high' });
+  const [page, setPage] = useState(1);
+  const pageSize = 4;
 
   const { data, isLoading } = useQuery({
-    queryKey: ['drought-events'],
+    queryKey: ['drought-events', page],
     queryFn: () => apiClient.get('/core-ops/droughts'),
   });
 
@@ -179,14 +182,20 @@ export function DroughtResponsePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Drought Events & Response Status</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Drought Events & Response Status</CardTitle>
+            <span className="text-sm text-muted-foreground">
+              {events.length} events
+            </span>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {isLoading ? (
-              <p>Loading drought events...</p>
-            ) : (
-              events.map((event: DroughtEvent) => (
+          <ScrollArea className="h-[550px] pr-4">
+            <div className="space-y-4">
+              {isLoading ? (
+                <p>Loading drought events...</p>
+              ) : (
+                events.slice((page - 1) * pageSize, page * pageSize).map((event: DroughtEvent) => (
                 <div
                   key={event.id}
                   className={`p-4 border-2 rounded-lg ${getSeverityColor(event.severity)}`}
@@ -238,8 +247,35 @@ export function DroughtResponsePage() {
                   )}
                 </div>
               ))
-            )}
-          </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {events.length > pageSize && (
+            <div className="flex justify-between items-center mt-6 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {Math.ceil(events.length / pageSize)}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(Math.min(Math.ceil(events.length / pageSize), page + 1))}
+                  disabled={page >= Math.ceil(events.length / pageSize)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
