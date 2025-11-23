@@ -60,7 +60,9 @@ export function WorkflowInstancesPage() {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold">Workflow Instances</h1>
-        <p className="text-muted-foreground">Monitor active workflows</p>
+        <p className="text-muted-foreground mt-2 max-w-2xl">
+          Monitor running workflow instances in real-time. Track the progress of Work Orders, Incidents, Complaints, Procurement requests, and other business entities as they move through defined workflow states. Manually trigger transitions, check SLA compliance, and view the complete audit trail of all state changes.
+        </p>
       </div>
 
       <div className="flex gap-4">
@@ -88,7 +90,7 @@ export function WorkflowInstancesPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {instances.map((instance) => (
+          {instances.map((instance: WorkflowInstance) => (
             <Card key={instance.id}>
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
