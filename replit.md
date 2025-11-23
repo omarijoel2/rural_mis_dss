@@ -2,6 +2,8 @@
 
 This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-based Management Information System. Its primary goal is to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities. Key capabilities include multi-tenancy, spatial data integration (PostGIS, MapLibre GL), Role-Based Access Control (RBAC), audit logging, asset and CMMS functionalities, shift management, water quality monitoring, and robust CRM and Revenue Assurance features. The system also supports hydro-meteorological and water sources data, costing, budgeting, and forecasting, alongside scaffolding for monitoring, evaluation, service levels, customer and commercial field service, and community and stakeholder engagement. The latter covers RWSS committee governance, a vendor portal, Grievance Redressal Mechanism (GRM), and open data transparency.
 
+**NEW (Module 18)**: Workflows Engine & SLAs - Production-grade state machine for human-in-the-loop approvals, escalations, timers, and auditability. Integrates with all modules (CMMS, CRM/RA, WQ, Procurement, Projects, Ops Events, etc.) with deterministic execution, multi-tenancy support, and comprehensive observability.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -11,6 +13,15 @@ Preferred communication style: Simple, everyday language.
 ## Application Structure
 
 The project uses a monorepo structure with `/client` (React frontend), `/server` (Express.js backend for React serving and API proxying), `/api` (Laravel API backend), and `/shared` (shared TypeScript schemas). It leverages Vite for the frontend and esbuild for the Node.js backend.
+
+## Workflows Engine (Module 18)
+
+**Core Components**:
+- **Data Model**: 8 Drizzle tables (wf_definitions, wf_instances, wf_transitions, wf_tasks, wf_slas, wf_escalations, wf_webhooks, wf_signals)
+- **Services**: WfCompiler (spec compilation), WfRuntime (state machine execution), WfNotifier (multi-channel notifications)
+- **API Routes**: `/api/v1/workflows/definitions` (CRUD), `/api/v1/workflows/instances` (create/trigger/signal)
+- **React UI**: Workflow definitions editor, instances monitor, task board
+- **Seeds**: Work Order and Incident template workflows with SLA policies
 
 ## Technology Stack
 

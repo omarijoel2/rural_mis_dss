@@ -119,6 +119,8 @@ import { EventsPage } from './pages/core-ops/EventsPage';
 import { ChecklistsPage } from './pages/core-ops/ChecklistsPage';
 import { PlaybooksPage } from './pages/core-ops/PlaybooksPage';
 import { EscalationPoliciesPage } from './pages/core-ops/EscalationPoliciesPage';
+import { WorkflowDefinitionsPage } from './pages/workflows/WorkflowDefinitionsPage';
+import { WorkflowInstancesPage } from './pages/workflows/WorkflowInstancesPage';
 import { TrainingLayout } from './components/layouts/TrainingLayout';
 import { CourseCatalog, MyLearning, KnowledgeBase, SopsPage, SkillsMatrix, CertificatesPage } from './pages/training';
 import { DSALayout } from './components/layouts/DSALayout';
@@ -747,6 +749,16 @@ export function AppMIS() {
                 <Route path="escalation-policies" element={
                   <ProtectedRoute requiredPermission="operations.view_escalation_policies">
                     <EscalationPoliciesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="workflows/definitions" element={
+                  <ProtectedRoute requiredPermission="workflows.view">
+                    <WorkflowDefinitionsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="workflows/instances" element={
+                  <ProtectedRoute requiredPermission="workflows.view">
+                    <WorkflowInstancesPage />
                   </ProtectedRoute>
                 } />
               </Route>
