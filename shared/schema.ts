@@ -18,7 +18,7 @@ export type User = typeof users.$inferSelect;
 
 // ============ WORKFLOWS ENGINE ============
 
-import { varchar, jsonb, timestamp, index, uniqueIndex, pgTable as table } from "drizzle-orm/pg-core";
+import { varchar, jsonb, timestamp, index, uniqueIndex, pgTable as table, sql } from "drizzle-orm/pg-core";
 
 export const wfDefinitions = table('wf_definitions', {
   id: serial('id').primaryKey(),
@@ -240,4 +240,261 @@ export const vulnerableGroups = table('vulnerable_groups', {
   index('idx_vuln_tenant').on(t.tenantId),
   index('idx_vuln_scheme').on(t.schemeId),
   index('idx_vuln_type').on(t.groupType),
+]);
+
+// ============ COMMUNITY & STAKEHOLDER MODULE ============
+
+export const committees = table('committees', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: varchar('scheme_id'),
+  name: text('name').notNull(),
+  communityName: text('community_name'),
+  bylaws: jsonb('bylaws'),
+  termStart: timestamp('term_start').notNull(),
+  termEnd: timestamp('term_end').notNull(),
+  quotas: jsonb('quotas'),
+  status: text('status').notNull().default('active'),
+  lastElectionDate: timestamp('last_election_date'),
+  complianceScore: integer('compliance_score').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_committee_tenant').on(t.tenantId),
+  index('idx_committee_status').on(t.status),
+]);
+
+export const committeeMembers = table('committee_members', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  committeeId: varchar('committee_id').notNull(),
+  name: text('name').notNull(),
+  idNumber: text('id_number'),
+  phone: text('phone'),
+  email: text('email'),
+  role: text('role').notNull().default('member'),
+  gender: text('gender'),
+  termStart: timestamp('term_start').notNull(),
+  termEnd: timestamp('term_end'),
+  photoKey: text('photo_key'),
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_cmember_tenant').on(t.tenantId),
+  index('idx_cmember_committee').on(t.committeeId),
+]);
+
+export const committeeMeetings = table('committee_meetings', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  committeeId: varchar('committee_id').notNull(),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  venue: text('venue'),
+  agenda: jsonb('agenda'),
+  minutes: text('minutes'),
+  attendance: jsonb('attendance'),
+  quorumRequired: integer('quorum_required').default(5),
+  membersPresent: integer('members_present').default(0),
+  quorumMet: boolean('quorum_met').default(false),
+  resolutions: jsonb('resolutions'),
+  actionItems: jsonb('action_items'),
+  status: text('status').notNull().default('scheduled'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_cmeet_tenant').on(t.tenantId),
+  index('idx_cmeet_committee').on(t.committeeId),
+]);
+
+export const committeeCashbook = table('committee_cashbook', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  committeeId: varchar('committee_id').notNull(),
+  entryDate: timestamp('entry_date').notNull(),
+  refNo: text('ref_no'),
+  particulars: text('particulars').notNull(),
+  entryType: text('entry_type').notNull(),
+  amount: integer('amount').notNull(),
+  fundSource: text('fund_source'),
+  ledgerAccount: text('ledger_account'),
+  attachmentKey: text('attachment_key'),
+  approvedBy: varchar('approved_by'),
+  approvedAt: timestamp('approved_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_ccash_tenant').on(t.tenantId),
+  index('idx_ccash_committee').on(t.committeeId),
+]);
+
+export const committeeAudits = table('committee_audits', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  committeeId: varchar('committee_id').notNull(),
+  auditPeriod: text('audit_period').notNull(),
+  findings: jsonb('findings'),
+  recommendations: jsonb('recommendations'),
+  status: text('status').notNull().default('draft'),
+  auditedBy: varchar('audited_by'),
+  auditedAt: timestamp('audited_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_audit_tenant').on(t.tenantId),
+  index('idx_audit_committee').on(t.committeeId),
+]);
+
+export const vendors = table('vendors', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  companyName: text('company_name').notNull(),
+  registrationNumber: text('registration_number'),
+  contactName: text('contact_name'),
+  email: text('email').notNull(),
+  phone: text('phone'),
+  profile: jsonb('profile'),
+  kyc: jsonb('kyc'),
+  categories: jsonb('categories'),
+  bankInfo: jsonb('bank_info'),
+  status: text('status').notNull().default('pending'),
+  kycStatus: text('kyc_status').notNull().default('pending'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_vendor_tenant').on(t.tenantId),
+  index('idx_vendor_status').on(t.status),
+]);
+
+export const bids = table('bids', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  rfqId: varchar('rfq_id').notNull(),
+  vendorId: varchar('vendor_id').notNull(),
+  items: jsonb('items'),
+  priceTotal: integer('price_total'),
+  leadTimeDays: integer('lead_time_days'),
+  attachments: jsonb('attachments'),
+  status: text('status').notNull().default('submitted'),
+  submittedAt: timestamp('submitted_at').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_bid_tenant').on(t.tenantId),
+  index('idx_bid_rfq').on(t.rfqId),
+  index('idx_bid_vendor').on(t.vendorId),
+]);
+
+export const deliveries = table('deliveries', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  poId: varchar('po_id').notNull(),
+  vendorId: varchar('vendor_id').notNull(),
+  items: jsonb('items'),
+  docs: jsonb('docs'),
+  status: text('status').notNull().default('pending'),
+  deliveredAt: timestamp('delivered_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_deliv_tenant').on(t.tenantId),
+  index('idx_deliv_po').on(t.poId),
+  index('idx_deliv_vendor').on(t.vendorId),
+]);
+
+export const invoices = table('invoices', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  vendorId: varchar('vendor_id').notNull(),
+  poId: varchar('po_id'),
+  invoiceNumber: text('invoice_number').notNull(),
+  amount: integer('amount').notNull(),
+  currency: text('currency').default('KES'),
+  status: text('status').notNull().default('submitted'),
+  approvals: jsonb('approvals'),
+  paidAt: timestamp('paid_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_inv_tenant').on(t.tenantId),
+  index('idx_inv_vendor').on(t.vendorId),
+  index('idx_inv_status').on(t.status),
+]);
+
+export const stakeholders = table('stakeholders', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  stakeholderType: text('stakeholder_type').notNull(),
+  contactName: text('contact_name').notNull(),
+  organization: text('organization'),
+  email: text('email'),
+  phone: text('phone'),
+  influence: integer('influence'),
+  interest: integer('interest'),
+  tags: jsonb('tags'),
+  consentFlags: jsonb('consent_flags'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_stake_tenant').on(t.tenantId),
+  index('idx_stake_type').on(t.stakeholderType),
+]);
+
+export const engagements = table('engagements', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  title: text('title').notNull(),
+  audience: jsonb('audience'),
+  channel: text('channel'),
+  location: text('location'),
+  scheduledAt: timestamp('scheduled_at'),
+  outcomes: jsonb('outcomes'),
+  attendeeCount: integer('attendee_count'),
+  status: text('status').notNull().default('planned'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_engage_tenant').on(t.tenantId),
+  index('idx_engage_status').on(t.status),
+]);
+
+export const grievances = table('grievances', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  ticketNumber: text('ticket_number').notNull(),
+  category: text('category').notNull(),
+  severity: text('severity').notNull(),
+  status: text('status').notNull().default('new'),
+  location: text('location'),
+  reporterEmail: text('reporter_email'),
+  details: text('details'),
+  slaDueAt: timestamp('sla_due_at'),
+  resolution: jsonb('resolution'),
+  evidence: jsonb('evidence'),
+  signoff: jsonb('signoff'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_griev_tenant').on(t.tenantId),
+  index('idx_griev_status').on(t.status),
+  index('idx_griev_category').on(t.category),
+]);
+
+export const datasets = table('datasets', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar('tenant_id').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  license: text('license').default('CC BY 4.0'),
+  sourceRef: text('source_ref'),
+  transformJson: jsonb('transform_json'),
+  refreshCron: text('refresh_cron'),
+  visibility: text('visibility').notNull().default('private'),
+  apiSlug: text('api_slug').unique(),
+  downloadCount: integer('download_count').default(0),
+  rating: integer('rating').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_dataset_tenant').on(t.tenantId),
+  index('idx_dataset_visibility').on(t.visibility),
 ]);
