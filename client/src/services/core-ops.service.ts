@@ -201,4 +201,93 @@ export const coreOpsService = {
     getAlarms: () =>
       apiClient.get<{ alarms: any[]; message?: string }>('/core-ops/alarms'),
   },
+
+  shifts: {
+    list: (filters?: any) =>
+      apiClient.get<PaginatedResponse<any>>('/operations/shifts', filters),
+
+    create: (data: any) =>
+      apiClient.post<any>('/operations/shifts', data),
+
+    get: (id: string) =>
+      apiClient.get<any>(`/operations/shifts/${id}`),
+
+    close: (id: string, data: any) =>
+      apiClient.post<any>(`/operations/shifts/${id}/close`, data),
+
+    getEntries: (id: string, filters?: any) =>
+      apiClient.get<PaginatedResponse<any>>(`/operations/shifts/${id}/entries`, filters),
+
+    addEntry: (id: string, data: any) =>
+      apiClient.post<any>(`/operations/shifts/${id}/entries`, data),
+  },
+
+  events: {
+    list: (filters?: any) =>
+      apiClient.get<PaginatedResponse<any>>('/operations/events', filters),
+
+    create: (data: any) =>
+      apiClient.post<any>('/operations/events', data),
+
+    get: (id: string) =>
+      apiClient.get<any>(`/operations/events/${id}`),
+
+    acknowledge: (id: string, data: any) =>
+      apiClient.post<any>(`/operations/events/${id}/acknowledge`, data),
+
+    resolve: (id: string, data: any) =>
+      apiClient.post<any>(`/operations/events/${id}/resolve`, data),
+
+    link: (id: string, data: any) =>
+      apiClient.post<any>(`/operations/events/${id}/link`, data),
+  },
+
+  checklists: {
+    list: (filters?: any) =>
+      apiClient.get<PaginatedResponse<any>>('/operations/checklists', filters),
+
+    create: (data: any) =>
+      apiClient.post<any>('/operations/checklists', data),
+
+    get: (id: string) =>
+      apiClient.get<any>(`/operations/checklists/${id}`),
+
+    update: (id: string, data: any) =>
+      apiClient.patch<any>(`/operations/checklists/${id}`, data),
+
+    delete: (id: string) =>
+      apiClient.delete<any>(`/operations/checklists/${id}`),
+
+    startRun: (id: string, data: any) =>
+      apiClient.post<any>(`/operations/checklists/${id}/start`, data),
+
+    listRuns: (filters?: any) =>
+      apiClient.get<PaginatedResponse<any>>('/operations/checklist-runs', filters),
+
+    updateRun: (id: string, data: any) =>
+      apiClient.patch<any>(`/operations/checklist-runs/${id}`, data),
+
+    completeRun: (id: string, data: any) =>
+      apiClient.post<any>(`/operations/checklist-runs/${id}/complete`, data),
+  },
+
+  playbooks: {
+    list: (filters?: any) =>
+      apiClient.get<PaginatedResponse<any>>('/operations/playbooks', filters),
+
+    create: (data: any) =>
+      apiClient.post<any>('/operations/playbooks', data),
+
+    get: (id: string) =>
+      apiClient.get<any>(`/operations/playbooks/${id}`),
+
+    update: (id: string, data: any) =>
+      apiClient.patch<any>(`/operations/playbooks/${id}`, data),
+
+    delete: (id: string) =>
+      apiClient.delete<any>(`/operations/playbooks/${id}`),
+
+    findMatching: (filters?: any) =>
+      apiClient.get<any>('/operations/playbooks/find-matching', filters),
+  },
 };

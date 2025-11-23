@@ -116,6 +116,28 @@ class ShiftController extends Controller
     }
 
     /**
+     * Get shift entries.
+     * Requires: view shifts permission
+     */
+    public function getEntries(Request $request, string $id): JsonResponse
+    {
+        try {
+            $shift = $this->shiftService->getShiftById($id, $request->user());
+
+            $entries = $shift->entries()
+                ->with('creator')
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->get('per_page', 25));
+
+            return response()->json($entries);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Shift not found',
+            ], 404);
+        }
+    }
+
+    /**
      * Add an entry to a shift.
      * Requires: create shift entries permission
      */
