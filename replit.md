@@ -10,6 +10,13 @@ This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-
 - **Gender & Equity Reporting**: Gender-disaggregated water access metrics, vulnerable group segmentation, and equity outcome dashboards
 - **Capacity Assessment Framework**: Operator competency evaluation, certification tracking, and training impact measurement
 
+**NEW (Community & Stakeholder Module - Phase 1, Nov 23 2025)**:
+- **13 Drizzle ORM Tables**: Committees, members, meetings, cashbook, audits, vendors, bids, deliveries, invoices, stakeholders, engagements, grievances, datasets
+- **15 API Endpoints**: Mock endpoints for committees, finance, vendors, bids, grievances, stakeholders, engagements, open data
+- **5 Enhanced Pages**: CommitteesDirectory (search), CommitteeFinance (cashbook), GRMConsole (Kanban), VendorPortal (KYC), BidsCenter (RFQ)
+- **Public Maps**: Full MapLibre GL viewer with 6 layers, basemap switcher, legend, layer controls, embed code generator
+- **60% Functionally Complete**: Ready for Phase 2 backend integration
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
