@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { ScrollArea } from '../../components/ui/scroll-area';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Users, Zap, TrendingUp } from 'lucide-react';
 
@@ -59,6 +60,7 @@ export function GenderEquityReportingPage() {
   const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
 
   return (
+    <ScrollArea className="h-screen">
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Gender & Equity Reporting</h1>
@@ -200,5 +202,6 @@ export function GenderEquityReportingPage() {
         </CardContent>
       </Card>
     </div>
+    </ScrollArea>
   );
 }

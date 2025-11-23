@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Progress } from '../../components/ui/progress';
+import { ScrollArea } from '../../components/ui/scroll-area';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
-import { Plus, TrendingDown, AlertTriangle } from 'lucide-react';
+import { Plus, TrendingDown, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Aquifer {
@@ -26,9 +27,11 @@ export function AquiferManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newAquifer, setNewAquifer] = useState({ name: '', safeYield: '' });
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
 
   const { data, isLoading } = useQuery({
-    queryKey: ['aquifers'],
+    queryKey: ['aquifers', page],
     queryFn: () => apiClient.get('/hydromet/aquifers'),
   });
 
@@ -164,14 +167,20 @@ export function AquiferManagementPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Aquifer Status Overview</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Aquifer Status Overview</CardTitle>
+            <span className="text-sm text-muted-foreground">
+              {aquifers.length} aquifers total
+            </span>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {isLoading ? (
-              <p>Loading aquifers...</p>
-            ) : (
-              aquifers.map((aquifer: Aquifer) => {
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-6">
+              {isLoading ? (
+                <p>Loading aquifers...</p>
+              ) : (
+                aquifers.slice((page - 1) * pageSize, page * pageSize).map((aquifer: Aquifer) => {
                 const utilization = aquifer.safeYieldMcm > 0
                   ? (aquifer.currentYieldMcm / aquifer.safeYieldMcm) * 100
                   : 0;
@@ -218,8 +227,35 @@ export function AquiferManagementPage() {
                   </div>
                 );
               })
-            )}
-          </div>
+              )}
+            </div>
+          </ScrollArea>
+          
+          {aquifers.length > pageSize && (
+            <div className="flex justify-between items-center mt-6 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {Math.ceil(aquifers.length / pageSize)}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(Math.min(Math.ceil(aquifers.length / pageSize), page + 1))}
+                  disabled={page >= Math.ceil(aquifers.length / pageSize)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
