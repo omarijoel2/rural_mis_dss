@@ -99,6 +99,7 @@ const moduleNavigation = [
     subPages: [
       { name: 'Water Sources', href: '/hydromet/sources' },
       { name: 'Stations Registry', href: '/hydromet/stations' },
+      { name: 'Aquifer Management', href: '/hydromet/aquifers', icon: Droplet },
     ]
   },
   {
@@ -183,6 +184,7 @@ const moduleNavigation = [
       { name: 'NRW Tracker', href: '/me/nrw', icon: Droplet },
       { name: 'CX Analytics', href: '/me/cx', icon: Activity },
       { name: 'Results Framework', href: '/me/indicators', icon: Target },
+      { name: 'Gender & Equity', href: '/me/gender-equity', icon: Users },
     ]
   },
   {
@@ -241,6 +243,7 @@ const moduleNavigation = [
       { name: 'Escalation Policies', href: '/core-ops/escalation-policies', icon: Bell },
       { name: 'Workflows - Definitions', href: '/core-ops/workflows/definitions', icon: GitBranch },
       { name: 'Workflows - Instances', href: '/core-ops/workflows/instances', icon: GitBranch },
+      { name: 'Drought Response', href: '/core-ops/droughts', icon: AlertTriangle },
     ]
   },
   {
@@ -316,6 +319,7 @@ const moduleNavigation = [
       { name: 'SOPs', href: '/training/sops', icon: ClipboardList },
       { name: 'Skills Matrix', href: '/training/skills', icon: Target },
       { name: 'Certificates', href: '/training/certificates', icon: Shield },
+      { name: 'Capacity Assessments', href: '/training/assessments', icon: Award },
     ]
   },
 ];
