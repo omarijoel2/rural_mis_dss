@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { coreOpsService } from '../../services/core-ops.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { AlertTriangle, Plus, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Plus, CheckCircle2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { ChecklistBuilderForm } from '../../components/core-ops/ChecklistBuilderForm';
+import { toast } from 'sonner';
 
 interface Checklist {
   id: string;
@@ -27,7 +30,10 @@ interface ChecklistRun {
 }
 
 export function ChecklistsPage() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('checklists');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingChecklist, setEditingChecklist] = useState<Checklist | null>(null);
 
   const { data: checklistsData, isLoading: checklistsLoading } = useQuery({
     queryKey: ['checklists'],
@@ -37,6 +43,14 @@ export function ChecklistsPage() {
   const { data: runsData, isLoading: runsLoading } = useQuery({
     queryKey: ['checklist-runs'],
     queryFn: () => coreOpsService.checklists.listRuns({ per_page: 50 }),
+  });
+
+  const deleteChecklist = useMutation({
+    mutationFn: (checklistId: string) => coreOpsService.checklists.delete(checklistId),
+    onSuccess: () => {
+      toast.success('Checklist deleted');
+      queryClient.invalidateQueries({ queryKey: ['checklists'] });
+    },
   });
 
   const checklists = checklistsData?.data || [];
@@ -49,10 +63,26 @@ export function ChecklistsPage() {
           <h1 className="text-3xl font-bold">Checklists</h1>
           <p className="text-muted-foreground mt-1">Create and manage facility checklists</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Checklist
-        </Button>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Checklist
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Checklist</DialogTitle>
+              <DialogDescription>Define questions for your facility checklist</DialogDescription>
+            </DialogHeader>
+            <ChecklistBuilderForm
+              onSuccess={() => {
+                setIsCreateOpen(false);
+                queryClient.invalidateQueries({ queryKey: ['checklists'] });
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -94,11 +124,34 @@ export function ChecklistsPage() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Edit Checklist</DialogTitle>
+                            </DialogHeader>
+                            <ChecklistBuilderForm
+                              initialChecklist={checklist}
+                              onSuccess={() => {
+                                queryClient.invalidateQueries({ queryKey: ['checklists'] });
+                              }}
+                            />
+                          </DialogContent>
+                        </Dialog>
                         <Button size="sm">
                           Start Run
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteChecklist.mutate(checklist.id)}
+                          disabled={deleteChecklist.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>

@@ -114,6 +114,11 @@ import { NRWDashboard } from './pages/core-ops/NRWDashboard';
 import { DosingControl } from './pages/core-ops/DosingControl';
 import { PumpScheduling } from './pages/core-ops/PumpScheduling';
 import { PressureLeakPage } from './pages/core-ops/PressureLeakPage';
+import { ShiftsPage } from './pages/core-ops/ShiftsPage';
+import { EventsPage } from './pages/core-ops/EventsPage';
+import { ChecklistsPage } from './pages/core-ops/ChecklistsPage';
+import { PlaybooksPage } from './pages/core-ops/PlaybooksPage';
+import { EscalationPoliciesPage } from './pages/core-ops/EscalationPoliciesPage';
 import { TrainingLayout } from './components/layouts/TrainingLayout';
 import { CourseCatalog, MyLearning, KnowledgeBase, SopsPage, SkillsMatrix, CertificatesPage } from './pages/training';
 import { DSALayout } from './components/layouts/DSALayout';
@@ -717,6 +722,31 @@ export function AppMIS() {
                 <Route path="pressure-leak" element={
                   <ProtectedRoute requiredPermission="core_ops.view_operations">
                     <PressureLeakPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="shifts" element={
+                  <ProtectedRoute requiredPermission="operations.view_shifts">
+                    <ShiftsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="events" element={
+                  <ProtectedRoute requiredPermission="operations.view_events">
+                    <EventsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="checklists" element={
+                  <ProtectedRoute requiredPermission="operations.view_checklists">
+                    <ChecklistsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="playbooks" element={
+                  <ProtectedRoute requiredPermission="operations.view_playbooks">
+                    <PlaybooksPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="escalation-policies" element={
+                  <ProtectedRoute requiredPermission="operations.view_escalation_policies">
+                    <EscalationPoliciesPage />
                   </ProtectedRoute>
                 } />
               </Route>
