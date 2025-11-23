@@ -462,6 +462,20 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    Route::prefix('workflows')->group(function () {
+        Route::get('/definitions', [\App\Http\Controllers\Api\V1\Workflows\WorkflowDefinitionController::class, 'index'])->middleware('permission:view workflow definitions');
+        Route::post('/definitions', [\App\Http\Controllers\Api\V1\Workflows\WorkflowDefinitionController::class, 'store'])->middleware('permission:create workflow definitions');
+        Route::get('/definitions/{id}', [\App\Http\Controllers\Api\V1\Workflows\WorkflowDefinitionController::class, 'show'])->middleware('permission:view workflow definitions');
+        Route::patch('/definitions/{id}', [\App\Http\Controllers\Api\V1\Workflows\WorkflowDefinitionController::class, 'update'])->middleware('permission:edit workflow definitions');
+        Route::post('/definitions/{id}/activate', [\App\Http\Controllers\Api\V1\Workflows\WorkflowDefinitionController::class, 'activate'])->middleware('permission:edit workflow definitions');
+        Route::delete('/definitions/{id}', [\App\Http\Controllers\Api\V1\Workflows\WorkflowDefinitionController::class, 'destroy'])->middleware('permission:delete workflow definitions');
+
+        Route::get('/instances', [\App\Http\Controllers\Api\V1\Workflows\WorkflowInstanceController::class, 'index'])->middleware('permission:view workflow instances');
+        Route::post('/instances', [\App\Http\Controllers\Api\V1\Workflows\WorkflowInstanceController::class, 'store'])->middleware('permission:create workflow instances');
+        Route::get('/instances/{id}', [\App\Http\Controllers\Api\V1\Workflows\WorkflowInstanceController::class, 'show'])->middleware('permission:view workflow instances');
+        Route::post('/instances/{id}/trigger', [\App\Http\Controllers\Api\V1\Workflows\WorkflowInstanceController::class, 'trigger'])->middleware('permission:edit workflow instances');
+    });
+
     Route::prefix('water-quality')->group(function () {
         Route::prefix('parameters')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\WqParameterController::class, 'index'])->middleware('permission:view water quality parameters');
