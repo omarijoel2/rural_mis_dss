@@ -54,7 +54,8 @@ import {
   Sparkles,
   Bell,
   BookOpen,
-  AlertCircle
+  AlertCircle,
+  GitBranch
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -238,6 +239,8 @@ const moduleNavigation = [
       { name: 'Checklists', href: '/core-ops/checklists', icon: ClipboardList },
       { name: 'Playbooks', href: '/core-ops/playbooks', icon: BookOpen },
       { name: 'Escalation Policies', href: '/core-ops/escalation-policies', icon: Bell },
+      { name: 'Workflows - Definitions', href: '/core-ops/workflows/definitions', icon: GitBranch },
+      { name: 'Workflows - Instances', href: '/core-ops/workflows/instances', icon: GitBranch },
     ]
   },
   {
