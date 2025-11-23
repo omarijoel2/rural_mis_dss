@@ -121,6 +121,10 @@ import { PlaybooksPage } from './pages/core-ops/PlaybooksPage';
 import { EscalationPoliciesPage } from './pages/core-ops/EscalationPoliciesPage';
 import { WorkflowDefinitionsPage } from './pages/workflows/WorkflowDefinitionsPage';
 import { WorkflowInstancesPage } from './pages/workflows/WorkflowInstancesPage';
+import { CapacityAssessmentPage } from './pages/training/CapacityAssessmentPage';
+import { AquiferManagementPage } from './pages/hydromet/AquiferManagementPage';
+import { DroughtResponsePage } from './pages/core-ops/DroughtResponsePage';
+import { GenderEquityReportingPage } from './pages/me/GenderEquityReportingPage';
 import { TrainingLayout } from './components/layouts/TrainingLayout';
 import { CourseCatalog, MyLearning, KnowledgeBase, SopsPage, SkillsMatrix, CertificatesPage } from './pages/training';
 import { DSALayout } from './components/layouts/DSALayout';
@@ -453,6 +457,11 @@ export function AppMIS() {
                     <StationsPage />
                   </ProtectedRoute>
                 } />
+                <Route path="aquifers" element={
+                  <ProtectedRoute requiredPermission="view sources">
+                    <AquiferManagementPage />
+                  </ProtectedRoute>
+                } />
               </Route>
               
               <Route path="/costing" element={
@@ -560,6 +569,11 @@ export function AppMIS() {
                 <Route path="indicators" element={
                   <ProtectedRoute>
                     <ResultsFramework />
+                  </ProtectedRoute>
+                } />
+                <Route path="gender-equity" element={
+                  <ProtectedRoute>
+                    <GenderEquityReportingPage />
                   </ProtectedRoute>
                 } />
               </Route>
@@ -761,6 +775,11 @@ export function AppMIS() {
                     <WorkflowInstancesPage />
                   </ProtectedRoute>
                 } />
+                <Route path="droughts" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_operations">
+                    <DroughtResponsePage />
+                  </ProtectedRoute>
+                } />
               </Route>
               
               <Route path="/admin" element={
@@ -851,6 +870,7 @@ export function AppMIS() {
                 <Route path="sops" element={<SopsPage />} />
                 <Route path="skills" element={<SkillsMatrix />} />
                 <Route path="certificates" element={<CertificatesPage />} />
+                <Route path="assessments" element={<CapacityAssessmentPage />} />
               </Route>
               
               <Route path="/dsa" element={
