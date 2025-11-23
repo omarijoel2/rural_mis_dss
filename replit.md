@@ -1,6 +1,6 @@
 # Overview
 
-This project is a hybrid monorepo primarily focused on the **Rural Water Supply MIS**, a Laravel-based Management Information System. Its core mission is to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities. Key capabilities include multi-tenancy, spatial data integration (PostGIS, MapLibre GL), Role-Based Access Control (RBAC), audit logging, asset and CMMS functionalities, shift management, water quality monitoring, and robust CRM and Revenue Assurance features. The system also includes modules for Hydro-Meteorological & Water Sources, Costing, Budgeting & Forecasts, and scaffolding for Monitoring, Evaluation & Service Levels, Customer & Commercial Field Service, and Community & Stakeholder Engagement. The latter encompasses RWSS committee governance, a vendor portal, Grievance Redressal Mechanism (GRM), and open data transparency.
+This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-based Management Information System. Its primary goal is to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities. Key capabilities include multi-tenancy, spatial data integration (PostGIS, MapLibre GL), Role-Based Access Control (RBAC), audit logging, asset and CMMS functionalities, shift management, water quality monitoring, and robust CRM and Revenue Assurance features. The system also supports hydro-meteorological and water sources data, costing, budgeting, and forecasting, alongside scaffolding for monitoring, evaluation, service levels, customer and commercial field service, and community and stakeholder engagement. The latter covers RWSS committee governance, a vendor portal, Grievance Redressal Mechanism (GRM), and open data transparency.
 
 # User Preferences
 
@@ -10,7 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Application Structure
 
-The project employs a monorepo structure comprising `/client` (React frontend), `/server` (Express.js backend for serving React and API proxying), `/api` (Laravel API backend), and `/shared` (shared TypeScript schemas). It uses Vite for the frontend and esbuild for the Node.js backend.
+The project uses a monorepo structure with `/client` (React frontend), `/server` (Express.js backend for React serving and API proxying), `/api` (Laravel API backend), and `/shared` (shared TypeScript schemas). It leverages Vite for the frontend and esbuild for the Node.js backend.
 
 ## Technology Stack
 
@@ -20,210 +20,43 @@ The project employs a monorepo structure comprising `/client` (React frontend), 
 
 ## Dual-Server Architecture
 
-The MIS operates with two concurrent servers:
-- **Express server (port 5000)**: Serves the React frontend and proxies `/api/*` requests to Laravel.
-- **Laravel API server (port 8001)**: Handles backend logic, database interactions, and spatial queries.
+The MIS operates with two concurrent servers: an Express server (port 5000) serving the React frontend and proxying API requests, and a Laravel API server (port 8001) handling backend logic and database interactions.
 
 ## Database Architecture
 
-- **Dual ORM Strategy**: Drizzle ORM for Node.js and Eloquent ORM for Laravel.
-- **Multi-tenancy**: Implemented in Laravel with `tenant_id` scoping for data isolation.
-- **Spatial Data**: PostGIS support for GeoJSON geometries.
+A dual ORM strategy is employed, using Drizzle ORM for Node.js and Eloquent ORM for Laravel. Multi-tenancy is implemented in Laravel with `tenant_id` scoping for data isolation. PostGIS supports GeoJSON geometries for spatial data.
 
 ## Authentication & Authorization
 
-- **Laravel (MIS)**: Laravel Sanctum for API authentication, Spatie Laravel Permission for granular RBAC, two-factor authentication, secure cookie-based sessions, and comprehensive multi-tenancy hardening.
+Laravel Sanctum provides API authentication, Spatie Laravel Permission handles granular RBAC, and the system includes two-factor authentication, secure cookie-based sessions, and multi-tenancy hardening.
 
 ## Security Features (Laravel)
 
-CSRF protection, strict CORS, secure cookie settings, RBAC enforcement for all API endpoints, automatic audit logging, static analysis (PHPStan), and dependency vulnerability scanning.
+The system incorporates CSRF protection, strict CORS, secure cookie settings, RBAC enforcement, automatic audit logging, static analysis (PHPStan), and dependency vulnerability scanning.
 
 ## API Design
 
-- **Express Backend**: RESTful API with request/response logging, JSON parsing, and error handling.
-- **Laravel Backend**: API versioning (`/api/v1`), resource-based controllers, service layer pattern, paginated responses, type-safe API client wrapper, and structured error responses.
+The Express backend offers a RESTful API with request/response logging, JSON parsing, and error handling. The Laravel backend features API versioning (`/api/v1`), resource-based controllers, a service layer pattern, paginated responses, a type-safe API client wrapper, and structured error responses.
 
 ## Frontend Architecture
 
-- **Component Design**: Radix UI for accessible components, custom hooks.
-- **State Management**: TanStack Query for server state and caching.
-- **Routing**: React Router with protected routes and nested layouts.
-- **Module Features**: Production-ready CRM, Revenue Assurance, Decision Support & Advanced Analytics, Energy Management, Procurement, Hydro-Meteorological modules with comprehensive error handling, loading states, defensive rendering, and MapLibre GL integration for spatial data.
-- **Accessibility**: Colorblind-friendly palette, adjustable font sizes, keyboard navigation, ARIA labels, WCAG compliance focus.
+Radix UI is used for accessible components and custom hooks. TanStack Query manages server state and caching. React Router handles routing with protected routes and nested layouts. Module features include CRM, Revenue Assurance, Decision Support & Advanced Analytics, Energy Management, Procurement, Hydro-Meteorological modules with comprehensive error handling, loading states, defensive rendering, and MapLibre GL integration for spatial data. Accessibility is a key focus, including a colorblind-friendly palette, adjustable font sizes, keyboard navigation, ARIA labels, and WCAG compliance.
 
 ## Development Workflow
 
-Includes build scripts, code quality tools (TypeScript strict mode, PHPStan, Laravel Pint), and `.env` files for environment configuration.
+The project includes build scripts, code quality tools (TypeScript strict mode, PHPStan, Laravel Pint), and `.env` files for environment configuration.
 
 ## Queue Processing & Notifications
 
-- **Laravel Horizon**: Configured for queue processing with Redis.
-- **Priority Queues**: Notifications, high, default, DSA-specific queues.
-- **Multi-Channel Notifications**: EWSAlertNotification supports email, SMS (Twilio), and custom webhooks for async delivery.
+Laravel Horizon is configured for queue processing with Redis, utilizing priority queues for notifications, high-priority tasks, default tasks, and DSA-specific queues. Multi-channel notifications support email (SendGrid), SMS (Twilio), and custom webhooks for asynchronous delivery.
 
-# Recent Updates (Nov 23, 2025)
+## Mobile Application
 
-## Core Operations P0 Implementation (NEW - MVP Ready)
-Completed critical items for event correlation, SLA enforcement, and operations UI:
+A production-ready offline-first iOS/Android companion app is built using React Native Expo Workspace (SDK 51) with TypeScript, NativeWind, and Expo Router. It uses WatermelonDB for offline storage with multi-tenant namespacing, Expo SecureStore for secure token storage, and a sync engine for CRUD mutation queuing and auto-retry. Features include customer management, work orders, asset inspections, and water quality data collection with offline capabilities and multi-tenancy.
 
-### Backend Services & Jobs Created
-1. ✅ **EscalateEventJob** (`api/app/Jobs/Operations/EscalateEventJob.php`)
-   - Monitors SLA timers and escalates overdue events
-   - Creates escalation audit trail
-   - Integrates with NotificationService
-   - Supports repeat escalation with 30-min cooldown
+## GIS Module
 
-2. ✅ **NotificationService** (`api/app/Services/Operations/NotificationService.php`)
-   - Multi-channel notification delivery (email, SMS, webhook, push)
-   - Queueing and retry logic with max 3 attempts
-   - Integration with Twilio (SMS), Firebase (push), webhooks
-   - Notification tracking and status management
-
-3. ✅ **ShiftController Enhancement**
-   - Added `getEntries()` endpoint for shift logbook entries
-   - Paginated shift entries retrieval with creator info
-   - Route: `GET /operations/shifts/{shift}/entries`
-
-### React Pages (Core Operations Module)
-1. ✅ **ShiftsPage** - 24/7 shift scheduling and logbook management
-2. ✅ **EventsPage** - Event monitoring with severity/status filters
-3. ✅ **ChecklistsPage** - Template-based checklists and run tracking
-4. ✅ **PlaybooksPage** - Event response automation and runbooks
-
-### API & Service Updates
-1. ✅ **core-ops.service.ts Extensions**
-   - Added `shifts.*` methods (list, create, get, close, getEntries, addEntry)
-   - Added `events.*` methods (list, create, acknowledge, resolve, link)
-   - Added `checklists.*` methods (CRUD, runs management)
-   - Added `playbooks.*` methods (CRUD, find matching)
-
-2. ✅ **Route Registration**
-   - Registered shift entries GET endpoint: `GET /operations/shifts/{shift}/entries`
-   - All event, checklist, and playbook routes already registered
-
-### Event Correlation (Already Implemented)
-- EventService has full correlation logic: `generateCorrelationKey()`, `findCorrelatedEvent()`, `calculateSlaDueAt()`
-- Handles duplicate detection by external_id + source
-- 30-minute correlation window for aggregating similar events
-- Multi-tenant safe with tenant_id scoping on all queries
-
-### P0 MVP Status
-- ✅ Event correlation and deduplication
-- ✅ SLA tracking and escalation
-- ✅ Shift entries logging
-- ✅ Events console UI
-- ✅ Playbook execution framework
-- ✅ All TypeScript compilation successful
-
-# Recent Updates (Nov 22, 2025)
-
-## GIS Module Enhancement (NEW - Complete)
-Comprehensive shape file and vector file management system added to the web application:
-- **Shape File Management**: Upload, parse, and manage Shapefile (.zip), GeoJSON, and GeoPackage formats
-- **Vector Layer System**: Create styled vector layers (fill, line, circle, symbol) from shape files
-- **Styling Controls**: Real-time color, opacity, and stroke width customization
-- **Database Models**: ShapeFile and VectorLayer models with full RBAC enforcement
-- **API Endpoints**: Complete REST API for shape file and layer management with tenant isolation
-- **React Components**: FileManager and VectorLayerManager components for UI integration
-- **Documentation**: Comprehensive GIS_MODULE_GUIDE.md with API specs and usage examples
-
-### GIS Module Files Created
-1. ✅ Backend Models: `app/Models/GIS/ShapeFile.php`, `VectorLayer.php`
-2. ✅ Controllers: `ShapeFileController.php`, `VectorLayerController.php`
-3. ✅ Service Layer: `ShapeFileService.php` for processing
-4. ✅ Database Migrations: `2024_11_22_create_shape_files_table.php`, `create_vector_layers_table.php`
-5. ✅ API Routes: GIS endpoints added to `/api/v1/gis/*`
-6. ✅ React Components: `FileManager.tsx`, `VectorLayerManager.tsx`
-7. ✅ GIS Page: `pages/gis/index.tsx` with tabs for map, files, settings
-8. ✅ Documentation: `GIS_MODULE_GUIDE.md` with complete API specs
-
-### GIS Module Features
-- Upload Shapefile, GeoJSON, or GeoPackage files
-- Automatic geometry type detection and feature counting
-- Create multiple styled layers from single source file
-- Real-time map integration with MapLibre GL
-- Layer visibility and opacity control
-- RBAC-enforced file access per tenant
-- Full CRUD operations for files and layers
-
-## Mobile App Development (COMPLETE - 95% Ready for Beta Testing)
-Built production-ready offline-first iOS/Android companion app for field operations:
-- **React Native Expo Workspace**: SDK 51 with TypeScript, NativeWind (Tailwind), Expo Router
-- **Offline Storage**: WatermelonDB with 5 tables and multi-tenant database namespacing
-- **Authentication**: Secure token storage with Expo SecureStore, tenant switcher, automatic token refresh
-- **Sync Engine**: Full CRUD mutation queuing (CREATE, UPDATE, DELETE) with auto-retry (max 5x)
-- **API Integration**: Complete Laravel API endpoints with X-Tenant-ID header injection
-- **Architecture**: File-based routing, TanStack Query caching, Zustand auth, WatermelonDB persistence
-
-### Mobile App Features Completed
-1. ✅ Expo workspace (SDK 51) with TypeScript, NativeWind, Expo Router
-2. ✅ WatermelonDB schema with 5 tables and multi-tenant database namespacing
-3. ✅ Authentication flow with secure token storage and tenant switcher
-4. ✅ API client with automatic token refresh and X-Tenant-ID header injection
-5. ✅ **Customer Module** - Complete CRUD with offline search, edit, and sync
-6. ✅ **Work Orders Module** - Status filtering, editing, photo capture (95%)
-7. ✅ **Asset Inspections Module** - GPS location capture, category filtering (95%)
-8. ✅ **Water Quality Module** - Full data collection and sync (95%)
-9. ✅ **Sync Engine** - Supports CREATE/UPDATE/DELETE with retry and persistence
-10. ✅ **Laravel API** - WaterQualityTestController created, routes added to /api/v1
-
-### Mobile App Architecture
-- **Authentication**: Login → Tenant Selection → Token Storage → API with X-Tenant-ID header
-- **Offline-First**: Data synced to WatermelonDB, mutations queued, synced when online
-- **Multi-Tenancy**: Strict isolation via X-Tenant-ID header and database filtering
-- **Sync Queue**: Failed mutations auto-retry up to 5 times with exponential backoff
-- **Data Serialization**: WatermelonDB records serialized to plain objects for React
-
-### Mobile App Enhancements (COMPLETE)
-- ✅ Photo upload system: WorkOrderPhotoController with multipart upload
-- ✅ Security hardening: Biometric authentication (Face ID/Touch ID/Fingerprint)
-- ✅ Encrypted storage: Secure token storage in Keychain/Keystore
-- ✅ EAS build configuration: Development, preview, production profiles
-- ✅ RBAC enforcement: Permission checking on mobile operations
-- ✅ Database encryption key management: UUID-based keys stored securely
-
-### Mobile App Pending (Post-Beta)
-- Push notifications for new work orders
-- Offline map caching with MapLibre
-- Crash reporting and comprehensive error boundaries
-- SQLCipher integration for database-level encryption
-- Certificate pinning for API requests
-
-## Web Application Fixes
-
-### Loading State Improvements
-Fixed **5 major pages** to display page structure (headers, filters, buttons) during loading/error states:
-- **CustomersPage**: Shows header and search while loading
-- **TwoFactorSetupPage**: Loading indicator with header visible
-- **AssetDetailPage**: Maintains back button and header
-- **SchemesPage**: Grid loading with header/filters always visible
-- **ZonesPage, PipelinesPage, DmasPage**: Proper TypeScript type annotations
-
-### Code Quality
-- All LSP diagnostics resolved (0 errors in web app)
-- Consistent error handling with inline error messages
-- Pages maintain layout during backend unavailability
-
-## Module Completion Status
-
-### Web Modules (React + Laravel)
-| Module | Status | Key Features |
-|--------|--------|--------------|
-| **GIS** | ✅ 100% | Shape file upload, vector layers, MapLibre integration |
-| **CRM** | ✅ 100% | Customer management, interactions, complaints |
-| **CMMS** | ✅ 100% | Work orders, assets, maintenance scheduling |
-| **Water Quality** | ✅ 100% | Test data collection, parameter tracking |
-| **Costing** | ✅ 100% | Budgets, allocations, cost forecasting |
-| **Core Registry** | ✅ 100% | Zones, DMAs, pipelines, schemes |
-| **Core Operations** | ✅ 100% | Shift management, operations monitoring |
-
-### Mobile Modules (React Native + React Query)
-| Module | Status | Key Features |
-|--------|--------|--------------|
-| **Customers** | ✅ 100% | Full CRUD, search, offline sync |
-| **Work Orders** | ✅ 95% | CRUD, photos, status filters |
-| **Assets** | ✅ 95% | CRUD, GPS location, categories |
-| **Water Quality** | ✅ 95% | Data collection, sync |
+A comprehensive shape file and vector file management system supports uploading, parsing, and managing Shapefile, GeoJSON, and GeoPackage formats. It allows creating styled vector layers with real-time customization of color, opacity, and stroke width, integrates with MapLibre GL, and includes full CRUD operations for files and layers with RBAC enforcement and tenant isolation.
 
 # External Dependencies
 
@@ -235,8 +68,8 @@ Fixed **5 major pages** to display page structure (headers, filters, buttons) du
 ## Key Third-Party Services
 
 - **Frontend Libraries**: Radix UI, TanStack Query, MapLibre GL, React Router.
-- **Backend Libraries (Node)**: Express.js, Drizzle ORM, Zod, Expo, WatermelonDB.
+- **Backend Libraries (Node)**: Express.js, Drizzle ORM, Zod.
 - **Backend Libraries (PHP)**: Laravel Framework 11, Laravel Sanctum, Spatie Laravel Permission, Google2FA Laravel, Laravel Eloquent Spatial, laravel-notification-channels/twilio.
-- **Mobile Libraries**: React Native, Expo Router, NativeWind, Expo SecureStore, Expo LocalAuthentication.
+- **Mobile Libraries**: React Native, Expo, Expo Router, NativeWind, WatermelonDB, Expo SecureStore, Expo LocalAuthentication.
 - **Development Tools**: Vite, esbuild, PostCSS, Autoprefixer, TailwindCSS, EAS Build.
 - **Integrations**: SendGrid (email), Twilio (SMS), EAS (native app deployment).
