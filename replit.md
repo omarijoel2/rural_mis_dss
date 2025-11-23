@@ -4,6 +4,12 @@ This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-
 
 **NEW (Module 18)**: Workflows Engine & SLAs - Production-grade state machine for human-in-the-loop approvals, escalations, timers, and auditability. Integrates with all modules (CMMS, CRM/RA, WQ, Procurement, Projects, Ops Events, etc.) with deterministic execution, multi-tenancy support, and comprehensive observability.
 
+**NEW (GW4R Phase 1 Enhancements)**: 
+- **Aquifer Management**: Groundwater sustainability tracking with yield monitoring, recharge rates, abstraction limits, and risk assessment across 7 priority ASAL aquifers
+- **Drought Response System**: Emergency response coordination with strategic borehole activation, water rationing, and affected population tracking
+- **Gender & Equity Reporting**: Gender-disaggregated water access metrics, vulnerable group segmentation, and equity outcome dashboards
+- **Capacity Assessment Framework**: Operator competency evaluation, certification tracking, and training impact measurement
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -22,6 +28,24 @@ The project uses a monorepo structure with `/client` (React frontend), `/server`
 - **API Routes**: `/api/v1/workflows/definitions` (CRUD), `/api/v1/workflows/instances` (create/trigger/signal)
 - **React UI**: Workflow definitions editor, instances monitor, task board
 - **Seeds**: Work Order and Incident template workflows with SLA policies
+
+## GW4R Phase 1 Groundwater Enhancement (Module 19-22)
+
+**Database Schema** (6 new tables):
+- **aquifers**: Registry with yield, recharge, depth, geology, water quality, risk level tracking
+- **groundwater_monitoring**: Water level, abstraction, yield, quality (chloride/fluoride/nitrate) time-series data
+- **drought_events**: Event declaration, severity, population impact, borehole activation tracking
+- **gender_equity_tracking**: Demographic water access metrics (gender, age, vulnerability), collection time, satisfaction
+- **competency_assessments**: Operator certification with scores, validity dates, topic tracking
+- **vulnerable_groups**: Population segmentation with access challenges and support tracking
+
+**UI Modules**:
+1. **Aquifer Management** (`/hydromet/aquifers`): Monitor 7 ASAL aquifers with yield curves, recharge tracking, utilization dashboards, sustainability alerts
+2. **Drought Response Center** (`/core-ops/droughts`): Declare events, activate emergency boreholes, track affected populations, manage water rationing
+3. **Gender & Equity Reporting** (`/me/gender-equity`): Gender-disaggregated dashboards showing collection burden disparity, vulnerable group segmentation
+4. **Capacity Assessments** (`/training/assessments`): Evaluate operator competency, track certifications, measure training impact
+
+**Sidebar Integration**: All 4 modules integrated into respective layout sidebars (Hydromet, Core Operations, M&E, Training)
 
 ## Technology Stack
 

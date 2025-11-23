@@ -55,7 +55,8 @@ import {
   Bell,
   BookOpen,
   AlertCircle,
-  GitBranch
+  GitBranch,
+  Trophy
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -319,7 +320,7 @@ const moduleNavigation = [
       { name: 'SOPs', href: '/training/sops', icon: ClipboardList },
       { name: 'Skills Matrix', href: '/training/skills', icon: Target },
       { name: 'Certificates', href: '/training/certificates', icon: Shield },
-      { name: 'Capacity Assessments', href: '/training/assessments', icon: Award },
+      { name: 'Capacity Assessments', href: '/training/assessments', icon: Trophy },
     ]
   },
 ];
