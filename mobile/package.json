@@ -1,15 +1,28 @@
 {
   "name": "@rural-water-mis/mobile",
   "version": "1.0.0",
+  "description": "Production-ready offline-first iOS/Android mobile app for Rural Water MIS",
   "main": "expo-router",
+  "private": true,
   "scripts": {
     "start": "expo start",
+    "dev": "expo start --clear",
+    "web": "expo start --web",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "prebuild": "expo prebuild",
+    "prebuild": "expo prebuild --clean",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "build:all": "eas build --platform all",
+    "preview:android": "eas build --platform android --wait",
+    "preview:ios": "eas build --platform ios --wait",
+    "submit:android": "eas submit --platform android",
+    "submit:ios": "eas submit --platform ios",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "setup": "npm install && npm run type-check",
+    "clean": "rm -rf node_modules && rm -rf .expo && rm -rf dist"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
@@ -18,9 +31,14 @@
     "@tanstack/react-query": "^5.60.5",
     "axios": "^1.7.0",
     "expo": "~51.0.0",
+    "expo-blur": "~13.0.0",
     "expo-constants": "~16.0.0",
     "expo-device": "~6.0.0",
+    "expo-file-system": "~16.0.0",
+    "expo-image-picker": "~15.0.0",
     "expo-linking": "~6.3.0",
+    "expo-local-authentication": "~14.0.0",
+    "expo-notifications": "~0.28.0",
     "expo-router": "~3.5.0",
     "expo-secure-store": "~13.0.0",
     "expo-sqlite": "~14.0.0",
@@ -38,11 +56,31 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "@babel/preset-react": "^7.24.0",
+    "@babel/preset-typescript": "^7.24.0",
     "@types/react": "~18.3.11",
     "@types/react-native": "^0.73.0",
+    "babel-jest": "^29.7.0",
     "babel-plugin-module-resolver": "^5.0.2",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "^6.0.0",
+    "prettier": "^3.2.0",
     "tailwindcss": "^3.4.14",
     "typescript": "~5.6.3"
   },
-  "private": true
+  "engines": {
+    "node": ">=20.19.4",
+    "npm": ">=10.0.0"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "mobile",
+    "offline-first",
+    "water-utility",
+    "field-operations"
+  ],
+  "author": "Rural Water MIS Team",
+  "license": "MIT"
 }
