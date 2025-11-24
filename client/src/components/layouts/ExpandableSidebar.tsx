@@ -248,6 +248,7 @@ const moduleNavigation = [
       { name: 'Workflows - Definitions', href: '/core-ops/workflows/definitions', icon: GitBranch },
       { name: 'Workflows - Instances', href: '/core-ops/workflows/instances', icon: GitBranch },
       { name: 'Drought Response', href: '/core-ops/droughts', icon: AlertTriangle },
+      { name: 'Predictions', href: '/core-ops/predictions', icon: TrendingUp },
     ]
   },
   {
