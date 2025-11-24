@@ -900,3 +900,247 @@ export const roleModuleAccess = table('role_module_access', {
   index('idx_role_module_access_role').on(t.roleId),
   index('idx_role_module_access_module').on(t.moduleKey),
 ]);
+
+// ============ INTEGRATION HUB - API GATEWAY ============
+
+export const apiKeys = table('api_keys', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  keyId: text('key_id').notNull().unique(),
+  keySecret: text('key_secret').notNull(),
+  appName: text('app_name').notNull(),
+  description: text('description'),
+  scopes: jsonb('scopes'), // ['read:telemetry', 'write:work-orders']
+  rateLimit: integer('rate_limit').default(1000), // requests per hour
+  isActive: boolean('is_active').notNull().default(true),
+  lastUsedAt: timestamp('last_used_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  rotatedAt: timestamp('rotated_at').defaultNow(),
+}, (t) => [
+  index('idx_api_keys_tenant').on(t.tenantId),
+  index('idx_api_keys_active').on(t.isActive),
+]);
+
+export const oauthClients = table('oauth_clients', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  clientId: text('client_id').notNull().unique(),
+  clientSecret: text('client_secret').notNull(),
+  clientName: text('client_name').notNull(),
+  redirectUris: jsonb('redirect_uris').notNull(), // ['https://app.example.com/callback']
+  scopes: jsonb('scopes').notNull(), // ['openid', 'profile', 'email']
+  grantTypes: jsonb('grant_types').notNull(), // ['authorization_code', 'refresh_token']
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_oauth_clients_tenant').on(t.tenantId),
+  index('idx_oauth_clients_active').on(t.isActive),
+]);
+
+export const webhooks = table('webhooks', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  endpointUrl: text('endpoint_url').notNull(),
+  secret: text('secret').notNull(), // for HMAC signing
+  eventTopics: jsonb('event_topics').notNull(), // ['telemetry.ingest', 'billing.posted']
+  retryPolicy: jsonb('retry_policy'), // { maxRetries: 3, backoffMs: 1000 }
+  isActive: boolean('is_active').notNull().default(true),
+  testEventSent: timestamp('test_event_sent'),
+  lastDeliveryAt: timestamp('last_delivery_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_webhooks_tenant').on(t.tenantId),
+  index('idx_webhooks_active').on(t.isActive),
+]);
+
+export const apiAuditLog = table('api_audit_log', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  endpoint: text('endpoint').notNull(),
+  method: text('method').notNull(),
+  userId: varchar('user_id'),
+  statusCode: integer('status_code'),
+  latencyMs: integer('latency_ms'),
+  errorMessage: text('error_message'),
+  requestSize: integer('request_size'),
+  responseSize: integer('response_size'),
+  timestamp: timestamp('timestamp').defaultNow(),
+}, (t) => [
+  index('idx_api_audit_tenant').on(t.tenantId),
+  index('idx_api_audit_timestamp').on(t.timestamp),
+]);
+
+// ============ INTEGRATION HUB - EVENT BUS ============
+
+export const eventTopics = table('event_topics', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  topicName: text('topic_name').notNull(),
+  description: text('description'),
+  schema: jsonb('schema'), // JSON schema for validation
+  retentionDays: integer('retention_days').default(90),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_event_topics_tenant_name').on(t.tenantId, t.topicName),
+  index('idx_event_topics_active').on(t.isActive),
+]);
+
+export const eventSubscriptions = table('event_subscriptions', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  topicId: integer('topic_id').notNull(),
+  consumerName: text('consumer_name').notNull(),
+  consumerType: text('consumer_type').notNull(), // 'webhook'|'queue'|'stream'
+  consumerConfig: jsonb('consumer_config'), // {url, retryPolicy}
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_subscriptions_tenant').on(t.tenantId),
+  index('idx_subscriptions_topic').on(t.topicId),
+]);
+
+export const eventLog = table('event_log', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  topicId: integer('topic_id').notNull(),
+  eventPayload: jsonb('event_payload').notNull(),
+  deliveryStatus: text('delivery_status').notNull(), // 'pending'|'delivered'|'failed'|'dlq'
+  deliveryAttempts: integer('delivery_attempts').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  deliveredAt: timestamp('delivered_at'),
+}, (t) => [
+  index('idx_event_log_tenant').on(t.tenantId),
+  index('idx_event_log_status').on(t.deliveryStatus),
+]);
+
+// ============ MASTER DATA MANAGEMENT ============
+
+export const mdmEntities = table('mdm_entities', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  entityType: text('entity_type').notNull(), // 'customer'|'asset'|'location'|'vendor'
+  sourceSystem: text('source_system').notNull(),
+  sourceId: text('source_id').notNull(),
+  goldenRecord: jsonb('golden_record'), // merged fields
+  trustScore: integer('trust_score').default(50), // 0-100
+  status: text('status').notNull().default('active'), // 'active'|'merged'|'deleted'
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_mdm_entities_source').on(t.tenantId, t.sourceSystem, t.sourceId),
+  index('idx_mdm_entities_type').on(t.entityType),
+  index('idx_mdm_entities_status').on(t.status),
+]);
+
+export const mdmMatches = table('mdm_matches', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  entityAId: integer('entity_a_id').notNull(),
+  entityBId: integer('entity_b_id').notNull(),
+  similarityScore: integer('similarity_score'), // 0-100
+  matchType: text('match_type').notNull(), // 'phonetic'|'fuzzy'|'exact'
+  autoApproved: boolean('auto_approved').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_mdm_matches_tenant').on(t.tenantId),
+  index('idx_mdm_matches_score').on(t.similarityScore),
+]);
+
+export const mdmMerges = table('mdm_merges', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  winningEntityId: integer('winning_entity_id').notNull(),
+  losingEntityId: integer('losing_entity_id').notNull(),
+  mergeData: jsonb('merge_data'), // { fieldName: { fromValue, toValue } }
+  approvedBy: varchar('approved_by'),
+  approvedAt: timestamp('approved_at'),
+  reversibleUntil: timestamp('reversible_until'),
+  isReversed: boolean('is_reversed').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_mdm_merges_tenant').on(t.tenantId),
+  index('idx_mdm_merges_winning').on(t.winningEntityId),
+]);
+
+export const mdmRules = table('mdm_rules', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  entityType: text('entity_type').notNull(),
+  survivorshipRule: text('survivorship_rule').notNull(), // 'priority'|'most_recent'|'longest'
+  matchThreshold: integer('match_threshold').default(75), // minimum similarity %
+  blockingKeys: jsonb('blocking_keys'), // fields that must match exactly
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_mdm_rules_tenant_type').on(t.tenantId, t.entityType),
+]);
+
+// ============ IDENTITY & ACCESS - SSO/MFA/ABAC ============
+
+export const ssoProviders = table('sso_providers', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  providerType: text('provider_type').notNull(), // 'oidc'|'saml'
+  providerName: text('provider_name').notNull(),
+  issuer: text('issuer').notNull(),
+  clientId: text('client_id').notNull(),
+  clientSecret: text('client_secret').notNull(),
+  authorizationEndpoint: text('authorization_endpoint'),
+  tokenEndpoint: text('token_endpoint'),
+  userInfoEndpoint: text('user_info_endpoint'),
+  certificate: text('certificate'), // for SAML
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_sso_providers_tenant_issuer').on(t.tenantId, t.issuer),
+  index('idx_sso_providers_active').on(t.isActive),
+]);
+
+export const mfaSettings = table('mfa_settings', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  enforcementPolicy: text('enforcement_policy').notNull(), // 'optional'|'recommended'|'required'
+  allowedMethods: jsonb('allowed_methods').notNull(), // ['totp', 'sms', 'email']
+  gracePeriodDays: integer('grace_period_days').default(7),
+  totpIssuer: text('totp_issuer').default('Water Utility MIS'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_mfa_settings_tenant').on(t.tenantId),
+]);
+
+export const abacPolicies = table('abac_policies', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  policyName: text('policy_name').notNull(),
+  description: text('description'),
+  effect: text('effect').notNull(), // 'allow'|'deny'
+  priority: integer('priority').default(100),
+  conditionJson: jsonb('condition_json').notNull(), // {attribute, operator, value}
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_abac_policies_tenant').on(t.tenantId),
+  index('idx_abac_policies_priority').on(t.priority),
+]);
+
+export const loginAudit = table('login_audit', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  userId: varchar('user_id').notNull(),
+  status: text('status').notNull(), // 'success'|'failed'|'mfa_required'
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  mfaUsed: boolean('mfa_used').notNull().default(false),
+  mfaMethod: text('mfa_method'), // 'totp'|'sms'|'email'
+  failureReason: text('failure_reason'),
+  timestamp: timestamp('timestamp').defaultNow(),
+}, (t) => [
+  index('idx_login_audit_tenant').on(t.tenantId),
+  index('idx_login_audit_user').on(t.userId),
+  index('idx_login_audit_timestamp').on(t.timestamp),
+]);
