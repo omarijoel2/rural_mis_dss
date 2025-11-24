@@ -36,7 +36,6 @@ export function AssetsPageWithForm() {
       return {
         data: [
           { id: 1, name: 'Lodwar Water Supply Scheme' },
-          { id: 2, name: 'Marsabit Town Water Scheme' },
         ],
       };
     },

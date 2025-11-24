@@ -16,11 +16,10 @@ export function SchemesPageEnhanced() {
     queryFn: async () => {
       const laravel = await schemesAPI.list();
       if (laravel) return laravel;
-      // Fallback to mock
+      // Fallback to mock - Single county per tenant (Multi-tenancy: Tenant can only see schemes from their assigned county)
       return {
         data: [
           { id: 1, code: 'TRK_LOD_001', name: 'Lodwar Water Supply Scheme', type: 'piped', status: 'active', county: 'Turkana', populationServed: 28000, connections: 5600 },
-          { id: 2, code: 'MRB_TN_001', name: 'Marsabit Town Water Scheme', type: 'piped', status: 'active', county: 'Marsabit', populationServed: 18000, connections: 3600 },
         ],
       };
     },
