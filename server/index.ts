@@ -41,6 +41,82 @@ app.get('/api/training/assessments', (req, res) => {
 });
 app.post('/api/training/assessments', (req, res) => { res.json({ id: 4, status: 'pending', message: 'Assessment recorded', ...req.body }); });
 
+// ============ AUTHENTICATION (Mock) ============
+app.get('/api/v1/auth/user', (req, res) => {
+  res.json({ 
+    id: 1,
+    name: 'Demo User',
+    email: 'demo@example.com',
+    tenant_id: 1,
+    permissions: ['*'],
+    authenticated: true
+  });
+});
+
+// ============ PHASE 3: PREDICTIVE ANALYTICS ============
+app.get('/api/core-ops/predictions/asset-failures', (req, res) => {
+  res.json({
+    data: [
+      { assetId: 'pump_001', failureProbability: 87, daysToFailure: 8, confidence: 0.92, riskLevel: 'high', recommendedAction: 'schedule_maintenance_today' },
+      { assetId: 'pump_003', failureProbability: 62, daysToFailure: 21, confidence: 0.85, riskLevel: 'medium', recommendedAction: 'monitor_closely' },
+    ]
+  });
+});
+
+app.get('/api/core-ops/predictions/nrw-anomalies', (req, res) => {
+  res.json({
+    data: [
+      { dmaId: 'dma_001', nrwPercentage: 35.2, baselineNrw: 28.5, anomalyScore: 0.87, leakDetected: true, estimatedLossMc: 450, estimatedCostPerDay: 2250, urgency: 'high' },
+    ]
+  });
+});
+
+app.get('/api/core-ops/predictions/demand-forecast/:schemeId', (req, res) => {
+  res.json({
+    data: [
+      { date: '2025-12-01', demand: 1200, lower: 1050, upper: 1350 },
+      { date: '2025-12-02', demand: 1350, lower: 1180, upper: 1520 },
+      { date: '2025-12-03', demand: 1100, lower: 950, upper: 1250 },
+    ]
+  });
+});
+
+app.get('/api/core-ops/predictions/pump-schedule', (req, res) => {
+  res.json({
+    data: [
+      { pumpId: 'pump_001', startTime: '22:00', endTime: '04:00', reason: 'off_peak_tariff', estimatedCost: 450 },
+      { pumpId: 'pump_002', startTime: '08:00', endTime: '10:00', reason: 'peak_demand', estimatedCost: 180 },
+    ]
+  });
+});
+
+app.get('/api/core-ops/predictions/outage-impact', (req, res) => {
+  res.json({
+    affectedConnections: 1240,
+    affectedPopulation: 6200,
+    impactScore: 72,
+    suggestedTiming: '2025-12-22 midnight (Sunday, lower demand)',
+  });
+});
+
+app.get('/api/core-ops/nrw/snapshots/:dmaId', (req, res) => {
+  res.json({
+    data: [
+      { date: '2025-11-24', nrw: 28.5, systemInput: 15000, billed: 10725, loss: 4275 },
+      { date: '2025-11-23', nrw: 27.2, systemInput: 14800, billed: 10778, loss: 4022 },
+    ]
+  });
+});
+
+app.get('/api/core-ops/interventions/:dmaId', (req, res) => {
+  res.json({
+    data: [
+      { id: '1', type: 'leak_detection', status: 'completed', startDate: '2025-11-01', endDate: '2025-11-20', cost: 125000, nrwReduction: 8 },
+      { id: '2', type: 'meter_audit', status: 'ongoing', startDate: '2025-11-15', estimatedCost: 85000 },
+    ]
+  });
+});
+
 app.use('/api', createProxyMiddleware({
   target: 'http://127.0.0.1:8000',
   changeOrigin: true,
