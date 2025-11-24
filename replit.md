@@ -24,9 +24,11 @@ This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-
 - **20+ Missing Tables**: Schemes, DMAs, Assets, Telemetry, NRW, Outages, Dosing, Scheduling, Meters, Leak/Pressure reports
 - **40+ API Endpoints**: Full CRUD + operational features (trace, ingest, scheduling, console)
 - **12+ React Pages**: Scheme registry, topology viewer, telemetry dashboard, operations console, outage planner, dosing control
-- **Estimated Timeline**: 8-10 weeks (305+ hours) for complete implementation
-- **See:** CORE_REGISTRY_GAP_ANALYSIS.md + INCEPTION_REPORT_ALIGNMENT.md for specifications
-- **Status:** Ready for implementation with stakeholder clarifications
+- **Predictive Analytics**: Asset failure prediction, NRW anomaly detection, demand forecasting, pump optimization, outage impact prediction
+- **Estimated Timeline**: 10-11 weeks (310+ hours) for complete implementation with predictive ML
+- **Estimated Cost**: $21,300 dev (from $18,300) + $3,000/year infrastructure
+- **See:** CORE_REGISTRY_GAP_ANALYSIS.md + INCEPTION_REPORT_ALIGNMENT.md + PREDICTIVE_ANALYTICS_MVP.md for specifications
+- **Status:** Ready for implementation with predictive analytics in MVP
 
 # User Preferences
 
