@@ -141,6 +141,16 @@ import { AssetsPageWithForm } from './pages/core-registry/AssetsPageWithForm';
 import { TelemetryPageWithForms } from './pages/core-ops/operations/TelemetryPageWithForms';
 import { OutagePlannerWithForm } from './pages/core-ops/operations/OutagePlannerWithForm';
 import { NetworkMapPage } from './pages/core-ops/operations/NetworkMapPage';
+import { RiskComplianceLayout } from './components/layouts/RiskComplianceLayout';
+import { RiskComplianceHome } from './pages/risk-compliance/RiskComplianceHome';
+import { RiskRegisterPage } from './pages/risk-compliance/RiskRegisterPage';
+import { IncidentsPage } from './pages/risk-compliance/IncidentsPage';
+import { BCPPage } from './pages/risk-compliance/BCPPage';
+import { RegulatoryReportingPage } from './pages/risk-compliance/RegulatoryReportingPage';
+import { PoliciesPage } from './pages/risk-compliance/PoliciesPage';
+import { InternalAuditPage } from './pages/risk-compliance/AuditPage';
+import { HSEPage } from './pages/risk-compliance/HSEPage';
+import { DPOPage } from './pages/risk-compliance/DPOPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -799,6 +809,59 @@ export function AppMIS() {
                 <Route path="droughts" element={
                   <ProtectedRoute requiredPermission="core_ops.view_operations">
                     <DroughtResponsePage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+
+              <Route path="/risk-compliance" element={
+                <ProtectedRoute>
+                  <RiskComplianceLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/risk-compliance/home" replace />} />
+                <Route path="home" element={
+                  <ProtectedRoute requiredPermission="risk.view">
+                    <RiskComplianceHome />
+                  </ProtectedRoute>
+                } />
+                <Route path="risks" element={
+                  <ProtectedRoute requiredPermission="risk.view">
+                    <RiskRegisterPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="incidents" element={
+                  <ProtectedRoute requiredPermission="compliance.view">
+                    <IncidentsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="bcp" element={
+                  <ProtectedRoute requiredPermission="compliance.view">
+                    <BCPPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="regulatory-reporting" element={
+                  <ProtectedRoute requiredPermission="compliance.view">
+                    <RegulatoryReportingPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="policies" element={
+                  <ProtectedRoute requiredPermission="compliance.view">
+                    <PoliciesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="audit" element={
+                  <ProtectedRoute requiredPermission="audit.view">
+                    <InternalAuditPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="hse" element={
+                  <ProtectedRoute requiredPermission="hse.view">
+                    <HSEPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="dpo" element={
+                  <ProtectedRoute requiredPermission="compliance.dpo">
+                    <DPOPage />
                   </ProtectedRoute>
                 } />
               </Route>

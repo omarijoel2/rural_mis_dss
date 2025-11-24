@@ -56,7 +56,9 @@ import {
   BookOpen,
   AlertCircle,
   GitBranch,
-  Trophy
+  Trophy,
+  CheckCircle2,
+  Gavel
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -261,6 +263,23 @@ const moduleNavigation = [
       { name: 'Aquifer Dashboard', href: '/dsa/aquifer', icon: Droplet },
       { name: 'Tariff Sandbox', href: '/dsa/tariffs', icon: DollarSign },
       { name: 'EWS Console', href: '/dsa/ews', icon: Bell },
+    ]
+  },
+  {
+    name: 'Risk, Compliance & Governance',
+    href: '/risk-compliance',
+    icon: Gavel,
+    color: 'text-orange-500',
+    subPages: [
+      { name: 'Dashboard', href: '/risk-compliance/home', icon: Activity },
+      { name: 'Risk Register', href: '/risk-compliance/risks', icon: AlertTriangle },
+      { name: 'Incidents & Issues', href: '/risk-compliance/incidents', icon: Shield },
+      { name: 'Business Continuity', href: '/risk-compliance/bcp', icon: CheckCircle2 },
+      { name: 'Regulatory Reporting', href: '/risk-compliance/regulatory-reporting', icon: FileText },
+      { name: 'Policies & SOPs', href: '/risk-compliance/policies', icon: BookOpen },
+      { name: 'Internal Audit', href: '/risk-compliance/audit', icon: FileText },
+      { name: 'HSE', href: '/risk-compliance/hse', icon: Shield },
+      { name: 'Data Privacy (DPO)', href: '/risk-compliance/dpo', icon: Lock },
     ]
   },
   {
