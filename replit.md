@@ -149,3 +149,23 @@ A comprehensive shape file and vector file management system supports uploading,
 - **Mobile Libraries**: React Native, Expo, Expo Router, NativeWind, WatermelonDB, Expo SecureStore, Expo LocalAuthentication.
 - **Development Tools**: Vite, esbuild, PostCSS, Autoprefixer, TailwindCSS, EAS Build.
 - **Integrations**: SendGrid (email), Twilio (SMS), EAS (native app deployment).
+## Integration & Platform Services Module (NEW - Phase 1 MVP - Nov 24 2025)
+
+**Status:** Phase 1 Critical Components LIVE
+- ✅ API Gateway tables (api_keys, oauth_clients, webhooks, api_audit_log)
+- ✅ Event Bus tables (event_topics, event_subscriptions, event_log)
+- ✅ Master Data Management tables (mdm_entities, mdm_matches, mdm_merges, mdm_rules)
+- ✅ SSO/Identity tables (sso_providers, mfa_settings, abac_policies, login_audit)
+
+**UI Pages Created:**
+1. API Catalog & Key Management (`/integration/api`) - Generate, rotate, manage API keys and OAuth clients
+2. Master Data Management Entity Hubs (`/integration/mdm`) - Deduplicate and merge golden records
+3. SSO & Identity Configuration (`/integration/sso`) - Configure OIDC/SAML, MFA, ABAC policies
+
+**Database Schema:** 20 new tables added to Phase 1 (API Gateway + Event Bus + MDM + SSO)
+**Implementation Time:** ~12 hours for MVP critical path
+**Remaining Phases:** 
+- Phase 2 (Weeks 1.5-2.5): Data Warehouse, EDRMS, Advanced Notifications
+- Phase 3 (Weeks 2.5-4): Device Registry, Observability, Backup/DR, Secrets Vault
+
+**Gap Analysis Document:** INTEGRATION_GAP_ANALYSIS.md (comprehensive 7-section roadmap)

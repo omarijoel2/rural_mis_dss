@@ -73,6 +73,9 @@ import { UsersManagement } from './pages/admin/UsersManagement';
 import { RolesPermissions } from './pages/admin/rbac/RolesPermissions';
 import { PermissionMatrix } from './pages/admin/rbac/PermissionMatrix';
 import { AuditLogs } from './pages/admin/AuditLogs';
+import { ApiCatalogPage } from './pages/integration/ApiCatalogPage';
+import { MdmEntityHubsPage } from './pages/integration/MdmEntityHubsPage';
+import { SsoConfigPage } from './pages/integration/SsoConfigPage';
 import { APICatalog } from './pages/integration/APICatalog';
 import { ConnectorGallery } from './pages/integration/ConnectorGallery';
 import { WebhookManager } from './pages/integration/WebhookManager';
@@ -924,7 +927,17 @@ export function AppMIS() {
                 <Route index element={<Navigate to="/integration/api" replace />} />
                 <Route path="api" element={
                   <ProtectedRoute requiredPermission="integration.api.view">
-                    <APICatalog />
+                    <ApiCatalogPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="mdm" element={
+                  <ProtectedRoute requiredPermission="integration.mdm.view">
+                    <MdmEntityHubsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="sso" element={
+                  <ProtectedRoute requiredPermission="integration.sso.view">
+                    <SsoConfigPage />
                   </ProtectedRoute>
                 } />
                 <Route path="connectors" element={
