@@ -868,3 +868,35 @@ export const interventions = table('interventions', {
   index('idx_int_dma').on(t.dmaId),
   index('idx_int_status').on(t.status),
 ]);
+
+// ============ SETTINGS & CONFIGURATION ============
+
+export const moduleSettings = table('module_settings', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  moduleKey: text('module_key').notNull(), // 'core-registry', 'core-ops', 'crm', 'risk-compliance', etc.
+  moduleName: text('module_name').notNull(),
+  isEnabled: boolean('is_enabled').notNull().default(true),
+  description: text('description'),
+  icon: text('icon'),
+  order: integer('order').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_module_settings_tenant_key').on(t.tenantId, t.moduleKey),
+  index('idx_module_settings_enabled').on(t.isEnabled),
+]);
+
+export const roleModuleAccess = table('role_module_access', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  roleId: varchar('role_id').notNull(),
+  moduleKey: text('module_key').notNull(), // references moduleSettings.moduleKey
+  hasAccess: boolean('has_access').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_role_module_access_tenant_role_module').on(t.tenantId, t.roleId, t.moduleKey),
+  index('idx_role_module_access_role').on(t.roleId),
+  index('idx_role_module_access_module').on(t.moduleKey),
+]);
