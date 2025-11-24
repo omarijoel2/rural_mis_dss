@@ -68,6 +68,7 @@ const moduleNavigation = [
     subPages: [
       { name: 'Home', href: '/core' },
       { name: 'Schemes', href: '/core/schemes' },
+      { name: 'Assets', href: '/core/assets' },
       { name: 'Facilities', href: '/core/facilities' },
       { name: 'DMAs', href: '/core/dmas' },
       { name: 'Pipelines', href: '/core/pipelines' },
