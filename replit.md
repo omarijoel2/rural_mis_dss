@@ -10,6 +10,15 @@ This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-
 - **Gender & Equity Reporting**: Gender-disaggregated water access metrics, vulnerable group segmentation, and equity outcome dashboards
 - **Capacity Assessment Framework**: Operator competency evaluation, certification tracking, and training impact measurement
 
+**NEW (Settings & Configuration Module - Nov 24 2025)**:
+- **Module Management**: Admin can enable/disable any of 14 modules from single dashboard
+- **Role-Based Menu Access Control**: Admin defines which modules each role (Admin, Manager, Operator, Analyst, Viewer) can access
+- **Database Tables**: `moduleSettings` (tenant-scoped module enablement) + `roleModuleAccess` (role-module permissions)
+- **React Hook**: `useAvailableModules()` checks both module settings and role permissions for dynamic sidebar filtering
+- **Pages Created**: SettingsPage (module toggles), RoleMenuAccessPage (role-module matrix)
+- **Sidebar Integration**: "Module Settings" and "Role & Menu Access" added to Admin menu
+- **Multi-Tenancy**: Each tenant manages their own module enablement independently
+
 **NEW (Community & Stakeholder Module - Phase 1, Nov 23 2025)**:
 - **13 Drizzle ORM Tables**: Committees, members, meetings, cashbook, audits, vendors, bids, deliveries, invoices, stakeholders, engagements, grievances, datasets
 - **15 API Endpoints**: Mock endpoints for committees, finance, vendors, bids, grievances, stakeholders, engagements, open data

@@ -151,6 +151,8 @@ import { PoliciesPage } from './pages/risk-compliance/PoliciesPage';
 import { InternalAuditPage } from './pages/risk-compliance/AuditPage';
 import { HSEPage } from './pages/risk-compliance/HSEPage';
 import { DPOPage } from './pages/risk-compliance/DPOPage';
+import { SettingsPage } from './pages/admin/SettingsPage';
+import { RoleMenuAccessPage } from './pages/admin/RoleMenuAccessPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -900,6 +902,16 @@ export function AppMIS() {
                 <Route path="security/api-keys" element={
                   <ProtectedRoute requiredPermission="security.view">
                     <ApiKeysPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="settings" element={
+                  <ProtectedRoute requiredPermission="settings.manage">
+                    <SettingsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="rbac/menu-access" element={
+                  <ProtectedRoute requiredPermission="rbac.manage">
+                    <RoleMenuAccessPage />
                   </ProtectedRoute>
                 } />
               </Route>

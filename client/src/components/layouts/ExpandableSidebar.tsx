@@ -308,7 +308,9 @@ const moduleNavigation = [
     subPages: [
       { name: 'Users Management', href: '/admin/users', icon: Users },
       { name: 'Roles & Permissions', href: '/admin/rbac/roles', icon: Key },
+      { name: 'Role & Menu Access', href: '/admin/rbac/menu-access', icon: Shield },
       { name: 'Permission Matrix', href: '/admin/rbac/matrix', icon: Settings },
+      { name: 'Module Settings', href: '/admin/settings', icon: Zap },
       { name: 'Audit Logs', href: '/admin/audit', icon: FileText },
       { name: 'Security Alerts', href: '/admin/security/alerts', icon: AlertTriangle },
       { name: 'API Keys', href: '/admin/security/api-keys', icon: Lock },
