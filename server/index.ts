@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { registerRoutes } from "./routes";
+import { registerCoreRegistryRoutes } from "./routes/core-registry";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -117,6 +118,9 @@ app.get('/api/core-ops/interventions/:dmaId', (req, res) => {
   });
 });
 
+// ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
+registerCoreRegistryRoutes(app);
+
 app.use('/api', createProxyMiddleware({
   target: 'http://127.0.0.1:8000',
   changeOrigin: true,
@@ -205,3 +209,6 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
+
+// Register Phase 1-2 routes (core-registry must be after predictions but before proxy)
+// This will be inserted during app startup
