@@ -1144,3 +1144,324 @@ export const loginAudit = table('login_audit', {
   index('idx_login_audit_user').on(t.userId),
   index('idx_login_audit_timestamp').on(t.timestamp),
 ]);
+
+// ============ PHASE 2: EDRMS, DATA WAREHOUSE & LINEAGE, NOTIFICATIONS ============
+
+// EDRMS (Electronic Document Records Management System)
+export const documents = table('documents', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  documentId: text('document_id').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  documentType: text('document_type').notNull(), // 'contract'|'report'|'policy'|'procedure'
+  fileSize: integer('file_size'),
+  mimeType: text('mime_type'),
+  storageUrl: text('storage_url'),
+  version: integer('version').default(1),
+  status: text('status').notNull().default('active'), // 'active'|'archived'|'deleted'
+  retentionSchedule: text('retention_schedule'),
+  createdById: varchar('created_by_id'),
+  lastModifiedById: varchar('last_modified_by_id'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_document_tenant_id').on(t.tenantId, t.documentId),
+  index('idx_document_type').on(t.documentType),
+  index('idx_document_status').on(t.status),
+  index('idx_document_created').on(t.createdAt),
+]);
+
+export const documentVersions = table('document_versions', {
+  id: serial('id').primaryKey(),
+  documentId: integer('document_id').notNull(),
+  version: integer('version').notNull(),
+  fileName: text('file_name').notNull(),
+  fileUrl: text('file_url').notNull(),
+  uploadedBy: varchar('uploaded_by_id'),
+  changeLog: text('change_log'),
+  uploadedAt: timestamp('uploaded_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_doc_version_unique').on(t.documentId, t.version),
+]);
+
+export const documentLineage = table('document_lineage', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  sourceDocumentId: integer('source_document_id').notNull(),
+  relatedDocumentId: integer('related_document_id').notNull(),
+  relationshipType: text('relationship_type').notNull(), // 'parent'|'derived'|'referenced'|'amended'
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_doc_lineage_source').on(t.sourceDocumentId),
+  index('idx_doc_lineage_related').on(t.relatedDocumentId),
+]);
+
+// Data Warehouse & Lineage
+export const dataWarehouseTables = table('dw_tables', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  tableId: text('table_id').notNull(),
+  tableName: text('table_name').notNull(),
+  schema: text('schema').notNull(), // 'raw'|'staging'|'mart'
+  description: text('description'),
+  sourceSystem: text('source_system'),
+  rowCount: integer('row_count'),
+  lastRefreshed: timestamp('last_refreshed'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_dw_table_tenant_id').on(t.tenantId, t.tableId),
+  index('idx_dw_schema').on(t.schema),
+]);
+
+export const dataLineage = table('data_lineage', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  sourceTableId: integer('source_table_id').notNull(),
+  targetTableId: integer('target_table_id').notNull(),
+  transformationType: text('transformation_type').notNull(), // 'etl'|'aggregate'|'join'|'filter'
+  transformationLogic: jsonb('transformation_logic'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_lineage_unique').on(t.sourceTableId, t.targetTableId),
+  index('idx_lineage_source').on(t.sourceTableId),
+  index('idx_lineage_target').on(t.targetTableId),
+]);
+
+export const dataQualityMetrics = table('data_quality_metrics', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  tableId: integer('table_id').notNull(),
+  metricType: text('metric_type').notNull(), // 'completeness'|'accuracy'|'timeliness'|'consistency'
+  metricValue: integer('metric_value').notNull(),
+  threshold: integer('threshold'),
+  status: text('status').notNull(), // 'pass'|'warning'|'fail'
+  lastCheckedAt: timestamp('last_checked_at').defaultNow(),
+}, (t) => [
+  index('idx_dq_table').on(t.tableId),
+  index('idx_dq_status').on(t.status),
+]);
+
+// Advanced Notifications
+export const notificationChannels = table('notification_channels', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  channelName: text('channel_name').notNull(),
+  channelType: text('channel_type').notNull(), // 'email'|'sms'|'slack'|'webhook'|'push'
+  configuration: jsonb('configuration').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_channel_tenant_name').on(t.tenantId, t.channelName),
+  index('idx_channel_type').on(t.channelType),
+]);
+
+export const notificationTemplates = table('notification_templates', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  templateKey: text('template_key').notNull(),
+  templateName: text('template_name').notNull(),
+  subject: text('subject'),
+  body: text('body').notNull(),
+  variables: jsonb('variables'), // {field_name, data_type, required}
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_template_tenant_key').on(t.tenantId, t.templateKey),
+]);
+
+export const notificationQueue = table('notification_queue', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  templateId: integer('template_id').notNull(),
+  channelId: integer('channel_id').notNull(),
+  recipient: text('recipient').notNull(),
+  payload: jsonb('payload').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending'|'sent'|'failed'|'retry'
+  attempts: integer('attempts').default(0),
+  lastAttempt: timestamp('last_attempt'),
+  nextRetry: timestamp('next_retry'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_notif_queue_tenant').on(t.tenantId),
+  index('idx_notif_queue_status').on(t.status),
+  index('idx_notif_queue_next_retry').on(t.nextRetry),
+]);
+
+// ============ PHASE 3: DEVICE REGISTRY, OBSERVABILITY, BACKUP/DR, SECRETS ============
+
+// Device Registry & Offline Sync
+export const deviceRegistry = table('device_registry', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  deviceId: text('device_id').notNull(),
+  deviceName: text('device_name').notNull(),
+  deviceType: text('device_type').notNull(), // 'mobile'|'tablet'|'iot'|'sensor'|'gateway'
+  osType: text('os_type'), // 'ios'|'android'|'linux'|'windows'
+  osVersion: text('os_version'),
+  appVersion: text('app_version'),
+  serialNumber: text('serial_number').unique(),
+  location: text('location'),
+  status: text('status').notNull().default('active'), // 'active'|'inactive'|'offline'|'lost'
+  lastSyncedAt: timestamp('last_synced_at'),
+  lastLocationUpdate: timestamp('last_location_update'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_device_tenant_id').on(t.tenantId, t.deviceId),
+  index('idx_device_type').on(t.deviceType),
+  index('idx_device_status').on(t.status),
+]);
+
+export const offlineSyncQueue = table('offline_sync_queue', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  deviceId: integer('device_id').notNull(),
+  operation: text('operation').notNull(), // 'create'|'update'|'delete'
+  entityType: text('entity_type').notNull(),
+  entityId: text('entity_id').notNull(),
+  payload: jsonb('payload').notNull(),
+  syncStatus: text('sync_status').notNull().default('pending'), // 'pending'|'synced'|'conflict'|'failed'
+  conflictResolution: text('conflict_resolution'), // 'server'|'device'|'merge'
+  createdAt: timestamp('created_at').defaultNow(),
+  syncedAt: timestamp('synced_at'),
+}, (t) => [
+  index('idx_sync_device').on(t.deviceId),
+  index('idx_sync_status').on(t.syncStatus),
+]);
+
+// Observability & Ops Dashboard
+export const metricsCollection = table('metrics_collection', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  metricName: text('metric_name').notNull(),
+  metricType: text('metric_type').notNull(), // 'counter'|'gauge'|'histogram'|'summary'
+  labels: jsonb('labels'),
+  value: integer('value'),
+  timestamp: timestamp('timestamp').defaultNow(),
+}, (t) => [
+  index('idx_metrics_tenant').on(t.tenantId),
+  index('idx_metrics_name').on(t.metricName),
+  index('idx_metrics_timestamp').on(t.timestamp),
+]);
+
+export const alertPolicies = table('alert_policies', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  policyName: text('policy_name').notNull(),
+  description: text('description'),
+  condition: jsonb('condition').notNull(), // {metric, operator, threshold}
+  severity: text('severity').notNull(), // 'info'|'warning'|'critical'
+  isActive: boolean('is_active').notNull().default(true),
+  notificationChannels: jsonb('notification_channels'), // [channel_id, ...]
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_alert_tenant').on(t.tenantId),
+  index('idx_alert_severity').on(t.severity),
+]);
+
+export const alertIncidents = table('alert_incidents', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  policyId: integer('policy_id').notNull(),
+  status: text('status').notNull().default('open'), // 'open'|'acknowledged'|'resolved'
+  severity: text('severity').notNull(),
+  message: text('message'),
+  firedAt: timestamp('fired_at').defaultNow(),
+  acknowledgedAt: timestamp('acknowledged_at'),
+  resolvedAt: timestamp('resolved_at'),
+}, (t) => [
+  index('idx_incident_tenant').on(t.tenantId),
+  index('idx_incident_status').on(t.status),
+  index('idx_incident_fired').on(t.firedAt),
+]);
+
+// Backup & Disaster Recovery
+export const backupPolicies = table('backup_policies', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  policyName: text('policy_name').notNull(),
+  description: text('description'),
+  backupType: text('backup_type').notNull(), // 'full'|'incremental'|'differential'|'snapshot'
+  schedule: text('schedule').notNull(), // cron expression
+  retentionDays: integer('retention_days').notNull(),
+  targetLocation: text('target_location').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_backup_policy_tenant_name').on(t.tenantId, t.policyName),
+]);
+
+export const backupJobs = table('backup_jobs', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  policyId: integer('policy_id').notNull(),
+  jobId: text('job_id').notNull(),
+  status: text('status').notNull().default('scheduled'), // 'scheduled'|'running'|'completed'|'failed'
+  dataSize: integer('data_size'),
+  backupSize: integer('backup_size'),
+  duration: integer('duration'), // seconds
+  startedAt: timestamp('started_at'),
+  completedAt: timestamp('completed_at'),
+  errorMessage: text('error_message'),
+}, (t) => [
+  index('idx_backup_job_tenant').on(t.tenantId),
+  index('idx_backup_job_status').on(t.status),
+]);
+
+export const disasterRecoveryPlans = table('dr_plans', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  planName: text('plan_name').notNull(),
+  description: text('description'),
+  rtoSeconds: integer('rto_seconds'), // Recovery Time Objective
+  rpoSeconds: integer('rpo_seconds'), // Recovery Point Objective
+  criticalServices: jsonb('critical_services'), // list of service names
+  recoverySteps: jsonb('recovery_steps'), // ordered steps for recovery
+  isActive: boolean('is_active').notNull().default(true),
+  lastTestedAt: timestamp('last_tested_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_dr_plan_tenant_name').on(t.tenantId, t.planName),
+]);
+
+// Secrets Vault
+export const secretsVault = table('secrets_vault', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  secretKey: text('secret_key').notNull(),
+  secretType: text('secret_type').notNull(), // 'api_key'|'password'|'token'|'certificate'|'connection_string'
+  encryptedValue: text('encrypted_value').notNull(),
+  encryptionMethod: text('encryption_method').notNull().default('AES-256-GCM'),
+  rotationSchedule: text('rotation_schedule'), // cron expression
+  lastRotated: timestamp('last_rotated'),
+  expiresAt: timestamp('expires_at'),
+  ownerTeam: text('owner_team'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  uniqueIndex('idx_secret_tenant_key').on(t.tenantId, t.secretKey),
+  index('idx_secret_type').on(t.secretType),
+  index('idx_secret_expires').on(t.expiresAt),
+]);
+
+export const secretAccessAudit = table('secret_access_audit', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  secretId: integer('secret_id').notNull(),
+  accessedBy: varchar('accessed_by_id').notNull(),
+  accessType: text('access_type').notNull(), // 'read'|'write'|'rotate'|'delete'
+  ipAddress: text('ip_address'),
+  requestId: text('request_id'),
+  timestamp: timestamp('timestamp').defaultNow(),
+}, (t) => [
+  index('idx_secret_audit_tenant').on(t.tenantId),
+  index('idx_secret_audit_secret').on(t.secretId),
+  index('idx_secret_audit_timestamp').on(t.timestamp),
+]);

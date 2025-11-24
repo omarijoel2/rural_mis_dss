@@ -76,6 +76,13 @@ import { AuditLogs } from './pages/admin/AuditLogs';
 import { ApiCatalogPage } from './pages/integration/ApiCatalogPage';
 import { MdmEntityHubsPage } from './pages/integration/MdmEntityHubsPage';
 import { SsoConfigPage } from './pages/integration/SsoConfigPage';
+import { EdRmsPage } from './pages/integration/EdRmsPage';
+import { DataWarehousePage } from './pages/integration/DataWarehousePage';
+import { NotificationsPage } from './pages/integration/NotificationsPage';
+import { DeviceRegistryPage } from './pages/integration/DeviceRegistryPage';
+import { ObservabilityPage } from './pages/integration/ObservabilityPage';
+import { BackupDrPage } from './pages/integration/BackupDrPage';
+import { SecretsVaultPage } from './pages/integration/SecretsVaultPage';
 import { APICatalog } from './pages/integration/APICatalog';
 import { ConnectorGallery } from './pages/integration/ConnectorGallery';
 import { WebhookManager } from './pages/integration/WebhookManager';
@@ -940,6 +947,41 @@ export function AppMIS() {
                     <SsoConfigPage />
                   </ProtectedRoute>
                 } />
+                <Route path="edrms" element={
+                  <ProtectedRoute requiredPermission="integration.edrms.view">
+                    <EdRmsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="dw-lineage" element={
+                  <ProtectedRoute requiredPermission="integration.dw.view">
+                    <DataWarehousePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="notifications" element={
+                  <ProtectedRoute requiredPermission="integration.notifications.view">
+                    <NotificationsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="devices" element={
+                  <ProtectedRoute requiredPermission="integration.devices.view">
+                    <DeviceRegistryPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="observability" element={
+                  <ProtectedRoute requiredPermission="integration.observability.view">
+                    <ObservabilityPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="backup-dr" element={
+                  <ProtectedRoute requiredPermission="integration.backup.view">
+                    <BackupDrPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="secrets" element={
+                  <ProtectedRoute requiredPermission="integration.secrets.view">
+                    <SecretsVaultPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="connectors" element={
                   <ProtectedRoute requiredPermission="integration.connectors.view">
                     <ConnectorGallery />
@@ -953,11 +995,6 @@ export function AppMIS() {
                 <Route path="etl" element={
                   <ProtectedRoute requiredPermission="integration.etl.view">
                     <ETLJobs />
-                  </ProtectedRoute>
-                } />
-                <Route path="dw" element={
-                  <ProtectedRoute requiredPermission="integration.dw.view">
-                    <DataWarehouse />
                   </ProtectedRoute>
                 } />
                 <Route path="comms" element={
