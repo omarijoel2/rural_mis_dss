@@ -3,22 +3,37 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, Copy, RotateCw, Trash2, Plus, AlertCircle } from 'lucide-react';
+import { getSecretAuditLog } from '@/services/integrationApi';
 
 export function SecretsVaultPage() {
-  const [secrets] = useState([
+  const [secrets, setSecrets] = useState([
     { id: 1, key: 'SENDGRID_API_KEY', type: 'api_key', owner: 'Integrations', expiresIn: '45 days', lastRotated: '2025-10-01' },
     { id: 2, key: 'DATABASE_PASSWORD', type: 'password', owner: 'Database', expiresIn: 'Never', lastRotated: '2025-06-15' },
     { id: 3, key: 'TWILIO_AUTH_TOKEN', type: 'token', owner: 'Communications', expiresIn: '30 days', lastRotated: '2025-11-01' },
     { id: 4, key: 'SSL_CERTIFICATE', type: 'certificate', owner: 'Infrastructure', expiresIn: '60 days', lastRotated: 'N/A' },
   ]);
 
-  const [accessLog] = useState([
+  const [accessLog, setAccessLog] = useState([
     { id: 1, secret: 'SENDGRID_API_KEY', accessedBy: 'admin@example.com', type: 'read', timestamp: '2025-11-24T14:32:00Z', ip: '192.168.1.1' },
     { id: 2, secret: 'DATABASE_PASSWORD', accessedBy: 'backup-service', type: 'read', timestamp: '2025-11-24T10:00:00Z', ip: '10.0.0.5' },
     { id: 3, secret: 'TWILIO_AUTH_TOKEN', accessedBy: 'notifications-service', type: 'read', timestamp: '2025-11-24T15:20:00Z', ip: '10.0.1.3' },
   ]);
+
+  useEffect(() => {
+    const loadAuditLog = async () => {
+      try {
+        const result = await getSecretAuditLog();
+        if (result.success && result.logs) {
+          setAccessLog(result.logs);
+        }
+      } catch (error) {
+        console.error('Failed to load audit log:', error);
+      }
+    };
+    loadAuditLog();
+  }, []);
 
   const [showSecrets, setShowSecrets] = useState<Record<number, boolean>>({});
   const [searchTerm, setSearchTerm] = useState('');

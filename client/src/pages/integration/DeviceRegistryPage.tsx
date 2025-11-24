@@ -2,11 +2,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Smartphone, Wifi, WifiOff, MapPin, Plus, Trash2, Settings } from 'lucide-react';
+import { listDevices } from '@/services/integrationApi';
 
 export function DeviceRegistryPage() {
-  const [devices] = useState([
+  const [devices, setDevices] = useState([
     { 
       id: 1, 
       name: 'Field Device-001', 
@@ -44,6 +45,20 @@ export function DeviceRegistryPage() {
     { id: 2, device: 'IoT Sensor-042', operation: 'update', entity: 'reading', status: 'pending' },
     { id: 3, device: 'Tablet-Ops', operation: 'delete', entity: 'ticket', status: 'conflict' },
   ]);
+
+  useEffect(() => {
+    const loadDevices = async () => {
+      try {
+        const result = await listDevices();
+        if (result.success && result.devices) {
+          setDevices(result.devices);
+        }
+      } catch (error) {
+        console.error('Failed to load devices:', error);
+      }
+    };
+    loadDevices();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
