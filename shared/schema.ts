@@ -498,6 +498,280 @@ export const datasets = table('datasets', {
   index('idx_dataset_visibility').on(t.visibility),
 ]);
 
+// ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ============
+
+// Phase 1: Schemes & Topology
+export const schemes = table('schemes', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  code: text('code').notNull().unique(),
+  name: text('name').notNull(),
+  type: text('type').notNull(), // 'piped'|'handpump'|'borehole'|'spring'
+  status: text('status').notNull().default('active'), // 'planning'|'active'|'suspended'|'decommissioned'
+  ownership: text('ownership').notNull().default('public'), // 'public'|'private'|'community'
+  county: text('county'),
+  subcounty: text('subcounty'),
+  populationServed: integer('population_served'),
+  connections: integer('connections'),
+  designCapacityM3: integer('design_capacity_m3'),
+  sourceType: text('source_type'), // 'groundwater'|'surface'|'rainwater'
+  administrationNotes: text('administration_notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_scheme_tenant').on(t.tenantId),
+  index('idx_scheme_code').on(t.code),
+  index('idx_scheme_status').on(t.status),
+]);
+
+export const dmas = table('dmas', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: integer('scheme_id').notNull(),
+  code: text('code').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_dma_tenant').on(t.tenantId),
+  index('idx_dma_scheme').on(t.schemeId),
+]);
+
+export const networkNodes = table('network_nodes', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: integer('scheme_id').notNull(),
+  nodeType: text('node_type').notNull(), // 'source'|'reservoir'|'junction'|'treatment'|'pump_station'
+  code: text('code').notNull(),
+  name: text('name'),
+  latitude: text('latitude'),
+  longitude: text('longitude'),
+  elevation: integer('elevation'),
+  properties: jsonb('properties'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_node_tenant').on(t.tenantId),
+  index('idx_node_scheme').on(t.schemeId),
+  index('idx_node_type').on(t.nodeType),
+]);
+
+export const networkEdges = table('network_edges', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: integer('scheme_id').notNull(),
+  fromNodeId: integer('from_node_id').notNull(),
+  toNodeId: integer('to_node_id').notNull(),
+  assetId: integer('asset_id'),
+  edgeOrder: integer('edge_order'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_edge_tenant').on(t.tenantId),
+  index('idx_edge_scheme').on(t.schemeId),
+]);
+
+// Phase 1: Asset Types & Assets
+export const assetTypes = table('asset_types', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  jsonSchema: jsonb('json_schema'), // Dynamic field spec
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_assettype_tenant').on(t.tenantId),
+]);
+
+export const assets = table('assets', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  assetTypeId: integer('asset_type_id').notNull(),
+  schemeId: integer('scheme_id').notNull(),
+  code: text('code').notNull(),
+  name: text('name'),
+  status: text('status').notNull().default('operational'), // 'operational'|'faulty'|'maintenance'|'decommissioned'
+  condition: text('condition').default('good'), // 'good'|'fair'|'poor'|'critical'
+  latitude: text('latitude'),
+  longitude: text('longitude'),
+  specifications: jsonb('specifications'),
+  installationDate: timestamp('installation_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_asset_tenant').on(t.tenantId),
+  index('idx_asset_scheme').on(t.schemeId),
+  index('idx_asset_type').on(t.assetTypeId),
+  index('idx_asset_status').on(t.status),
+]);
+
+// Phase 1: Meters
+export const meters = table('meters', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  assetId: integer('asset_id').notNull(),
+  meterType: text('meter_type').notNull(), // 'consumer'|'bulk'|'point_of_use'
+  serialNumber: text('serial_number').notNull(),
+  accuracyClass: text('accuracy_class'), // 'Class A'|'Class B'
+  installationDate: timestamp('installation_date'),
+  lastReading: integer('last_reading'),
+  lastReadDate: timestamp('last_read_date'),
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_meter_tenant').on(t.tenantId),
+  index('idx_meter_asset').on(t.assetId),
+]);
+
+// Phase 2: Telemetry & SCADA
+export const telemetryTags = table('telemetry_tags', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  tag: text('tag').notNull().unique(),
+  ioType: text('io_type').notNull(), // 'AI'|'DI'|'AO'|'DO'
+  unit: text('unit'), // 'bar'|'lpm'|'m3'|'°C'|'on/off'
+  scale: jsonb('scale'), // {min, max, offset}
+  thresholds: jsonb('thresholds'), // {critical_low, warning_low, warning_high, critical_high}
+  assetId: integer('asset_id'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_telemetry_tenant').on(t.tenantId),
+  index('idx_telemetry_tag').on(t.tag),
+  index('idx_telemetry_asset').on(t.assetId),
+]);
+
+export const telemetryMeasurements = table('telemetry_measurements', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  telemetryTagId: integer('telemetry_tag_id').notNull(),
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  value: text('value').notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_measure_tenant').on(t.tenantId),
+  index('idx_measure_tag').on(t.telemetryTagId),
+  index('idx_measure_time').on(t.timestamp),
+]);
+
+// Phase 2: Pump Scheduling
+export const pumpSchedules = table('pump_schedules', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  assetId: integer('asset_id').notNull(),
+  startTime: timestamp('start_time').notNull(),
+  endTime: timestamp('end_time').notNull(),
+  constraints: jsonb('constraints'), // {reservoir_targets, tariff_bands, max_run_hours}
+  status: text('status').notNull().default('scheduled'), // 'scheduled'|'active'|'completed'
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_schedule_tenant').on(t.tenantId),
+  index('idx_schedule_asset').on(t.assetId),
+  index('idx_schedule_status').on(t.status),
+]);
+
+// Phase 2: Outages
+export const outages = table('outages', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: integer('scheme_id').notNull(),
+  cause: text('cause').notNull(), // 'planned'|'fault'|'water_quality'|'power'|'other'
+  state: text('state').notNull().default('draft'), // draft → approved → live → restored → closed
+  reason: text('reason'),
+  scheduledStart: timestamp('scheduled_start'),
+  scheduledEnd: timestamp('scheduled_end'),
+  actualStart: timestamp('actual_start'),
+  actualEnd: timestamp('actual_end'),
+  estimatedAffectedPopulation: integer('estimated_affected_population'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_outage_tenant').on(t.tenantId),
+  index('idx_outage_scheme').on(t.schemeId),
+  index('idx_outage_state').on(t.state),
+]);
+
+export const outageAudits = table('outage_audits', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  outageId: integer('outage_id').notNull(),
+  action: text('action').notNull(), // 'created'|'approved'|'activated'|'resolved'|'closed'
+  notes: text('notes'),
+  userId: varchar('user_id'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_outage_audit_tenant').on(t.tenantId),
+  index('idx_outage_audit_outage').on(t.outageId),
+]);
+
+// Phase 2: Dosing Control
+export const dosePlans = table('dose_plans', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: integer('scheme_id').notNull(),
+  assetId: integer('asset_id').notNull(),
+  flowBands: jsonb('flow_bands').notNull(), // [{min_lps, max_lps, target_mg_l}]
+  alarms: jsonb('alarms'), // {residual_low, residual_high, flow_high}
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_dose_tenant').on(t.tenantId),
+  index('idx_dose_scheme').on(t.schemeId),
+  index('idx_dose_asset').on(t.assetId),
+]);
+
+export const chemicalStocks = table('chemical_stocks', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: integer('scheme_id').notNull(),
+  chemical: text('chemical').notNull(), // 'alum'|'chlorine'|'lime'
+  quantityL: integer('quantity_l').notNull(),
+  unitCost: integer('unit_cost'),
+  supplier: text('supplier'),
+  expiryDate: timestamp('expiry_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_stock_tenant').on(t.tenantId),
+  index('idx_stock_scheme').on(t.schemeId),
+]);
+
+export const doseChangeLogs = table('dose_change_logs', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  dosePlanId: integer('dose_plan_id').notNull(),
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  oldDose: text('old_dose'),
+  newDose: text('new_dose').notNull(),
+  userId: varchar('user_id'),
+  reason: text('reason'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_doselog_tenant').on(t.tenantId),
+  index('idx_doselog_plan').on(t.dosePlanId),
+]);
+
+// Phase 2: Pressure & Leak Reports
+export const pressureLeakReports = table('pressure_leak_reports', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  dmaId: integer('dma_id').notNull(),
+  reportType: text('report_type').notNull(), // 'pressure_drop'|'leak_detected'|'burst'
+  severity: text('severity').notNull(), // 'low'|'medium'|'high'|'critical'
+  location: text('location'),
+  description: text('description'),
+  reportedAt: timestamp('reported_at').notNull(),
+  status: text('status').notNull().default('open'), // 'open'|'investigating'|'resolved'
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_report_tenant').on(t.tenantId),
+  index('idx_report_dma').on(t.dmaId),
+  index('idx_report_status').on(t.status),
+]);
+
 // ============ PHASE 3: PREDICTIVE ANALYTICS & ML ============
 
 export const predictions = table('predictions', {
