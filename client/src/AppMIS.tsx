@@ -137,8 +137,10 @@ import AquiferDashboardPage from './pages/dsa/AquiferDashboardPage';
 import TariffSandboxPage from './pages/dsa/TariffSandboxPage';
 import EWSConsolePage from './pages/dsa/EWSConsolePage';
 import { SchemesPageEnhanced } from './pages/core-registry/SchemesPageEnhanced';
-import { AssetsPageEnhanced } from './pages/core-registry/AssetsPageEnhanced';
-import { NetworkPage } from './pages/core-ops/operations/NetworkPage';
+import { AssetsPageWithForm } from './pages/core-registry/AssetsPageWithForm';
+import { TelemetryPageWithForms } from './pages/core-ops/operations/TelemetryPageWithForms';
+import { OutagePlannerWithForm } from './pages/core-ops/operations/OutagePlannerWithForm';
+import { NetworkMapPage } from './pages/core-ops/operations/NetworkMapPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -169,12 +171,7 @@ export function AppMIS() {
                 } />
                 <Route path="assets" element={
                   <ProtectedRoute requiredPermission="view assets">
-                    <AssetsPageEnhanced />
-                  </ProtectedRoute>
-                } />
-                <Route path="network" element={
-                  <ProtectedRoute requiredPermission="view schemes">
-                    <NetworkPage />
+                    <AssetsPageWithForm />
                   </ProtectedRoute>
                 } />
                 <Route path="facilities" element={
@@ -726,12 +723,17 @@ export function AppMIS() {
                 } />
                 <Route path="telemetry" element={
                   <ProtectedRoute requiredPermission="core_ops.view_telemetry">
-                    <TelemetryDashboard />
+                    <TelemetryPageWithForms />
+                  </ProtectedRoute>
+                } />
+                <Route path="network" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_topology">
+                    <NetworkMapPage />
                   </ProtectedRoute>
                 } />
                 <Route path="outages" element={
                   <ProtectedRoute requiredPermission="core_ops.view_outages">
-                    <OutagePlanner />
+                    <OutagePlannerWithForm />
                   </ProtectedRoute>
                 } />
                 <Route path="nrw" element={
