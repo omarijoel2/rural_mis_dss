@@ -136,6 +136,9 @@ import AnomaliesInboxPage from './pages/dsa/AnomaliesInboxPage';
 import AquiferDashboardPage from './pages/dsa/AquiferDashboardPage';
 import TariffSandboxPage from './pages/dsa/TariffSandboxPage';
 import EWSConsolePage from './pages/dsa/EWSConsolePage';
+import { SchemesPageEnhanced } from './pages/core-registry/SchemesPageEnhanced';
+import { AssetsPageEnhanced } from './pages/core-registry/AssetsPageEnhanced';
+import { NetworkPage } from './pages/core-ops/operations/NetworkPage';
 import NotFound from './pages/not-found';
 
 export function AppMIS() {
@@ -161,7 +164,17 @@ export function AppMIS() {
                 <Route index element={<CoreRegistryHome />} />
                 <Route path="schemes" element={
                   <ProtectedRoute requiredPermission="view schemes">
-                    <SchemesExplorerPage />
+                    <SchemesPageEnhanced />
+                  </ProtectedRoute>
+                } />
+                <Route path="assets" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <AssetsPageEnhanced />
+                  </ProtectedRoute>
+                } />
+                <Route path="network" element={
+                  <ProtectedRoute requiredPermission="view schemes">
+                    <NetworkPage />
                   </ProtectedRoute>
                 } />
                 <Route path="facilities" element={
