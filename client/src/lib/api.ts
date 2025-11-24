@@ -1,5 +1,5 @@
 // Laravel API Integration Layer - Updated for real backend
-const LARAVEL_API = process.env.REACT_APP_LARAVEL_API || 'http://127.0.0.1:8001/api/v1';
+const LARAVEL_API = import.meta.env.VITE_LARAVEL_API || 'http://127.0.0.1:8001/api/v1';
 
 export async function apiCall(endpoint: string, options?: RequestInit) {
   try {
@@ -150,7 +150,7 @@ export const telemetryWS = {
   connect: (onMessage: (data: any) => void, onError?: (error: any) => void) => {
     if (wsConnection?.readyState === WebSocket.OPEN) return;
 
-    const wsUrl = (process.env.REACT_APP_WS_URL || 'ws://127.0.0.1:8001').replace('http', 'ws') + '/telemetry';
+    const wsUrl = (import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8001').replace('http', 'ws') + '/telemetry';
     
     wsConnection = new WebSocket(wsUrl);
 
