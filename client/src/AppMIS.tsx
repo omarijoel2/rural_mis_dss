@@ -119,6 +119,7 @@ import { EventsPage } from './pages/core-ops/EventsPage';
 import { ChecklistsPage } from './pages/core-ops/ChecklistsPage';
 import { PlaybooksPage } from './pages/core-ops/PlaybooksPage';
 import { EscalationPoliciesPage } from './pages/core-ops/EscalationPoliciesPage';
+import { PredictionsDashboard } from './pages/core-ops/PredictionsDashboard';
 import { WorkflowDefinitionsPage } from './pages/workflows/WorkflowDefinitionsPage';
 import { WorkflowInstancesPage } from './pages/workflows/WorkflowInstancesPage';
 import { CapacityAssessmentPage } from './pages/training/CapacityAssessmentPage';
@@ -763,6 +764,11 @@ export function AppMIS() {
                 <Route path="escalation-policies" element={
                   <ProtectedRoute requiredPermission="operations.view_escalation_policies">
                     <EscalationPoliciesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="predictions" element={
+                  <ProtectedRoute requiredPermission="core_ops.view_operations">
+                    <PredictionsDashboard />
                   </ProtectedRoute>
                 } />
                 <Route path="workflows/definitions" element={

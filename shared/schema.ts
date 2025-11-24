@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { varchar, jsonb, timestamp, index, uniqueIndex, pgTable as table, sql } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -17,8 +18,6 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 // ============ WORKFLOWS ENGINE ============
-
-import { varchar, jsonb, timestamp, index, uniqueIndex, pgTable as table, sql } from "drizzle-orm/pg-core";
 
 export const wfDefinitions = table('wf_definitions', {
   id: serial('id').primaryKey(),
@@ -497,4 +496,100 @@ export const datasets = table('datasets', {
 }, (t) => [
   index('idx_dataset_tenant').on(t.tenantId),
   index('idx_dataset_visibility').on(t.visibility),
+]);
+
+// ============ PHASE 3: PREDICTIVE ANALYTICS & ML ============
+
+export const predictions = table('predictions', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  entityType: text('entity_type').notNull(), // 'asset'|'dma'|'scheme'
+  entityId: varchar('entity_id').notNull(),
+  predictionType: text('prediction_type').notNull(), // 'failure'|'nrw_anomaly'|'demand'|'schedule'|'outage'
+  predictedValue: jsonb('predicted_value').notNull(), // Depends on type
+  confidence: integer('confidence').default(0), // 0-100
+  metadata: jsonb('metadata'), // Model version, algorithm, training data timestamp
+  createdAt: timestamp('created_at').defaultNow(),
+  expiresAt: timestamp('expires_at'), // When prediction becomes stale
+}, (t) => [
+  index('idx_pred_tenant').on(t.tenantId),
+  index('idx_pred_entity').on(t.entityType, t.entityId),
+  index('idx_pred_type').on(t.predictionType),
+  index('idx_pred_expires').on(t.expiresAt),
+]);
+
+export const anomalyEvents = table('anomaly_events', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  entityType: text('entity_type').notNull(), // 'dma'|'scheme'
+  entityId: varchar('entity_id').notNull(),
+  anomalyType: text('anomaly_type').notNull(), // 'nrw_spike'|'demand_anomaly'|'pressure_drop'
+  anomalyScore: integer('anomaly_score'), // 0-100 (severity)
+  severity: text('severity').notNull(), // 'low'|'medium'|'high'|'critical'
+  details: jsonb('details').notNull(), // Context (actual vs baseline, etc)
+  investigatedAt: timestamp('investigated_at'),
+  resolution: jsonb('resolution'), // Action taken, outcome
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_anom_tenant').on(t.tenantId),
+  index('idx_anom_entity').on(t.entityType, t.entityId),
+  index('idx_anom_severity').on(t.severity),
+  index('idx_anom_created').on(t.createdAt),
+]);
+
+export const forecastData = table('forecast_data', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  schemeId: varchar('scheme_id').notNull(),
+  forecastDate: timestamp('forecast_date').notNull(), // Date being forecasted
+  forecastType: text('forecast_type').notNull(), // 'demand'|'supply'|'pressure'
+  value: integer('value').notNull(), // Predicted value
+  lower: integer('lower'), // Confidence interval lower bound
+  upper: integer('upper'), // Confidence interval upper bound
+  confidence: integer('confidence').default(0), // 0-100
+  modelVersion: text('model_version'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_forecast_tenant').on(t.tenantId),
+  index('idx_forecast_scheme').on(t.schemeId),
+  index('idx_forecast_date').on(t.forecastDate),
+  index('idx_forecast_type').on(t.forecastType),
+]);
+
+export const nrwSnapshots = table('nrw_snapshots', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  dmaId: varchar('dma_id').notNull(),
+  asOf: timestamp('as_of').notNull(),
+  systemInputVolumeMc: integer('system_input_volume_m3').notNull(), // System input in m³
+  billedAuthorizedMc: integer('billed_authorized_m3').notNull(), // Billed volume
+  waterLossMc: integer('water_loss_m3'), // Calculated loss
+  nrwPercentage: integer('nrw_percentage'), // (Loss/Input) * 100
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (t) => [
+  index('idx_nrw_tenant').on(t.tenantId),
+  index('idx_nrw_dma').on(t.dmaId),
+  index('idx_nrw_date').on(t.asOf),
+]);
+
+export const interventions = table('interventions', {
+  id: serial('id').primaryKey(),
+  tenantId: varchar('tenant_id').notNull(),
+  dmaId: varchar('dma_id').notNull(),
+  type: text('type').notNull(), // 'leak_detection'|'meter_audit'|'pressure_mgmt'|'metering'
+  status: text('status').notNull().default('planned'), // 'planned'|'ongoing'|'completed'
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date'),
+  estimatedCost: integer('estimated_cost'),
+  actualCost: integer('actual_cost'),
+  impactNrwReduction: integer('impact_nrw_reduction'), // % reduction expected
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => [
+  index('idx_int_tenant').on(t.tenantId),
+  index('idx_int_dma').on(t.dmaId),
+  index('idx_int_status').on(t.status),
 ]);
