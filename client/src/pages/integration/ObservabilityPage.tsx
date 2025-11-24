@@ -2,21 +2,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Activity, AlertTriangle, TrendingUp, Plus, Check, Clock } from 'lucide-react';
+import { getObservabilityDashboard, listAlertPolicies } from '@/services/integrationApi';
 
 export function ObservabilityPage() {
-  const [alerts] = useState([
+  const [alerts, setAlerts] = useState([
     { id: 1, name: 'High CPU Usage', severity: 'critical', condition: 'cpu > 85%', status: 'open' },
     { id: 2, name: 'Database Connection Pool', severity: 'warning', condition: 'connections > 100', status: 'open' },
     { id: 3, name: 'API Response Time', severity: 'warning', condition: 'latency > 2s', status: 'active' },
   ]);
 
-  const [incidents] = useState([
+  const [incidents, setIncidents] = useState([
     { id: 1, policy: 'High CPU Usage', severity: 'critical', status: 'open', firedAt: '2025-11-24T15:32:00Z' },
     { id: 2, policy: 'Database Connection Pool', severity: 'warning', status: 'acknowledged', firedAt: '2025-11-24T14:15:00Z' },
     { id: 3, policy: 'API Response Time', severity: 'warning', status: 'resolved', firedAt: '2025-11-23T10:30:00Z' },
   ]);
+
+  const [dashStats, setDashStats] = useState<any>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [dashResult, policiesResult] = await Promise.all([
+          getObservabilityDashboard(),
+          listAlertPolicies(),
+        ]);
+        if (dashResult.success) {
+          setDashStats(dashResult);
+        }
+        if (policiesResult.success && policiesResult.policies) {
+          setAlerts(policiesResult.policies);
+        }
+      } catch (error) {
+        console.error('Failed to load observability data:', error);
+      }
+    };
+    loadData();
+  }, []);
 
   return (
     <div className="space-y-6">

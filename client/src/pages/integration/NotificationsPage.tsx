@@ -2,27 +2,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Mail, MessageSquare, Webhook, Plus, Edit, Trash2, Send } from 'lucide-react';
+import { getNotificationQueue } from '@/services/integrationApi';
 
 export function NotificationsPage() {
-  const [channels] = useState([
+  const [channels, setChannels] = useState([
     { id: 1, name: 'Email Notifications', type: 'email', status: 'active', config: 'SendGrid' },
     { id: 2, name: 'SMS Alerts', type: 'sms', status: 'active', config: 'Twilio' },
     { id: 3, name: 'Slack Integration', type: 'slack', status: 'active', config: 'Webhook' },
   ]);
 
-  const [templates] = useState([
+  const [templates, setTemplates] = useState([
     { id: 1, key: 'alert_system_down', name: 'System Alert', subject: 'System Downtime Alert', vars: 4 },
     { id: 2, key: 'report_generated', name: 'Report Ready', subject: 'Your Report is Ready', vars: 3 },
     { id: 3, key: 'payment_received', name: 'Payment Confirmation', subject: 'Payment Received', vars: 5 },
   ]);
 
-  const [queue] = useState([
+  const [queue, setQueue] = useState([
     { id: 1, template: 'alert_system_down', recipient: 'admin@example.com', status: 'sent', channel: 'email' },
     { id: 2, template: 'report_generated', recipient: '+254712345678', status: 'pending', channel: 'sms', retry: 2 },
     { id: 3, template: 'payment_received', recipient: 'ops-team', status: 'sent', channel: 'slack' },
   ]);
+
+  useEffect(() => {
+    const loadQueue = async () => {
+      try {
+        const result = await getNotificationQueue();
+        if (result.success && result.queue) {
+          setQueue(result.queue);
+        }
+      } catch (error) {
+        console.error('Failed to load notification queue:', error);
+      }
+    };
+    loadQueue();
+  }, []);
 
   return (
     <div className="space-y-6">

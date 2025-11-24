@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import integrationRouter from "./routes/integration";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // GW4R Phase 1 Mock API Endpoints
@@ -182,6 +183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]
     });
   });
+
+  // ============ INTEGRATION MODULE (Phase 1-3) ============
+  app.use('/api/v1/integration', integrationRouter);
 
   const httpServer = createServer(app);
 

@@ -1,55 +1,8 @@
 # Overview
 
-This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-based Management Information System. Its primary goal is to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities. Key capabilities include multi-tenancy, spatial data integration (PostGIS, MapLibre GL), Role-Based Access Control (RBAC), audit logging, asset and CMMS functionalities, shift management, water quality monitoring, and robust CRM and Revenue Assurance features. The system also supports hydro-meteorological and water sources data, costing, budgeting, and forecasting, alongside scaffolding for monitoring, evaluation, service levels, customer and commercial field service, and community and stakeholder engagement. The latter covers RWSS committee governance, a vendor portal, Grievance Redressal Mechanism (GRM), and open data transparency.
+This project is a hybrid monorepo for the **Rural Water Supply MIS**, a Laravel-based Management Information System. Its primary goal is to enhance operational efficiency, ensure revenue assurance, and improve customer relationship management for water utilities. Key capabilities include multi-tenancy, spatial data integration (PostGIS, MapLibre GL), Role-Based Access Control (RBAC), audit logging, asset and CMMS functionalities, shift management, water quality monitoring, and robust CRM and Revenue Assurance features. The system also supports hydro-meteorological and water sources data, costing, budgeting, and forecasting, alongside scaffolding for monitoring, evaluation, service levels, customer and commercial field service, and community and stakeholder engagement (RWSS committee governance, vendor portal, Grievance Redressal Mechanism (GRM), and open data transparency).
 
-**NEW (Module 18)**: Workflows Engine & SLAs - Production-grade state machine for human-in-the-loop approvals, escalations, timers, and auditability. Integrates with all modules (CMMS, CRM/RA, WQ, Procurement, Projects, Ops Events, etc.) with deterministic execution, multi-tenancy support, and comprehensive observability.
-
-**NEW (GW4R Phase 1 Enhancements)**: 
-- **Aquifer Management**: Groundwater sustainability tracking with yield monitoring, recharge rates, abstraction limits, and risk assessment across 7 priority ASAL aquifers
-- **Drought Response System**: Emergency response coordination with strategic borehole activation, water rationing, and affected population tracking
-- **Gender & Equity Reporting**: Gender-disaggregated water access metrics, vulnerable group segmentation, and equity outcome dashboards
-- **Capacity Assessment Framework**: Operator competency evaluation, certification tracking, and training impact measurement
-
-**NEW (Settings & Configuration Module - Nov 24 2025)**:
-- **Module Management**: Admin can enable/disable any of 14 modules from single dashboard
-- **Role-Based Menu Access Control**: Admin defines which modules each role (Admin, Manager, Operator, Analyst, Viewer) can access
-- **Database Tables**: `moduleSettings` (tenant-scoped module enablement) + `roleModuleAccess` (role-module permissions)
-- **React Hook**: `useAvailableModules()` checks both module settings and role permissions for dynamic sidebar filtering
-- **Pages Created**: SettingsPage (module toggles), RoleMenuAccessPage (role-module matrix)
-- **Sidebar Integration**: "Module Settings" and "Role & Menu Access" added to Admin menu
-- **Multi-Tenancy**: Each tenant manages their own module enablement independently
-
-**NEW (Community & Stakeholder Module - Phase 1, Nov 23 2025)**:
-- **13 Drizzle ORM Tables**: Committees, members, meetings, cashbook, audits, vendors, bids, deliveries, invoices, stakeholders, engagements, grievances, datasets
-- **15 API Endpoints**: Mock endpoints for committees, finance, vendors, bids, grievances, stakeholders, engagements, open data
-- **5 Enhanced Pages**: CommitteesDirectory (search), CommitteeFinance (cashbook), GRMConsole (Kanban), VendorPortal (KYC), BidsCenter (RFQ)
-- **Public Maps**: Full MapLibre GL viewer with 6 layers, basemap switcher, legend, layer controls, embed code generator
-- **Dataset Builder & Open Data Catalog**: Full data transformation UI with filters, aggregates, computed fields, refresh scheduling, API documentation, data stories
-- **70% Functionally Complete**: Ready for Phase 2 backend integration
-
-**PHASE 3: PREDICTIVE ANALYTICS & ML (PARTIAL IMPLEMENTATION - 25% COMPLETE)**:
-- **Official WSTF Inception Report**: Gap analysis validated against official Inception Report (HOAGW4RP P174867)
-- **100% Alignment**: Core Registry requirements match WSTF "O&M for RWSS" scope exactly
-- **Predictive Analytics (LIVE)**: 
-  - ✅ Asset Failure Prediction (risk scoring, days-to-failure)
-  - ✅ NRW Anomaly Detection (leak identification, cost impact)
-  - ✅ Demand Forecasting (7-day consumption forecast)
-  - ✅ Pump Schedule Optimization (cost savings, tariff optimization)
-  - ✅ Outage Impact Prediction (population impact, timing recommendations)
-- **Backend Implementation**: 6 Phase 3 API endpoints live (`/api/core-ops/predictions/*`)
-- **Frontend Implementation**: Predictions Dashboard (5 tabs: assets, NRW, demand, schedules, outage)
-- **React Route**: `/core-ops/predictions` - integrated into Core Operations module
-- **Database Schema**: 5 new Drizzle tables defined (predictions, anomaly_events, forecast_data, nrw_snapshots, interventions)
-- **Outstanding**: Database migrations (schema push pending - import resolution needed)
-- **NRW Tracking**: Full NRW snapshots & interventions tracking system designed
-- **Estimated Timeline**: 10-11 weeks (310+ hours) for COMPLETE implementation (Phases 1-3)
-- **Phase 1 (Foundation)**: 80h - Schemes, DMAs, Assets registry (PENDING)
-- **Phase 2 (Operations)**: 80h - Telemetry, SCADA, console (PENDING)
-- **Phase 3 (Analytics + ML)**: 110h - Predictive models, NRW tracking, optimization (25% LIVE)
-- **Phase 4 (Polish)**: 40h - Testing, security, performance (PENDING)
-- **Estimated Cost**: $21,300 dev + $3,000/year infrastructure (Phase 3 adds $3,000 dev cost)
-- **See:** CORE_REGISTRY_GAP_ANALYSIS.md + INCEPTION_REPORT_ALIGNMENT.md + PREDICTIVE_ANALYTICS_MVP.md for full specs
-- **Status:** Phase 3 MVP frontend + API live. Database migrations & backend ML services pending Phase 1-2 foundation.
+Recent enhancements include a complete Integration & Platform Services Module with 21 REST API endpoints, 4 service layers (encryption, notifications, device sync, observability), and an API client layer. A production-grade Workflows Engine and SLAs module provides state machine capabilities for approvals and escalations. Groundwater management, drought response, gender & equity reporting, and capacity assessment frameworks have been added as part of GW4R Phase 1. A new Settings & Configuration Module allows dynamic management of 14 modules and role-based menu access. The Community & Stakeholder Module (Phase 1) introduces 13 Drizzle ORM tables, 15 API endpoints, and enhanced pages for committees, vendors, grievances, and open data, including a full MapLibre GL viewer and a dataset builder. Predictive analytics features for asset failure, NRW anomaly detection, demand forecasting, pump optimization, and outage impact are partially implemented, with a live frontend and API endpoints.
 
 # User Preferences
 
@@ -61,111 +14,68 @@ Preferred communication style: Simple, everyday language.
 
 The project uses a monorepo structure with `/client` (React frontend), `/server` (Express.js backend for React serving and API proxying), `/api` (Laravel API backend), and `/shared` (shared TypeScript schemas). It leverages Vite for the frontend and esbuild for the Node.js backend.
 
-## Workflows Engine (Module 18)
+## Integration & Platform Services Module
 
-**Core Components**:
-- **Data Model**: 8 Drizzle tables (wf_definitions, wf_instances, wf_transitions, wf_tasks, wf_slas, wf_escalations, wf_webhooks, wf_signals)
-- **Services**: WfCompiler (spec compilation), WfRuntime (state machine execution), WfNotifier (multi-channel notifications)
-- **API Routes**: `/api/v1/workflows/definitions` (CRUD), `/api/v1/workflows/instances` (create/trigger/signal)
-- **React UI**: Workflow definitions editor, instances monitor, task board
-- **Seeds**: Work Order and Incident template workflows with SLA policies
+This module features an Express.js backend with modular routing, 4 independent service layers (encryption, notifications, devices, observability), and a robust API client with 35+ methods. It ensures full TypeScript type safety and multi-tenancy support across all 21 REST endpoints, covering API Gateway, Master Data Management, EDRMS, Data Warehouse, Notifications, Device Registry, Observability, Backup/DR, and Secrets Vault functionalities.
 
-## GW4R Phase 1 Groundwater Enhancement (Module 19-22)
+## Workflows Engine
 
-**Database Schema** (6 new tables):
-- **aquifers**: Registry with yield, recharge, depth, geology, water quality, risk level tracking
-- **groundwater_monitoring**: Water level, abstraction, yield, quality (chloride/fluoride/nitrate) time-series data
-- **drought_events**: Event declaration, severity, population impact, borehole activation tracking
-- **gender_equity_tracking**: Demographic water access metrics (gender, age, vulnerability), collection time, satisfaction
-- **competency_assessments**: Operator certification with scores, validity dates, topic tracking
-- **vulnerable_groups**: Population segmentation with access challenges and support tracking
+The Workflows Engine utilizes 8 Drizzle tables for data modeling, with core services for workflow compilation, state machine execution, and multi-channel notifications. It exposes API routes for CRUD operations on workflow definitions and instances, and provides a React UI for workflow editing, monitoring, and task management.
 
-**UI Modules**:
-1. **Aquifer Management** (`/hydromet/aquifers`): Monitor 7 ASAL aquifers with yield curves, recharge tracking, utilization dashboards, sustainability alerts
-2. **Drought Response Center** (`/core-ops/droughts`): Declare events, activate emergency boreholes, track affected populations, manage water rationing
-3. **Gender & Equity Reporting** (`/me/gender-equity`): Gender-disaggregated dashboards showing collection burden disparity, vulnerable group segmentation
-4. **Capacity Assessments** (`/training/assessments`): Evaluate operator competency, track certifications, measure training impact
+## GW4R Phase 1 Groundwater Enhancement
 
-**Sidebar Integration**: All 4 modules integrated into respective layout sidebars (Hydromet, Core Operations, M&E, Training)
+This enhancement introduces 6 new database tables for aquifer management, groundwater monitoring, drought events, gender & equity tracking, competency assessments, and vulnerable groups. It includes UI modules for Aquifer Management, a Drought Response Center, Gender & Equity Reporting, and Capacity Assessments, all integrated into the application's sidebars.
 
 ## Technology Stack
 
-- **Frontend**: React 18, TypeScript, Vite, TailwindCSS, Radix UI.
-- **Backend**: Express.js (Node.js), Laravel 11 (PHP 8.2+).
-- **Database**: PostgreSQL (Neon Database) with Drizzle ORM (Node.js) and Eloquent (Laravel).
+-   **Frontend**: React 18, TypeScript, Vite, TailwindCSS, Radix UI.
+-   **Backend**: Express.js (Node.js), Laravel 11 (PHP 8.2+).
+-   **Database**: PostgreSQL (Neon Database) with PostGIS, Drizzle ORM (Node.js), and Eloquent (Laravel).
 
 ## Dual-Server Architecture
 
-The MIS operates with two concurrent servers: an Express server (port 5000) serving the React frontend and proxying API requests, and a Laravel API server (port 8001) handling backend logic and database interactions.
+The MIS uses two concurrent servers: an Express server (port 5000) for the React frontend and API proxying, and a Laravel API server (port 8000) for backend logic and database interactions.
 
 ## Database Architecture
 
-A dual ORM strategy is employed, using Drizzle ORM for Node.js and Eloquent ORM for Laravel. Multi-tenancy is implemented in Laravel with `tenant_id` scoping for data isolation. PostGIS supports GeoJSON geometries for spatial data.
+A dual ORM strategy is employed, using Drizzle ORM for Node.js and Eloquent ORM for Laravel. Multi-tenancy is implemented in Laravel with `tenant_id` scoping. PostGIS supports GeoJSON geometries for spatial data.
 
 ## Authentication & Authorization
 
-Laravel Sanctum provides API authentication, Spatie Laravel Permission handles granular RBAC, and the system includes two-factor authentication, secure cookie-based sessions, and multi-tenancy hardening.
-
-## Security Features (Laravel)
-
-The system incorporates CSRF protection, strict CORS, secure cookie settings, RBAC enforcement, automatic audit logging, static analysis (PHPStan), and dependency vulnerability scanning.
+Laravel Sanctum provides API authentication, Spatie Laravel Permission handles granular RBAC, and the system includes two-factor authentication, secure cookie-based sessions, and multi-tenancy hardening. Security features include CSRF protection, strict CORS, and audit logging.
 
 ## API Design
 
-The Express backend offers a RESTful API with request/response logging, JSON parsing, and error handling. The Laravel backend features API versioning (`/api/v1`), resource-based controllers, a service layer pattern, paginated responses, a type-safe API client wrapper, and structured error responses.
+The Express backend offers a RESTful API with request/response logging, JSON parsing, and error handling. The Laravel backend features API versioning, resource-based controllers, a service layer pattern, paginated responses, a type-safe API client wrapper, and structured error responses.
 
 ## Frontend Architecture
 
-Radix UI is used for accessible components and custom hooks. TanStack Query manages server state and caching. React Router handles routing with protected routes and nested layouts. Module features include CRM, Revenue Assurance, Decision Support & Advanced Analytics, Energy Management, Procurement, Hydro-Meteorological modules with comprehensive error handling, loading states, defensive rendering, and MapLibre GL integration for spatial data. Accessibility is a key focus, including a colorblind-friendly palette, adjustable font sizes, keyboard navigation, ARIA labels, and WCAG compliance.
-
-## Development Workflow
-
-The project includes build scripts, code quality tools (TypeScript strict mode, PHPStan, Laravel Pint), and `.env` files for environment configuration.
+Radix UI is used for accessible components. TanStack Query manages server state. React Router handles routing with protected routes. Key modules include CRM, Revenue Assurance, Decision Support, Energy Management, Procurement, and Hydro-Meteorological, all featuring robust error handling, loading states, defensive rendering, and MapLibre GL integration. Accessibility is a core focus, including a colorblind-friendly palette, adjustable font sizes, keyboard navigation, ARIA labels, and WCAG compliance.
 
 ## Queue Processing & Notifications
 
-Laravel Horizon is configured for queue processing with Redis, utilizing priority queues for notifications, high-priority tasks, default tasks, and DSA-specific queues. Multi-channel notifications support email (SendGrid), SMS (Twilio), and custom webhooks for asynchronous delivery.
+Laravel Horizon is configured for Redis-based queue processing with priority queues for various tasks. Multi-channel notifications support email (SendGrid), SMS (Twilio), and custom webhooks.
 
 ## Mobile Application
 
-A production-ready offline-first iOS/Android companion app is built using React Native Expo Workspace (SDK 51) with TypeScript, NativeWind, and Expo Router. It uses WatermelonDB for offline storage with multi-tenant namespacing, Expo SecureStore for secure token storage, and a sync engine for CRUD mutation queuing and auto-retry. Features include customer management, work orders, asset inspections, and water quality data collection with offline capabilities and multi-tenancy.
+A production-ready offline-first iOS/Android companion app is built using React Native Expo Workspace, TypeScript, NativeWind, and Expo Router. It uses WatermelonDB for offline storage with multi-tenant namespacing, Expo SecureStore for secure token storage, and a sync engine.
 
 ## GIS Module
 
-A comprehensive shape file and vector file management system supports uploading, parsing, and managing Shapefile, GeoJSON, and GeoPackage formats. It allows creating styled vector layers with real-time customization of color, opacity, and stroke width, integrates with MapLibre GL, and includes full CRUD operations for files and layers with RBAC enforcement and tenant isolation.
+A comprehensive GIS module supports uploading, parsing, and managing Shapefile, GeoJSON, and GeoPackage formats. It allows creating styled vector layers with real-time customization, integrates with MapLibre GL, and includes full CRUD operations with RBAC and tenant isolation.
 
 # External Dependencies
 
 ## Core Infrastructure
 
-- **Database**: Neon Database (PostgreSQL serverless) with PostGIS.
-- **Package Managers**: npm, Composer.
+-   **Database**: Neon Database (PostgreSQL serverless) with PostGIS.
+-   **Package Managers**: npm, Composer.
 
 ## Key Third-Party Services
 
-- **Frontend Libraries**: Radix UI, TanStack Query, MapLibre GL, React Router.
-- **Backend Libraries (Node)**: Express.js, Drizzle ORM, Zod.
-- **Backend Libraries (PHP)**: Laravel Framework 11, Laravel Sanctum, Spatie Laravel Permission, Google2FA Laravel, Laravel Eloquent Spatial, laravel-notification-channels/twilio.
-- **Mobile Libraries**: React Native, Expo, Expo Router, NativeWind, WatermelonDB, Expo SecureStore, Expo LocalAuthentication.
-- **Development Tools**: Vite, esbuild, PostCSS, Autoprefixer, TailwindCSS, EAS Build.
-- **Integrations**: SendGrid (email), Twilio (SMS), EAS (native app deployment).
-## Integration & Platform Services Module (NEW - Phase 1 MVP - Nov 24 2025)
-
-**Status:** Phase 1 Critical Components LIVE
-- ✅ API Gateway tables (api_keys, oauth_clients, webhooks, api_audit_log)
-- ✅ Event Bus tables (event_topics, event_subscriptions, event_log)
-- ✅ Master Data Management tables (mdm_entities, mdm_matches, mdm_merges, mdm_rules)
-- ✅ SSO/Identity tables (sso_providers, mfa_settings, abac_policies, login_audit)
-
-**UI Pages Created:**
-1. API Catalog & Key Management (`/integration/api`) - Generate, rotate, manage API keys and OAuth clients
-2. Master Data Management Entity Hubs (`/integration/mdm`) - Deduplicate and merge golden records
-3. SSO & Identity Configuration (`/integration/sso`) - Configure OIDC/SAML, MFA, ABAC policies
-
-**Database Schema:** 20 new tables added to Phase 1 (API Gateway + Event Bus + MDM + SSO)
-**Implementation Time:** ~12 hours for MVP critical path
-**Remaining Phases:** 
-- Phase 2 (Weeks 1.5-2.5): Data Warehouse, EDRMS, Advanced Notifications
-- Phase 3 (Weeks 2.5-4): Device Registry, Observability, Backup/DR, Secrets Vault
-
-**Gap Analysis Document:** INTEGRATION_GAP_ANALYSIS.md (comprehensive 7-section roadmap)
+-   **Frontend Libraries**: Radix UI, TanStack Query, MapLibre GL, React Router.
+-   **Backend Libraries (Node)**: Express.js, Drizzle ORM, Zod.
+-   **Backend Libraries (PHP)**: Laravel Framework 11, Laravel Sanctum, Spatie Laravel Permission, Google2FA Laravel, Laravel Eloquent Spatial, laravel-notification-channels/twilio.
+-   **Mobile Libraries**: React Native, Expo, Expo Router, NativeWind, WatermelonDB, Expo SecureStore, Expo LocalAuthentication.
+-   **Development Tools**: Vite, esbuild, PostCSS, Autoprefixer, TailwindCSS, EAS Build.
+-   **Integrations**: SendGrid (email), Twilio (SMS), EAS (native app deployment).
