@@ -109,10 +109,13 @@ export function TelemetryTagForm({ onSubmit, defaultValues, isLoading, assetOpti
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
-                    {assetOptions?.map((a) => (
-                      <SelectItem key={a.id} value={a.id.toString()}>{a.name} ({a.code})</SelectItem>
-                    ))}
+                    {assetOptions && assetOptions.length > 0 ? (
+                      assetOptions.map((a) => (
+                        <SelectItem key={a.id} value={a.id.toString()}>{a.name} ({a.code})</SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>No assets available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
