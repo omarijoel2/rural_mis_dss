@@ -39,7 +39,7 @@ export function SchemeForm({ onSubmit, defaultValues, isLoading }: SchemeFormPro
             <FormItem>
               <FormLabel>Scheme Code</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., KISII_001" {...field} />
+                <Input placeholder="e.g., TRK_LOD_001" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -52,7 +52,7 @@ export function SchemeForm({ onSubmit, defaultValues, isLoading }: SchemeFormPro
             <FormItem>
               <FormLabel>Scheme Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Kisii Urban Scheme" {...field} />
+                <Input placeholder="e.g., Lodwar Water Supply Scheme" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

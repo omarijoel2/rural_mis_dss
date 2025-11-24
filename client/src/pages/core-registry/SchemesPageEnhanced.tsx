@@ -19,8 +19,8 @@ export function SchemesPageEnhanced() {
       // Fallback to mock
       return {
         data: [
-          { id: 1, code: 'KISII_001', name: 'Kisii Urban Scheme', type: 'piped', status: 'active', county: 'Kisii', populationServed: 45000, connections: 8900 },
-          { id: 2, code: 'KERICHO_001', name: 'Kericho Town Scheme', type: 'piped', status: 'active', county: 'Kericho', populationServed: 32000, connections: 6200 },
+          { id: 1, code: 'TRK_LOD_001', name: 'Lodwar Water Supply Scheme', type: 'piped', status: 'active', county: 'Turkana', populationServed: 28000, connections: 5600 },
+          { id: 2, code: 'MRB_TN_001', name: 'Marsabit Town Water Scheme', type: 'piped', status: 'active', county: 'Marsabit', populationServed: 18000, connections: 3600 },
         ],
       };
     },

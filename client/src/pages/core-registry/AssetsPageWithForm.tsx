@@ -35,8 +35,8 @@ export function AssetsPageWithForm() {
       if (laravel) return laravel;
       return {
         data: [
-          { id: 1, name: 'Kisii Urban Scheme' },
-          { id: 2, name: 'Kericho Town Scheme' },
+          { id: 1, name: 'Lodwar Water Supply Scheme' },
+          { id: 2, name: 'Marsabit Town Water Scheme' },
         ],
       };
     },
