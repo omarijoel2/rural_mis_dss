@@ -28,7 +28,16 @@ interface TelemetryTagFormProps {
 export function TelemetryTagForm({ onSubmit, defaultValues, isLoading, assetOptions = [] }: TelemetryTagFormProps) {
   const form = useForm<TelemetryFormData>({
     resolver: zodResolver(telemetrySchema),
-    defaultValues: defaultValues || {},
+    defaultValues: {
+      tag: '',
+      ioType: 'AI',
+      unit: '',
+      assetId: '',
+      scale: '',
+      thresholds: '',
+      ...defaultValues,
+    },
+    mode: 'onBlur',
   });
 
   return (
@@ -54,7 +63,7 @@ export function TelemetryTagForm({ onSubmit, defaultValues, isLoading, assetOpti
             render={({ field }) => (
               <FormItem>
                 <FormLabel>I/O Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || 'AI'}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -93,7 +102,7 @@ export function TelemetryTagForm({ onSubmit, defaultValues, isLoading, assetOpti
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Asset (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select asset" />
@@ -101,7 +110,7 @@ export function TelemetryTagForm({ onSubmit, defaultValues, isLoading, assetOpti
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="">None</SelectItem>
-                    {assetOptions.map((a) => (
+                    {assetOptions?.map((a) => (
                       <SelectItem key={a.id} value={a.id.toString()}>{a.name} ({a.code})</SelectItem>
                     ))}
                   </SelectContent>
