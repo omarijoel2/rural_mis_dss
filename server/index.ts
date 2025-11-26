@@ -239,7 +239,7 @@ app.get('/api/v1/projects/dashboard', (req, res) => {
   const totalBudget = projectsStore.reduce((sum, p) => sum + p.baseline_budget, 0);
   const avgPhysical = Math.round(projectsStore.reduce((sum, p) => sum + p.physical_progress, 0) / projectsStore.length);
   const avgFinancial = Math.round(projectsStore.reduce((sum, p) => sum + p.financial_progress, 0) / projectsStore.length);
-  res.json({
+  res.json({ data: {
     active_projects: active,
     total_budget: totalBudget,
     avg_physical_progress: avgPhysical,
@@ -247,7 +247,7 @@ app.get('/api/v1/projects/dashboard', (req, res) => {
     delayed_projects: 2,
     dlp_count: 1,
     pending_claims: 3
-  });
+  }});
 });
 
 app.get('/api/v1/projects/:id', (req, res) => {
@@ -458,7 +458,7 @@ app.get('/api/v1/land/:id/compensations', (req, res) => {
 });
 
 app.get('/api/v1/land/dashboard', (req, res) => {
-  res.json({
+  res.json({ data: {
     total_parcels: landParcelsStore.length,
     acquired: landParcelsStore.filter(p => p.acquisition_status === 'acquired').length,
     disputed: landParcelsStore.filter(p => p.acquisition_status === 'disputed').length,
@@ -466,7 +466,7 @@ app.get('/api/v1/land/dashboard', (req, res) => {
     active_wayleaves: wayleaveStore.filter(w => w.status === 'active').length,
     expiring_wayleaves: wayleaveStore.filter(w => w.status === 'pending').length,
     total_compensation_paid: compensationStore.reduce((sum, c) => sum + c.paid_amount, 0)
-  });
+  }});
 });
 
 // Models & Handover
@@ -495,7 +495,7 @@ app.get('/api/v1/handovers', (req, res) => {
 });
 
 app.get('/api/v1/handovers/dashboard', (req, res) => {
-  res.json({ pending: 2, accepted: 1, rejected: 0, expiring_warranties: 1 });
+  res.json({ data: { pending: 2, accepted: 1, rejected: 0, expiring_warranties: 1 }});
 });
 
 app.post('/api/v1/handovers', (req, res) => {
