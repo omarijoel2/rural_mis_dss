@@ -54,6 +54,149 @@ app.get('/api/v1/auth/user', (req, res) => {
   });
 });
 
+// ============ CRM MODULE (Mock) ============
+app.get('/api/v1/crm/customers', (req, res) => {
+  res.json({ data: [
+    { id: 1, tenant_id: 1, first_name: 'John', last_name: 'Mwangi', id_number: 'ID-001', phone: '+254712345678', email: 'john@example.com', customer_type: 'residential', created_at: '2024-01-15', updated_at: '2024-11-20', service_connections: [{ id: 1, account_no: 'ACC-001', status: 'active' }] },
+    { id: 2, tenant_id: 1, first_name: 'Mary', last_name: 'Wanjiku', id_number: 'ID-002', phone: '+254723456789', email: 'mary@example.com', customer_type: 'commercial', created_at: '2024-02-10', updated_at: '2024-11-18', service_connections: [{ id: 2, account_no: 'ACC-002', status: 'active' }] },
+    { id: 3, tenant_id: 1, first_name: 'Peter', last_name: 'Ochieng', id_number: 'ID-003', phone: '+254734567890', email: 'peter@example.com', customer_type: 'industrial', created_at: '2024-03-05', updated_at: '2024-11-15', service_connections: [{ id: 3, account_no: 'ACC-003', status: 'active' }] },
+    { id: 4, tenant_id: 1, first_name: 'Grace', last_name: 'Akinyi', id_number: 'ID-004', phone: '+254745678901', email: 'grace@example.com', customer_type: 'residential', created_at: '2024-04-20', updated_at: '2024-11-10', service_connections: [{ id: 4, account_no: 'ACC-004', status: 'suspended' }] },
+    { id: 5, tenant_id: 1, first_name: 'Nairobi City', last_name: 'Council', id_number: 'ID-005', phone: '+254756789012', email: 'council@nairobi.go.ke', customer_type: 'public', created_at: '2024-05-01', updated_at: '2024-11-05', service_connections: [{ id: 5, account_no: 'ACC-005', status: 'active' }] },
+  ], meta: { total: 5, per_page: 50, current_page: 1 } });
+});
+
+app.get('/api/v1/crm/complaints', (req, res) => {
+  res.json({ data: [
+    { id: 1, tenant_id: 1, customer_id: 1, account_no: 'ACC-001', category: 'billing', priority: 'medium', status: 'open', description: 'Overcharged on last bill', created_at: '2024-11-20', updated_at: '2024-11-20' },
+    { id: 2, tenant_id: 1, customer_id: 2, account_no: 'ACC-002', category: 'water_quality', priority: 'high', status: 'triage', description: 'Brown water from tap', created_at: '2024-11-19', updated_at: '2024-11-20' },
+    { id: 3, tenant_id: 1, customer_id: 3, account_no: 'ACC-003', category: 'supply', priority: 'critical', status: 'field', description: 'No water for 3 days', created_at: '2024-11-18', updated_at: '2024-11-19' },
+  ], meta: { total: 3, per_page: 50, current_page: 1 } });
+});
+
+app.get('/api/v1/crm/interactions', (req, res) => {
+  res.json({ data: [
+    { id: 1, tenant_id: 1, customer_id: 1, account_no: 'ACC-001', channel: 'phone', subject: 'Billing inquiry', message: 'Customer called about bill discrepancy', status: 'resolved', created_by: 1, created_at: '2024-11-20' },
+    { id: 2, tenant_id: 1, customer_id: 2, account_no: 'ACC-002', channel: 'walk_in', subject: 'New connection request', message: 'Customer visited office for new meter', status: 'pending', created_by: 1, created_at: '2024-11-19' },
+  ], meta: { total: 2, per_page: 50, current_page: 1 } });
+});
+
+app.get('/api/v1/crm/ra/cases', (req, res) => {
+  res.json({ data: [
+    { id: 1, account_no: 'ACC-001', rule_id: 1, status: 'new', priority: 'high', detected_at: '2024-11-20', evidence: { consumption_spike: 250 } },
+    { id: 2, account_no: 'ACC-003', rule_id: 2, status: 'triage', priority: 'medium', detected_at: '2024-11-18', evidence: { meter_tampering: true } },
+  ], meta: { total: 2, per_page: 50, current_page: 1 } });
+});
+
+app.get('/api/v1/crm/ra/cases/high-priority', (req, res) => {
+  res.json({ data: [
+    { id: 1, account_no: 'ACC-001', rule_id: 1, status: 'new', priority: 'high', detected_at: '2024-11-20', evidence: { consumption_spike: 250 } },
+  ] });
+});
+
+app.get('/api/v1/crm/dunning/disconnection-list', (req, res) => {
+  res.json({ data: [
+    { account_no: 'ACC-004', customer_name: 'Grace Akinyi', balance: 15000, days_overdue: 95, scheduled_date: '2024-11-25' },
+  ] });
+});
+
+app.get('/api/v1/crm/dunning/aging', (req, res) => {
+  res.json({ summary: { total_accounts: 5, total_balance: 125000, current: 25000, days_30: 35000, days_60: 30000, days_90: 20000, over_90: 15000 }, by_category: { residential: 45000, commercial: 35000, industrial: 30000, public: 15000 } });
+});
+
+app.get('/api/v1/crm/tariffs', (req, res) => {
+  res.json({ data: [
+    { id: 1, name: 'Residential Standard', category: 'residential', base_rate: 50, per_unit_rate: 85, effective_from: '2024-01-01' },
+    { id: 2, name: 'Commercial Standard', category: 'commercial', base_rate: 150, per_unit_rate: 120, effective_from: '2024-01-01' },
+    { id: 3, name: 'Industrial Standard', category: 'industrial', base_rate: 500, per_unit_rate: 95, effective_from: '2024-01-01' },
+  ] });
+});
+
+app.get('/api/v1/crm/billing/runs', (req, res) => {
+  res.json({ data: [
+    { id: 1, period: '2024-11', status: 'completed', total_invoices: 450, total_amount: 2500000, created_at: '2024-11-01' },
+    { id: 2, period: '2024-10', status: 'completed', total_invoices: 445, total_amount: 2350000, created_at: '2024-10-01' },
+  ] });
+});
+
+app.get('/api/v1/crm/reconciliation/aging', (req, res) => {
+  res.json({ summary: { total_accounts: 450, total_outstanding: 3500000, current: 1200000, days_30: 950000, days_60: 650000, days_90: 400000, over_90: 300000 } });
+});
+
+app.get('/api/v1/crm/reconciliation/payments', (req, res) => {
+  res.json({ data: [
+    { id: 1, account_no: 'ACC-001', amount: 5000, payment_date: '2024-11-20', method: 'mpesa', reference: 'MPE123456' },
+    { id: 2, account_no: 'ACC-002', amount: 12000, payment_date: '2024-11-19', method: 'bank', reference: 'BNK789012' },
+  ] });
+});
+
+app.get('/api/v1/crm/meter-routes', (req, res) => {
+  res.json({ data: [
+    { id: 1, name: 'Route A - Central', zone_id: 1, meter_count: 120, status: 'active' },
+    { id: 2, name: 'Route B - Industrial', zone_id: 2, meter_count: 45, status: 'active' },
+  ] });
+});
+
+app.get('/api/v1/crm/kiosks', (req, res) => {
+  res.json({ data: [
+    { id: 1, name: 'Kibera Kiosk 1', location: 'Kibera Silanga', status: 'operational', daily_sales: 5000, water_price: 5 },
+    { id: 2, name: 'Mathare Kiosk', location: 'Mathare 4A', status: 'operational', daily_sales: 3500, water_price: 5 },
+  ] });
+});
+
+app.get('/api/v1/crm/kiosks/trucks', (req, res) => {
+  res.json({ data: [
+    { id: 1, registration: 'KBZ 123A', capacity: 10000, status: 'active', trips_today: 5 },
+    { id: 2, registration: 'KCA 456B', capacity: 15000, status: 'maintenance', trips_today: 0 },
+  ] });
+});
+
+app.get('/api/v1/crm/connections/applications', (req, res) => {
+  res.json({ data: [
+    { id: 1, applicant_name: 'James Kamau', phone: '+254711222333', address: '123 Westlands', status: 'pending', applied_at: '2024-11-18' },
+    { id: 2, applicant_name: 'Sarah Njeri', phone: '+254722333444', address: '456 Kilimani', status: 'approved', applied_at: '2024-11-15' },
+  ] });
+});
+
+// ============ COSTING MODULE (Mock) ============
+app.get('/api/v1/costing/budgets', (req, res) => {
+  res.json({ data: [
+    { id: 1, name: 'FY 2025 Operations Budget', fiscal_year: 2025, status: 'approved', total_amount: 125000000, created_at: '2024-10-01' },
+    { id: 2, name: 'FY 2025 Capital Budget', fiscal_year: 2025, status: 'draft', total_amount: 85000000, created_at: '2024-11-01' },
+    { id: 3, name: 'FY 2024 Operations Budget', fiscal_year: 2024, status: 'archived', total_amount: 110000000, created_at: '2023-10-01' },
+  ] });
+});
+
+app.get('/api/v1/costing/allocation-rules', (req, res) => {
+  res.json({ data: [
+    { id: 1, name: 'Energy Cost Allocation', type: 'proportional', basis: 'consumption', status: 'active' },
+    { id: 2, name: 'Maintenance Cost Allocation', type: 'fixed', basis: 'asset_value', status: 'active' },
+  ] });
+});
+
+app.get('/api/v1/costing/allocation-runs', (req, res) => {
+  res.json({ data: [
+    { id: 1, period: '2024-11', status: 'completed', total_allocated: 15000000, run_at: '2024-11-15' },
+  ] });
+});
+
+app.get('/api/v1/costing/cost-to-serve', (req, res) => {
+  res.json({ data: [
+    { dma_id: 1, dma_name: 'DMA Central', cost_per_m3: 45.50, total_cost: 2500000, volume_m3: 55000 },
+    { dma_id: 2, dma_name: 'DMA Industrial', cost_per_m3: 38.20, total_cost: 1850000, volume_m3: 48500 },
+  ] });
+});
+
+app.get('/api/v1/costing/cost-to-serve/summary', (req, res) => {
+  res.json({ total_cost: 4350000, total_volume: 103500, average_cost_per_m3: 42.03, period_from: '2025-01', period_to: '2025-01' });
+});
+
+app.get('/api/v1/costing/cost-to-serve/dma-league/:period', (req, res) => {
+  res.json({ data: [
+    { rank: 1, dma_name: 'DMA Industrial', cost_per_m3: 38.20 },
+    { rank: 2, dma_name: 'DMA Central', cost_per_m3: 45.50 },
+  ] });
+});
+
 // ============ PHASE 3: PREDICTIVE ANALYTICS ============
 app.get('/api/core-ops/predictions/asset-failures', (req, res) => {
   res.json({
