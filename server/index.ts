@@ -9,14 +9,35 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // GW4R Phase 1 Mock API Endpoints (before proxy)
+let aquiferCounter = 3;
+const aquiferStore = [
+  { id: 1, name: 'Elwak Aquifer', safeYieldMcm: 15, currentYieldMcm: 12, rechargeRateMcm: 3, riskLevel: 'medium', waterQualityStatus: 'Good', areaKm2: 5000 },
+  { id: 2, name: 'Merti Aquifer', safeYieldMcm: 20, currentYieldMcm: 18, rechargeRateMcm: 4, riskLevel: 'low', waterQualityStatus: 'Excellent', areaKm2: 8000 },
+  { id: 3, name: 'Neogene Aquifer', safeYieldMcm: 10, currentYieldMcm: 9, rechargeRateMcm: 2, riskLevel: 'high', waterQualityStatus: 'Fair', areaKm2: 3000 },
+];
+
 app.get('/api/hydromet/aquifers', (req, res) => {
-  res.json({ data: [
-    { id: 1, name: 'Elwak Aquifer', safeYieldMcm: 15, currentYieldMcm: 12, rechargeRateMcm: 3, riskLevel: 'medium', waterQualityStatus: 'Good', areaKm2: 5000 },
-    { id: 2, name: 'Merti Aquifer', safeYieldMcm: 20, currentYieldMcm: 18, rechargeRateMcm: 4, riskLevel: 'low', waterQualityStatus: 'Excellent', areaKm2: 8000 },
-    { id: 3, name: 'Neogene Aquifer', safeYieldMcm: 10, currentYieldMcm: 9, rechargeRateMcm: 2, riskLevel: 'high', waterQualityStatus: 'Fair', areaKm2: 3000 },
-  ] });
+  res.json({ data: aquiferStore });
 });
-app.post('/api/hydromet/aquifers', (req, res) => { res.json({ id: 4, message: 'Aquifer registered', ...req.body }); });
+
+app.post('/api/hydromet/aquifers', (req, res) => {
+  const { name, safeYieldMcm } = req.body;
+  if (!name || safeYieldMcm === undefined) {
+    return res.status(400).json({ error: 'Name and safeYieldMcm are required' });
+  }
+  const newAquifer = {
+    id: ++aquiferCounter,
+    name,
+    safeYieldMcm,
+    currentYieldMcm: Math.floor(safeYieldMcm * 0.8),
+    rechargeRateMcm: Math.floor(safeYieldMcm * 0.25),
+    riskLevel: 'low',
+    waterQualityStatus: 'Good',
+    areaKm2: Math.floor(Math.random() * 10000),
+  };
+  aquiferStore.push(newAquifer);
+  res.json({ data: newAquifer, message: 'Aquifer registered successfully' });
+});
 app.get('/api/core-ops/droughts', (req, res) => {
   res.json({ data: [
     { id: 1, name: '2025 ASAL Drought - Jan-Mar', status: 'active', severity: 'high', startDate: '2025-01-01', affectedPopulation: 125000, activatedBoreholes: 8, waterRationing: true },
