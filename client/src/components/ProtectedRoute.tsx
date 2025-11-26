@@ -14,12 +14,8 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, hasPermission, hasRole } = useAuth();
 
-  // DEMO MODE: Bypass authentication to view pages without login
-  const DEMO_MODE = true;
-
-  if (DEMO_MODE) {
-    return <>{children}</>;
-  }
+  // Require authentication for all protected routes
+  const DEMO_MODE = false;
 
   if (isLoading) {
     return (
