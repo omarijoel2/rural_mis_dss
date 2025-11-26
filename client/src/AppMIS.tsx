@@ -65,6 +65,11 @@ import { CoreRegistryLayout } from './components/layouts/CoreRegistryLayout';
 import { HydrometLayout } from './components/layouts/HydrometLayout';
 import { ProjectsLayout } from './components/layouts/ProjectsLayout';
 import { ProjectsHome } from './pages/projects/ProjectsHome';
+import { ProjectsList } from './pages/projects/ProjectsList';
+import { InvestmentPipelinesPage } from './pages/projects/InvestmentPipelinesPage';
+import { LandPage } from './pages/projects/LandPage';
+import { ModelLibraryPage } from './pages/projects/ModelLibraryPage';
+import { HandoverPage } from './pages/projects/HandoverPage';
 import { AdminLayout } from './components/layouts/AdminLayout';
 import { IntegrationLayout } from './components/layouts/IntegrationLayout';
 import { MELayout } from './components/layouts/MELayout';
@@ -417,6 +422,31 @@ export function AppMIS() {
                 <Route index element={
                   <ProtectedRoute requiredPermission="view projects">
                     <ProjectsHome />
+                  </ProtectedRoute>
+                } />
+                <Route path="list" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <ProjectsList />
+                  </ProtectedRoute>
+                } />
+                <Route path="pipelines" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <InvestmentPipelinesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="land" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <LandPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="models" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <ModelLibraryPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="handover" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <HandoverPage />
                   </ProtectedRoute>
                 } />
               </Route>

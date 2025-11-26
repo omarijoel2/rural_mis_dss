@@ -220,6 +220,292 @@ app.get('/api/v1/costing/cost-to-serve/dma-league/:period', (req, res) => {
   ] });
 });
 
+// ============ PROJECTS & CAPITAL MODULE (Mock) ============
+let projectCounter = 5;
+const projectsStore = [
+  { id: '1', tenant_id: '1', code: 'PRJ-2024-001', title: 'Nairobi Water Pipeline Extension', description: 'Extension of main pipeline to serve new residential area', program_id: '1', category_id: '1', pipeline_id: null, pm_id: '1', baseline_budget: 15000000, revised_budget: 16500000, baseline_start_date: '2024-06-01', baseline_end_date: '2025-06-01', revised_start_date: '2024-07-01', revised_end_date: '2025-08-01', actual_start_date: '2024-07-15', actual_end_date: null, physical_progress: 45, financial_progress: 38, status: 'execution', location: null, created_by: '1', meta: null, created_at: '2024-05-15', updated_at: '2024-11-20' },
+  { id: '2', tenant_id: '1', code: 'PRJ-2024-002', title: 'Mombasa Treatment Plant Upgrade', description: 'Upgrade water treatment capacity from 50ML to 80ML per day', program_id: '1', category_id: '2', pipeline_id: null, pm_id: '2', baseline_budget: 85000000, revised_budget: null, baseline_start_date: '2024-09-01', baseline_end_date: '2026-03-01', revised_start_date: null, revised_end_date: null, actual_start_date: '2024-09-15', actual_end_date: null, physical_progress: 22, financial_progress: 18, status: 'execution', location: null, created_by: '1', meta: null, created_at: '2024-08-01', updated_at: '2024-11-18' },
+  { id: '3', tenant_id: '1', code: 'PRJ-2024-003', title: 'Kisumu DMA Establishment', description: 'Create 5 new District Metered Areas for NRW reduction', program_id: '2', category_id: '3', pipeline_id: null, pm_id: '1', baseline_budget: 8500000, revised_budget: null, baseline_start_date: '2024-10-01', baseline_end_date: '2025-02-28', revised_start_date: null, revised_end_date: null, actual_start_date: null, actual_end_date: null, physical_progress: 0, financial_progress: 0, status: 'tendering', location: null, created_by: '1', meta: null, created_at: '2024-09-15', updated_at: '2024-11-15' },
+  { id: '4', tenant_id: '1', code: 'PRJ-2023-015', title: 'Nakuru Reservoir Construction', description: 'New 5000m3 service reservoir', program_id: '1', category_id: '1', pipeline_id: null, pm_id: '3', baseline_budget: 45000000, revised_budget: 48000000, baseline_start_date: '2023-03-01', baseline_end_date: '2024-09-01', revised_start_date: '2023-03-01', revised_end_date: '2024-11-30', actual_start_date: '2023-03-15', actual_end_date: null, physical_progress: 92, financial_progress: 88, status: 'execution', location: null, created_by: '1', meta: null, created_at: '2023-01-10', updated_at: '2024-11-20' },
+  { id: '5', tenant_id: '1', code: 'PRJ-2023-008', title: 'Eldoret Meter Replacement Program', description: 'Replace 2500 old meters with smart AMI meters', program_id: '2', category_id: '4', pipeline_id: null, pm_id: '2', baseline_budget: 12000000, revised_budget: null, baseline_start_date: '2023-06-01', baseline_end_date: '2024-06-01', revised_start_date: null, revised_end_date: null, actual_start_date: '2023-06-15', actual_end_date: '2024-07-30', physical_progress: 100, financial_progress: 98, status: 'completed', location: null, created_by: '1', meta: null, created_at: '2023-04-20', updated_at: '2024-08-01' },
+];
+
+app.get('/api/v1/projects', (req, res) => {
+  res.json({ data: projectsStore });
+});
+
+app.get('/api/v1/projects/dashboard', (req, res) => {
+  const active = projectsStore.filter(p => p.status === 'execution').length;
+  const totalBudget = projectsStore.reduce((sum, p) => sum + p.baseline_budget, 0);
+  const avgPhysical = Math.round(projectsStore.reduce((sum, p) => sum + p.physical_progress, 0) / projectsStore.length);
+  const avgFinancial = Math.round(projectsStore.reduce((sum, p) => sum + p.financial_progress, 0) / projectsStore.length);
+  res.json({
+    active_projects: active,
+    total_budget: totalBudget,
+    avg_physical_progress: avgPhysical,
+    avg_financial_progress: avgFinancial,
+    delayed_projects: 2,
+    dlp_count: 1,
+    pending_claims: 3
+  });
+});
+
+app.get('/api/v1/projects/:id', (req, res) => {
+  const project = projectsStore.find(p => p.id === req.params.id);
+  if (!project) return res.status(404).json({ error: 'Project not found' });
+  res.json({ data: project });
+});
+
+app.post('/api/v1/projects', (req, res) => {
+  const { title, description, baseline_budget, baseline_start_date, baseline_end_date, program_id, category_id } = req.body;
+  if (!title || !baseline_budget) return res.status(400).json({ error: 'Title and budget required' });
+  const newProject = {
+    id: String(++projectCounter),
+    tenant_id: '1',
+    code: `PRJ-2024-${String(projectCounter).padStart(3, '0')}`,
+    title,
+    description: description || null,
+    program_id: program_id || null,
+    category_id: category_id || null,
+    pipeline_id: null,
+    pm_id: null,
+    baseline_budget,
+    revised_budget: null,
+    baseline_start_date: baseline_start_date || null,
+    baseline_end_date: baseline_end_date || null,
+    revised_start_date: null,
+    revised_end_date: null,
+    actual_start_date: null,
+    actual_end_date: null,
+    physical_progress: 0,
+    financial_progress: 0,
+    status: 'planning',
+    location: null,
+    created_by: '1',
+    meta: null,
+    created_at: new Date().toISOString().split('T')[0],
+    updated_at: new Date().toISOString().split('T')[0]
+  };
+  projectsStore.push(newProject);
+  res.json({ data: newProject, message: 'Project created successfully' });
+});
+
+app.patch('/api/v1/projects/:id', (req, res) => {
+  const idx = projectsStore.findIndex(p => p.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Project not found' });
+  projectsStore[idx] = { ...projectsStore[idx], ...req.body, updated_at: new Date().toISOString().split('T')[0] };
+  res.json({ data: projectsStore[idx] });
+});
+
+app.delete('/api/v1/projects/:id', (req, res) => {
+  const idx = projectsStore.findIndex(p => p.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Project not found' });
+  projectsStore.splice(idx, 1);
+  res.json({ message: 'Project deleted' });
+});
+
+// Investment Pipelines
+let pipelineCounter = 4;
+const pipelinesStore = [
+  { id: '1', tenant_id: '1', code: 'INV-2024-001', title: 'Thika Road Trunk Main', description: 'New 900mm trunk main along Thika Road', program_id: '1', category_id: '1', estimated_cost: 250000000, currency: 'KES', connections_added: 15000, energy_savings: null, nrw_reduction: 8, revenue_increase: 45000000, bcr: 2.4, npv: 180000000, irr: 18.5, risk_reduction_score: 75, priority_score: 88, status: 'approved', location: null, created_by: '1', approved_by: '2', approved_at: '2024-10-15', meta: null, created_at: '2024-06-01', updated_at: '2024-10-15' },
+  { id: '2', tenant_id: '1', code: 'INV-2024-002', title: 'Solar Pumping Stations', description: 'Convert 12 pumping stations to solar power', program_id: '2', category_id: '2', estimated_cost: 85000000, currency: 'KES', connections_added: null, energy_savings: 35, nrw_reduction: null, revenue_increase: 12000000, bcr: 1.8, npv: 45000000, irr: 15.2, risk_reduction_score: 60, priority_score: 72, status: 'shortlisted', location: null, created_by: '1', approved_by: null, approved_at: null, meta: null, created_at: '2024-07-15', updated_at: '2024-11-01' },
+  { id: '3', tenant_id: '1', code: 'INV-2024-003', title: 'Smart Meter Rollout Phase 2', description: 'Deploy 50,000 smart meters in urban areas', program_id: '2', category_id: '4', estimated_cost: 125000000, currency: 'KES', connections_added: null, energy_savings: null, nrw_reduction: 12, revenue_increase: 80000000, bcr: 2.1, npv: 95000000, irr: 22.3, risk_reduction_score: 85, priority_score: 91, status: 'active', location: null, created_by: '1', approved_by: null, approved_at: null, meta: null, created_at: '2024-08-20', updated_at: '2024-11-18' },
+  { id: '4', tenant_id: '1', code: 'INV-2024-004', title: 'Borehole Rehabilitation Program', description: 'Rehabilitate 25 boreholes in ASAL counties', program_id: '3', category_id: '3', estimated_cost: 45000000, currency: 'KES', connections_added: 8000, energy_savings: 10, nrw_reduction: null, revenue_increase: 15000000, bcr: 1.5, npv: 12000000, irr: 12.8, risk_reduction_score: 90, priority_score: 78, status: 'active', location: null, created_by: '1', approved_by: null, approved_at: null, meta: null, created_at: '2024-09-10', updated_at: '2024-11-15' },
+];
+
+app.get('/api/v1/investments', (req, res) => {
+  res.json({ data: pipelinesStore });
+});
+
+app.get('/api/v1/investments/:id', (req, res) => {
+  const pipeline = pipelinesStore.find(p => p.id === req.params.id);
+  if (!pipeline) return res.status(404).json({ error: 'Pipeline not found' });
+  res.json({ data: pipeline });
+});
+
+app.post('/api/v1/investments', (req, res) => {
+  const { title, description, estimated_cost, program_id, category_id } = req.body;
+  if (!title || !estimated_cost) return res.status(400).json({ error: 'Title and estimated cost required' });
+  const newPipeline = {
+    id: String(++pipelineCounter),
+    tenant_id: '1',
+    code: `INV-2024-${String(pipelineCounter).padStart(3, '0')}`,
+    title,
+    description: description || null,
+    program_id: program_id || null,
+    category_id: category_id || null,
+    estimated_cost,
+    currency: 'KES',
+    connections_added: null,
+    energy_savings: null,
+    nrw_reduction: null,
+    revenue_increase: null,
+    bcr: null,
+    npv: null,
+    irr: null,
+    risk_reduction_score: null,
+    priority_score: null,
+    status: 'active',
+    location: null,
+    created_by: '1',
+    approved_by: null,
+    approved_at: null,
+    meta: null,
+    created_at: new Date().toISOString().split('T')[0],
+    updated_at: new Date().toISOString().split('T')[0]
+  };
+  pipelinesStore.push(newPipeline);
+  res.json({ data: newPipeline, message: 'Investment pipeline created' });
+});
+
+app.post('/api/v1/investments/:id/score', (req, res) => {
+  const { criterion_id, raw_score, weighted_score, rationale } = req.body;
+  res.json({ data: { id: Date.now().toString(), pipeline_id: req.params.id, criterion_id, raw_score, weighted_score, rationale, scored_by: '1', created_at: new Date().toISOString() } });
+});
+
+app.get('/api/v1/investments/:id/scores', (req, res) => {
+  res.json({ data: [
+    { id: '1', pipeline_id: req.params.id, criterion_id: 'financial', raw_score: 85, weighted_score: 25.5, rationale: 'Strong BCR and NPV', scored_by: '1', created_at: '2024-11-01' },
+    { id: '2', pipeline_id: req.params.id, criterion_id: 'service', raw_score: 78, weighted_score: 19.5, rationale: 'Good coverage expansion', scored_by: '1', created_at: '2024-11-01' },
+    { id: '3', pipeline_id: req.params.id, criterion_id: 'risk', raw_score: 72, weighted_score: 14.4, rationale: 'Moderate technical risk', scored_by: '1', created_at: '2024-11-01' },
+  ] });
+});
+
+app.post('/api/v1/investments/:id/appraisal', (req, res) => {
+  const { capex, opex_annual, project_life_years, discount_rate, recommendation } = req.body;
+  const npv = capex * 0.8;
+  const bcr = 1.5 + Math.random();
+  const irr = 12 + Math.random() * 10;
+  res.json({ data: { id: Date.now().toString(), pipeline_id: req.params.id, appraisal_no: `APR-${Date.now()}`, capex, opex_annual, project_life_years, discount_rate, calculated_npv: npv, calculated_bcr: bcr.toFixed(2), calculated_irr: irr.toFixed(1), recommendation, created_at: new Date().toISOString() } });
+});
+
+app.post('/api/v1/investments/:id/convert', (req, res) => {
+  const pipeline = pipelinesStore.find(p => p.id === req.params.id);
+  if (!pipeline) return res.status(404).json({ error: 'Pipeline not found' });
+  const newProject = {
+    id: String(++projectCounter),
+    tenant_id: '1',
+    code: `PRJ-2024-${String(projectCounter).padStart(3, '0')}`,
+    title: pipeline.title,
+    description: pipeline.description,
+    program_id: pipeline.program_id,
+    category_id: pipeline.category_id,
+    pipeline_id: pipeline.id,
+    pm_id: null,
+    baseline_budget: pipeline.estimated_cost,
+    revised_budget: null,
+    baseline_start_date: null,
+    baseline_end_date: null,
+    revised_start_date: null,
+    revised_end_date: null,
+    actual_start_date: null,
+    actual_end_date: null,
+    physical_progress: 0,
+    financial_progress: 0,
+    status: 'planning',
+    location: pipeline.location,
+    created_by: '1',
+    meta: null,
+    created_at: new Date().toISOString().split('T')[0],
+    updated_at: new Date().toISOString().split('T')[0]
+  };
+  projectsStore.push(newProject);
+  pipeline.status = 'converted';
+  res.json({ data: newProject, message: 'Pipeline converted to project' });
+});
+
+// Land Administration
+const landParcelsStore = [
+  { id: '1', tenant_id: '1', ref_no: 'LND-001', title_number: 'TN/12345', title_status: 'registered', area_ha: 2.5, owner_name: 'John Kamau', owner_contact: '+254712345678', boundary: null, county: 'Nairobi', sub_county: 'Westlands', ward: 'Parklands', category_id: '1', project_id: '1', acquisition_status: 'acquired', notes: 'Pipeline right of way', created_by: '1', meta: null, created_at: '2024-03-15', updated_at: '2024-11-01' },
+  { id: '2', tenant_id: '1', ref_no: 'LND-002', title_number: 'TN/23456', title_status: 'pending', area_ha: 5.8, owner_name: 'Mary Wanjiku', owner_contact: '+254723456789', boundary: null, county: 'Kiambu', sub_county: 'Ruiru', ward: 'Githurai', category_id: '1', project_id: '2', acquisition_status: 'negotiation', notes: 'Treatment plant site', created_by: '1', meta: null, created_at: '2024-06-20', updated_at: '2024-11-15' },
+  { id: '3', tenant_id: '1', ref_no: 'LND-003', title_number: null, title_status: 'unregistered', area_ha: 0.8, owner_name: 'Peter Ochieng', owner_contact: '+254734567890', boundary: null, county: 'Mombasa', sub_county: 'Kisauni', ward: 'Bamburi', category_id: '2', project_id: null, acquisition_status: 'disputed', notes: 'Ownership dispute pending resolution', created_by: '1', meta: null, created_at: '2024-08-10', updated_at: '2024-11-18' },
+];
+
+const wayleaveStore = [
+  { id: '1', tenant_id: '1', parcel_id: '1', wayleave_no: 'WL-2024-001', type: 'pipeline', width_m: 6, length_m: 1200, agreement_date: '2024-04-01', expiry_date: '2044-03-31', status: 'active', annual_fee: 50000, terms: '20-year easement for water pipeline', documents: null, created_at: '2024-04-01', updated_at: '2024-04-01' },
+  { id: '2', tenant_id: '1', parcel_id: '2', wayleave_no: 'WL-2024-002', type: 'access_road', width_m: 4, length_m: 800, agreement_date: '2024-07-15', expiry_date: '2025-07-14', status: 'pending', annual_fee: 25000, terms: 'Temporary access during construction', documents: null, created_at: '2024-07-15', updated_at: '2024-11-01' },
+];
+
+const compensationStore = [
+  { id: '1', tenant_id: '1', parcel_id: '1', comp_no: 'CMP-2024-001', valuation_amount: 2500000, negotiated_amount: 2800000, paid_amount: 2800000, comp_type: 'land_acquisition', valuation_date: '2024-02-15', payment_date: '2024-04-10', payment_reference: 'PAY-2024-0456', status: 'paid', valuation_notes: 'Market rate valuation', valued_by: '1', approved_by: '2', approved_at: '2024-03-20', meta: null, created_at: '2024-02-15', updated_at: '2024-04-10' },
+  { id: '2', tenant_id: '1', parcel_id: '2', comp_no: 'CMP-2024-002', valuation_amount: 8500000, negotiated_amount: null, paid_amount: 0, comp_type: 'land_acquisition', valuation_date: '2024-08-01', payment_date: null, payment_reference: null, status: 'negotiated', valuation_notes: 'Pending owner acceptance', valued_by: '1', approved_by: null, approved_at: null, meta: null, created_at: '2024-08-01', updated_at: '2024-11-15' },
+];
+
+app.get('/api/v1/land', (req, res) => {
+  res.json({ data: landParcelsStore });
+});
+
+app.post('/api/v1/land', (req, res) => {
+  const { ref_no, owner_name, area_ha, county } = req.body;
+  const newParcel = { id: String(landParcelsStore.length + 1), tenant_id: '1', ref_no, title_number: null, title_status: 'unregistered', area_ha, owner_name, owner_contact: null, boundary: null, county, sub_county: null, ward: null, category_id: null, project_id: null, acquisition_status: 'identified', notes: null, created_by: '1', meta: null, created_at: new Date().toISOString().split('T')[0], updated_at: new Date().toISOString().split('T')[0] };
+  landParcelsStore.push(newParcel);
+  res.json({ data: newParcel });
+});
+
+app.get('/api/v1/land/:id/wayleaves', (req, res) => {
+  res.json({ data: wayleaveStore.filter(w => w.parcel_id === req.params.id) });
+});
+
+app.post('/api/v1/land/:id/wayleaves', (req, res) => {
+  const { type, width_m, length_m, agreement_date, expiry_date } = req.body;
+  const newWayleave = { id: String(wayleaveStore.length + 1), tenant_id: '1', parcel_id: req.params.id, wayleave_no: `WL-2024-${String(wayleaveStore.length + 1).padStart(3, '0')}`, type, width_m, length_m, agreement_date, expiry_date, status: 'pending', annual_fee: null, terms: null, documents: null, created_at: new Date().toISOString().split('T')[0], updated_at: new Date().toISOString().split('T')[0] };
+  wayleaveStore.push(newWayleave);
+  res.json({ data: newWayleave });
+});
+
+app.get('/api/v1/land/:id/compensations', (req, res) => {
+  res.json({ data: compensationStore.filter(c => c.parcel_id === req.params.id) });
+});
+
+app.get('/api/v1/land/dashboard', (req, res) => {
+  res.json({
+    total_parcels: landParcelsStore.length,
+    acquired: landParcelsStore.filter(p => p.acquisition_status === 'acquired').length,
+    disputed: landParcelsStore.filter(p => p.acquisition_status === 'disputed').length,
+    pending_compensation: compensationStore.filter(c => c.status !== 'paid').length,
+    active_wayleaves: wayleaveStore.filter(w => w.status === 'active').length,
+    expiring_wayleaves: wayleaveStore.filter(w => w.status === 'pending').length,
+    total_compensation_paid: compensationStore.reduce((sum, c) => sum + c.paid_amount, 0)
+  });
+});
+
+// Models & Handover
+const modelsStore = [
+  { id: '1', model_name: 'Nairobi Distribution Network', engine: 'EPANET', version: '2.2', project_id: '1', created_by: 'Eng. James', created_at: '2024-05-01', runs_count: 15 },
+  { id: '2', model_name: 'Mombasa Treatment Plant', engine: 'InfoWater', version: '3.1', project_id: '2', created_by: 'Eng. Mary', created_at: '2024-08-15', runs_count: 8 },
+];
+
+const handoversStore = [
+  { id: '1', project_id: '5', project_title: 'Eldoret Meter Replacement Program', status: 'accepted', commissioning_date: '2024-07-25', assets_count: 2500, warranty_expiry: '2026-07-25', documents_count: 12, created_at: '2024-07-30' },
+];
+
+app.get('/api/v1/models', (req, res) => {
+  res.json({ data: modelsStore });
+});
+
+app.post('/api/v1/models', (req, res) => {
+  const { model_name, engine, version, project_id } = req.body;
+  const newModel = { id: String(modelsStore.length + 1), model_name, engine, version, project_id, created_by: 'Current User', created_at: new Date().toISOString().split('T')[0], runs_count: 0 };
+  modelsStore.push(newModel);
+  res.json({ data: newModel });
+});
+
+app.get('/api/v1/handovers', (req, res) => {
+  res.json({ data: handoversStore });
+});
+
+app.get('/api/v1/handovers/dashboard', (req, res) => {
+  res.json({ pending: 2, accepted: 1, rejected: 0, expiring_warranties: 1 });
+});
+
+app.post('/api/v1/handovers', (req, res) => {
+  const { project_id, commissioning_date } = req.body;
+  const project = projectsStore.find(p => p.id === project_id);
+  const newHandover = { id: String(handoversStore.length + 1), project_id, project_title: project?.title || 'Unknown', status: 'pending', commissioning_date, assets_count: 0, warranty_expiry: null, documents_count: 0, created_at: new Date().toISOString().split('T')[0] };
+  handoversStore.push(newHandover);
+  res.json({ data: newHandover });
+});
+
 // ============ PHASE 3: PREDICTIVE ANALYTICS ============
 app.get('/api/core-ops/predictions/asset-failures', (req, res) => {
   res.json({
