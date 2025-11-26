@@ -94,9 +94,11 @@ app.get('/api/v1/crm/ra/cases/high-priority', (req, res) => {
 });
 
 app.get('/api/v1/crm/dunning/disconnection-list', (req, res) => {
-  res.json({ data: [
-    { account_no: 'ACC-004', customer_name: 'Grace Akinyi', balance: 15000, days_overdue: 95, scheduled_date: '2024-11-25' },
-  ] });
+  res.json([
+    { account_no: 'ACC-004', customer_name: 'Grace Akinyi', balance: 15000, days_overdue: 95, last_payment_date: '2024-08-15' },
+    { account_no: 'ACC-007', customer_name: 'David Mutua', balance: 22500, days_overdue: 120, last_payment_date: '2024-07-20' },
+    { account_no: 'ACC-012', customer_name: 'Faith Njoki', balance: 8700, days_overdue: 105, last_payment_date: null },
+  ]);
 });
 
 app.get('/api/v1/crm/dunning/aging', (req, res) => {
