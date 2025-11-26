@@ -66,12 +66,15 @@ app.post('/api/training/assessments', (req, res) => { res.json({ id: 4, status: 
 // ============ AUTHENTICATION (Mock) ============
 app.get('/api/v1/auth/user', (req, res) => {
   res.json({ 
-    id: 1,
-    name: 'Demo User',
-    email: 'demo@example.com',
-    tenant_id: 1,
-    permissions: ['*'],
-    authenticated: true
+    user: {
+      id: '1',
+      name: 'Demo User',
+      email: 'demo@example.com',
+      current_tenant_id: '1',
+      two_factor_enabled: false,
+      roles: ['admin'],
+      permissions: ['*']
+    }
   });
 });
 
