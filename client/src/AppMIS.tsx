@@ -66,10 +66,13 @@ import { HydrometLayout } from './components/layouts/HydrometLayout';
 import { ProjectsLayout } from './components/layouts/ProjectsLayout';
 import { ProjectsHome } from './pages/projects/ProjectsHome';
 import { ProjectsList } from './pages/projects/ProjectsList';
+import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
 import { InvestmentPipelinesPage } from './pages/projects/InvestmentPipelinesPage';
 import { LandPage } from './pages/projects/LandPage';
 import { ModelLibraryPage } from './pages/projects/ModelLibraryPage';
 import { HandoverPage } from './pages/projects/HandoverPage';
+import { ProcurementPage } from './pages/projects/ProcurementPage';
+import { ProjectsMapPage } from './pages/projects/ProjectsMapPage';
 import { AdminLayout } from './components/layouts/AdminLayout';
 import { IntegrationLayout } from './components/layouts/IntegrationLayout';
 import { MELayout } from './components/layouts/MELayout';
@@ -429,6 +432,11 @@ export function AppMIS() {
                     <ProjectsList />
                   </ProtectedRoute>
                 } />
+                <Route path=":id" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <ProjectDetailPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="pipelines" element={
                   <ProtectedRoute requiredPermission="view projects">
                     <InvestmentPipelinesPage />
@@ -447,6 +455,16 @@ export function AppMIS() {
                 <Route path="handover" element={
                   <ProtectedRoute requiredPermission="view projects">
                     <HandoverPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="procurement" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <ProcurementPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="map" element={
+                  <ProtectedRoute requiredPermission="view projects">
+                    <ProjectsMapPage />
                   </ProtectedRoute>
                 } />
               </Route>

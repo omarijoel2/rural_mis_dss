@@ -307,6 +307,163 @@ app.delete('/api/v1/projects/:id', (req, res) => {
   res.json({ message: 'Project deleted' });
 });
 
+// Project Milestones
+const milestonesStore = [
+  { id: '1', project_id: '1', name: 'Design Approval', description: 'Complete engineering design and obtain regulatory approval', planned_date: '2024-07-15', actual_date: '2024-07-20', status: 'completed', weight: 15, dependencies: null, deliverables: 'Approved design documents', created_at: '2024-06-01' },
+  { id: '2', project_id: '1', name: 'Procurement Complete', description: 'Complete all procurement processes', planned_date: '2024-09-01', actual_date: '2024-09-15', status: 'completed', weight: 20, dependencies: '1', deliverables: 'Signed contracts', created_at: '2024-06-01' },
+  { id: '3', project_id: '1', name: 'Pipeline Installation 50%', description: 'Complete 50% of pipeline installation', planned_date: '2024-12-01', actual_date: null, status: 'in_progress', weight: 25, dependencies: '2', deliverables: 'Installation progress report', created_at: '2024-06-01' },
+  { id: '4', project_id: '1', name: 'Testing & Commissioning', description: 'Complete pressure testing and commissioning', planned_date: '2025-04-01', actual_date: null, status: 'pending', weight: 20, dependencies: '3', deliverables: 'Test certificates', created_at: '2024-06-01' },
+  { id: '5', project_id: '1', name: 'Handover', description: 'Complete project handover to operations', planned_date: '2025-06-01', actual_date: null, status: 'pending', weight: 20, dependencies: '4', deliverables: 'Handover documentation', created_at: '2024-06-01' },
+  { id: '6', project_id: '2', name: 'Environmental Assessment', description: 'Complete EIA and obtain NEMA approval', planned_date: '2024-10-15', actual_date: '2024-10-20', status: 'completed', weight: 10, dependencies: null, deliverables: 'EIA Report', created_at: '2024-08-01' },
+  { id: '7', project_id: '2', name: 'Civil Works Start', description: 'Begin civil works construction', planned_date: '2024-11-01', actual_date: '2024-11-10', status: 'completed', weight: 15, dependencies: '6', deliverables: 'Site mobilization', created_at: '2024-08-01' },
+];
+
+app.get('/api/v1/projects/:id/milestones', (req, res) => {
+  res.json({ data: milestonesStore.filter(m => m.project_id === req.params.id) });
+});
+
+app.post('/api/v1/projects/:id/milestones', (req, res) => {
+  const { name, description, planned_date, weight } = req.body;
+  const newMilestone = { id: String(milestonesStore.length + 1), project_id: req.params.id, name, description, planned_date, actual_date: null, status: 'pending', weight: weight || 10, dependencies: null, deliverables: null, created_at: new Date().toISOString().split('T')[0] };
+  milestonesStore.push(newMilestone);
+  res.json({ data: newMilestone });
+});
+
+app.patch('/api/v1/projects/:id/milestones/:milestoneId', (req, res) => {
+  const idx = milestonesStore.findIndex(m => m.id === req.params.milestoneId && m.project_id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Milestone not found' });
+  milestonesStore[idx] = { ...milestonesStore[idx], ...req.body };
+  res.json({ data: milestonesStore[idx] });
+});
+
+// Project Procurement & Contracts
+const procurementStore = [
+  { id: '1', project_id: '1', tender_no: 'TND-2024-001', title: 'Supply of 900mm DI Pipes', description: 'Supply and delivery of ductile iron pipes', method: 'open_tender', estimated_value: 8500000, contract_value: 8200000, contractor: 'Kenya Pipeline Supplies Ltd', contractor_contact: '+254712345678', status: 'awarded', publish_date: '2024-07-01', closing_date: '2024-07-31', award_date: '2024-08-15', contract_start: '2024-09-01', contract_end: '2025-03-01', performance_bond: 820000, retention: 5, created_at: '2024-07-01' },
+  { id: '2', project_id: '1', tender_no: 'TND-2024-002', title: 'Pipeline Installation Works', description: 'Civil and mechanical works for pipeline installation', method: 'open_tender', estimated_value: 4500000, contract_value: 4350000, contractor: 'AquaWorks Construction', contractor_contact: '+254723456789', status: 'in_progress', publish_date: '2024-08-01', closing_date: '2024-08-31', award_date: '2024-09-15', contract_start: '2024-10-01', contract_end: '2025-04-01', performance_bond: 435000, retention: 10, created_at: '2024-08-01' },
+  { id: '3', project_id: '2', tender_no: 'TND-2024-003', title: 'Treatment Plant Equipment', description: 'Supply of filtration and chemical dosing equipment', method: 'restricted_tender', estimated_value: 45000000, contract_value: null, contractor: null, contractor_contact: null, status: 'evaluation', publish_date: '2024-09-15', closing_date: '2024-10-15', award_date: null, contract_start: null, contract_end: null, performance_bond: null, retention: null, created_at: '2024-09-15' },
+  { id: '4', project_id: '4', tender_no: 'TND-2023-015', title: 'Reservoir Civil Works', description: 'Construction of 5000m3 reinforced concrete reservoir', method: 'open_tender', estimated_value: 32000000, contract_value: 31500000, contractor: 'BuildRight Engineers', contractor_contact: '+254734567890', status: 'completed', publish_date: '2023-02-01', closing_date: '2023-03-01', award_date: '2023-03-20', contract_start: '2023-04-01', contract_end: '2024-10-01', performance_bond: 3150000, retention: 10, created_at: '2023-02-01' },
+];
+
+app.get('/api/v1/projects/:id/procurement', (req, res) => {
+  res.json({ data: procurementStore.filter(p => p.project_id === req.params.id) });
+});
+
+app.get('/api/v1/procurement', (req, res) => {
+  res.json({ data: procurementStore });
+});
+
+app.get('/api/v1/procurement/dashboard', (req, res) => {
+  res.json({ data: {
+    total_tenders: procurementStore.length,
+    active: procurementStore.filter(p => ['published', 'evaluation', 'in_progress'].includes(p.status)).length,
+    awarded_value: procurementStore.filter(p => p.contract_value).reduce((sum, p) => sum + (p.contract_value || 0), 0),
+    pending_evaluation: procurementStore.filter(p => p.status === 'evaluation').length,
+    expiring_contracts: 1
+  }});
+});
+
+app.post('/api/v1/projects/:id/procurement', (req, res) => {
+  const { title, description, method, estimated_value, closing_date } = req.body;
+  const newTender = { id: String(procurementStore.length + 1), project_id: req.params.id, tender_no: `TND-2024-${String(procurementStore.length + 1).padStart(3, '0')}`, title, description, method: method || 'open_tender', estimated_value, contract_value: null, contractor: null, contractor_contact: null, status: 'draft', publish_date: null, closing_date, award_date: null, contract_start: null, contract_end: null, performance_bond: null, retention: null, created_at: new Date().toISOString().split('T')[0] };
+  procurementStore.push(newTender);
+  res.json({ data: newTender });
+});
+
+// Project Risks & Issues
+const risksStore = [
+  { id: '1', project_id: '1', risk_no: 'RSK-001', title: 'Land Acquisition Delays', description: 'Potential delays in acquiring wayleaves from landowners', category: 'schedule', probability: 'high', impact: 'high', risk_score: 9, status: 'mitigated', mitigation: 'Early engagement with landowners, alternative routing options identified', owner: 'Project Manager', identified_date: '2024-06-15', review_date: '2024-11-15', created_at: '2024-06-15' },
+  { id: '2', project_id: '1', risk_no: 'RSK-002', title: 'Material Price Escalation', description: 'Steel and pipe prices may increase due to global market conditions', category: 'cost', probability: 'medium', impact: 'medium', risk_score: 6, status: 'monitoring', mitigation: 'Price variation clause in contracts, bulk procurement strategy', owner: 'Procurement Officer', identified_date: '2024-07-01', review_date: '2024-12-01', created_at: '2024-07-01' },
+  { id: '3', project_id: '1', risk_no: 'RSK-003', title: 'Contractor Capacity', description: 'Contractor may face resource constraints during peak season', category: 'technical', probability: 'low', impact: 'high', risk_score: 4, status: 'open', mitigation: 'Regular progress monitoring, backup contractor identified', owner: 'Site Engineer', identified_date: '2024-09-01', review_date: '2025-01-01', created_at: '2024-09-01' },
+  { id: '4', project_id: '2', risk_no: 'RSK-004', title: 'Environmental Compliance', description: 'Risk of environmental permit delays or additional requirements', category: 'regulatory', probability: 'medium', impact: 'high', risk_score: 7, status: 'mitigated', mitigation: 'Early NEMA engagement, comprehensive EIA completed', owner: 'Environmental Officer', identified_date: '2024-08-15', review_date: '2024-11-30', created_at: '2024-08-15' },
+];
+
+const issuesStore = [
+  { id: '1', project_id: '1', issue_no: 'ISS-001', title: 'Pipe Delivery Delay', description: 'Supplier delayed delivery of 200m pipe section by 2 weeks', category: 'procurement', priority: 'high', status: 'resolved', resolution: 'Expedited shipping arranged, schedule adjusted', assigned_to: 'Procurement Officer', reported_date: '2024-10-15', resolved_date: '2024-10-28', created_at: '2024-10-15' },
+  { id: '2', project_id: '1', issue_no: 'ISS-002', title: 'Underground Utility Conflict', description: 'Discovered unmarked fiber optic cables during excavation', category: 'technical', priority: 'medium', status: 'in_progress', resolution: null, assigned_to: 'Site Engineer', reported_date: '2024-11-10', resolved_date: null, created_at: '2024-11-10' },
+  { id: '3', project_id: '4', issue_no: 'ISS-003', title: 'Quality Concern - Concrete', description: 'Concrete cube test results below specification', category: 'quality', priority: 'critical', status: 'resolved', resolution: 'Affected section demolished and recast, supplier changed', assigned_to: 'Quality Engineer', reported_date: '2023-08-20', resolved_date: '2023-09-15', created_at: '2023-08-20' },
+];
+
+app.get('/api/v1/projects/:id/risks', (req, res) => {
+  res.json({ data: risksStore.filter(r => r.project_id === req.params.id) });
+});
+
+app.get('/api/v1/projects/:id/issues', (req, res) => {
+  res.json({ data: issuesStore.filter(i => i.project_id === req.params.id) });
+});
+
+app.post('/api/v1/projects/:id/risks', (req, res) => {
+  const { title, description, category, probability, impact, mitigation, owner } = req.body;
+  const scores: Record<string, number> = { low: 1, medium: 2, high: 3 };
+  const risk_score = (scores[probability] || 2) * (scores[impact] || 2);
+  const newRisk = { id: String(risksStore.length + 1), project_id: req.params.id, risk_no: `RSK-${String(risksStore.length + 1).padStart(3, '0')}`, title, description, category, probability, impact, risk_score, status: 'open', mitigation, owner, identified_date: new Date().toISOString().split('T')[0], review_date: null, created_at: new Date().toISOString().split('T')[0] };
+  risksStore.push(newRisk);
+  res.json({ data: newRisk });
+});
+
+app.post('/api/v1/projects/:id/issues', (req, res) => {
+  const { title, description, category, priority, assigned_to } = req.body;
+  const newIssue = { id: String(issuesStore.length + 1), project_id: req.params.id, issue_no: `ISS-${String(issuesStore.length + 1).padStart(3, '0')}`, title, description, category, priority, status: 'open', resolution: null, assigned_to, reported_date: new Date().toISOString().split('T')[0], resolved_date: null, created_at: new Date().toISOString().split('T')[0] };
+  issuesStore.push(newIssue);
+  res.json({ data: newIssue });
+});
+
+// Project Documents & Communications
+const documentsStore = [
+  { id: '1', project_id: '1', doc_no: 'DOC-001', title: 'Detailed Engineering Design', description: 'Complete engineering design package', category: 'design', file_type: 'pdf', file_size: 15600000, version: '2.1', status: 'approved', uploaded_by: 'Eng. James Mwangi', approved_by: 'Chief Engineer', approved_date: '2024-07-15', created_at: '2024-06-20' },
+  { id: '2', project_id: '1', doc_no: 'DOC-002', title: 'Bill of Quantities', description: 'Priced BOQ for all works', category: 'procurement', file_type: 'xlsx', file_size: 2500000, version: '1.3', status: 'approved', uploaded_by: 'QS Mary Wanjiku', approved_by: 'Finance Manager', approved_date: '2024-07-20', created_at: '2024-07-01' },
+  { id: '3', project_id: '1', doc_no: 'DOC-003', title: 'Monthly Progress Report - Oct 2024', description: 'October 2024 progress report', category: 'report', file_type: 'pdf', file_size: 8900000, version: '1.0', status: 'final', uploaded_by: 'Project Manager', approved_by: null, approved_date: null, created_at: '2024-11-05' },
+  { id: '4', project_id: '1', doc_no: 'DOC-004', title: 'Site Meeting Minutes #12', description: 'Minutes of 12th site coordination meeting', category: 'correspondence', file_type: 'docx', file_size: 450000, version: '1.0', status: 'final', uploaded_by: 'Site Clerk', approved_by: null, approved_date: null, created_at: '2024-11-18' },
+  { id: '5', project_id: '2', doc_no: 'DOC-005', title: 'Environmental Impact Assessment', description: 'Full EIA report with NEMA approval', category: 'regulatory', file_type: 'pdf', file_size: 25000000, version: '1.0', status: 'approved', uploaded_by: 'Environmental Officer', approved_by: 'NEMA', approved_date: '2024-10-20', created_at: '2024-09-01' },
+];
+
+const communicationsStore = [
+  { id: '1', project_id: '1', comm_no: 'COM-001', subject: 'Project Kickoff Meeting Invitation', message: 'You are invited to attend the project kickoff meeting scheduled for...', sender: 'Project Manager', recipients: ['Contractor', 'Consultant', 'Client Rep'], comm_type: 'meeting_invite', status: 'sent', sent_date: '2024-06-25', response_required: true, response_deadline: '2024-06-28', created_at: '2024-06-25' },
+  { id: '2', project_id: '1', comm_no: 'COM-002', subject: 'Request for Variation Approval', message: 'We request approval for variation order VO-001 regarding...', sender: 'Contractor', recipients: ['Project Manager', 'Client Rep'], comm_type: 'request', status: 'responded', sent_date: '2024-10-10', response_required: true, response_deadline: '2024-10-17', created_at: '2024-10-10' },
+  { id: '3', project_id: '1', comm_no: 'COM-003', subject: 'Progress Update - Week 45', message: 'Weekly progress update: Pipeline installation at 48% complete...', sender: 'Site Engineer', recipients: ['Project Manager', 'Stakeholders'], comm_type: 'update', status: 'sent', sent_date: '2024-11-15', response_required: false, response_deadline: null, created_at: '2024-11-15' },
+];
+
+app.get('/api/v1/projects/:id/documents', (req, res) => {
+  res.json({ data: documentsStore.filter(d => d.project_id === req.params.id) });
+});
+
+app.get('/api/v1/projects/:id/communications', (req, res) => {
+  res.json({ data: communicationsStore.filter(c => c.project_id === req.params.id) });
+});
+
+app.post('/api/v1/projects/:id/documents', (req, res) => {
+  const { title, description, category, file_type } = req.body;
+  const newDoc = { id: String(documentsStore.length + 1), project_id: req.params.id, doc_no: `DOC-${String(documentsStore.length + 1).padStart(3, '0')}`, title, description, category, file_type: file_type || 'pdf', file_size: 1000000, version: '1.0', status: 'draft', uploaded_by: 'Demo User', approved_by: null, approved_date: null, created_at: new Date().toISOString().split('T')[0] };
+  documentsStore.push(newDoc);
+  res.json({ data: newDoc });
+});
+
+app.post('/api/v1/projects/:id/communications', (req, res) => {
+  const { subject, message, recipients, comm_type, response_required } = req.body;
+  const newComm = { id: String(communicationsStore.length + 1), project_id: req.params.id, comm_no: `COM-${String(communicationsStore.length + 1).padStart(3, '0')}`, subject, message, sender: 'Demo User', recipients: recipients || [], comm_type: comm_type || 'general', status: 'draft', sent_date: null, response_required: response_required || false, response_deadline: null, created_at: new Date().toISOString().split('T')[0] };
+  communicationsStore.push(newComm);
+  res.json({ data: newComm });
+});
+
+// Project GIS Data
+const projectLocationsStore = [
+  { id: '1', project_id: '1', name: 'Pipeline Route Start', lat: -1.2864, lng: 36.8172, location_type: 'start_point', description: 'Pipeline starting point at Nairobi CBD' },
+  { id: '2', project_id: '1', name: 'Pipeline Route End', lat: -1.2200, lng: 36.8800, location_type: 'end_point', description: 'Pipeline ending point at residential area' },
+  { id: '3', project_id: '2', name: 'Treatment Plant Site', lat: -4.0435, lng: 39.6682, location_type: 'facility', description: 'Mombasa treatment plant location' },
+  { id: '4', project_id: '4', name: 'Reservoir Site', lat: -0.3031, lng: 36.0800, location_type: 'facility', description: 'Nakuru reservoir construction site' },
+];
+
+app.get('/api/v1/projects/:id/locations', (req, res) => {
+  res.json({ data: projectLocationsStore.filter(l => l.project_id === req.params.id) });
+});
+
+app.get('/api/v1/projects/map/all', (req, res) => {
+  const projectsWithLocations = projectsStore.map(p => ({
+    ...p,
+    locations: projectLocationsStore.filter(l => l.project_id === p.id)
+  })).filter(p => p.locations.length > 0);
+  res.json({ data: projectsWithLocations });
+});
+
 // Investment Pipelines
 let pipelineCounter = 4;
 const pipelinesStore = [

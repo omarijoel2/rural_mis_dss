@@ -238,9 +238,13 @@ export function ProjectsList() {
                   </TableRow>
                 ) : (
                   filteredProjects.map((project: Project) => (
-                    <TableRow key={project.id}>
+                    <TableRow key={project.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/projects/${project.id}`}>
                       <TableCell className="font-mono text-sm">{project.code}</TableCell>
-                      <TableCell className="font-medium max-w-xs truncate">{project.title}</TableCell>
+                      <TableCell className="font-medium max-w-xs truncate">
+                        <Link to={`/projects/${project.id}`} className="hover:text-primary hover:underline">
+                          {project.title}
+                        </Link>
+                      </TableCell>
                       <TableCell>
                         <Badge className={STATUS_COLORS[project.status]}>
                           {project.status}
