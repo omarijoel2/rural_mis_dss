@@ -78,6 +78,56 @@ app.get('/api/v1/auth/user', (req, res) => {
   });
 });
 
+// ============ ADMIN USERS MODULE (Mock) ============
+let userCounter = 5;
+const userStore = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin', tenant_id: '1' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user', tenant_id: '1' },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', tenant_id: '1' },
+  { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'manager', tenant_id: '1' },
+  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'user', tenant_id: '1' },
+];
+
+app.get('/api/v1/admin/users', (req, res) => {
+  res.json({ data: userStore, meta: { total: userStore.length, per_page: 50, current_page: 1 } });
+});
+
+app.post('/api/v1/admin/users/bulk-import', (req, res) => {
+  try {
+    const { users } = req.body;
+    if (!Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ error: 'Invalid users array' });
+    }
+
+    const imported = users.map(user => {
+      const newUser = {
+        id: ++userCounter,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        tenant_id: user.tenant_id || '1',
+      };
+      userStore.push(newUser);
+      return newUser;
+    });
+
+    res.json({ 
+      data: imported, 
+      message: `Successfully imported ${imported.length} users`,
+      meta: { total: userStore.length }
+    });
+  } catch (error) {
+    res.status(400).json({ error: 'Import failed', details: (error as Error).message });
+  }
+});
+
+app.get('/api/v1/admin/users/export', (req, res) => {
+  res.json({ 
+    data: userStore,
+    message: `Exported ${userStore.length} users`
+  });
+});
+
 // ============ CRM MODULE (Mock) ============
 app.get('/api/v1/crm/customers', (req, res) => {
   res.json({ data: [
