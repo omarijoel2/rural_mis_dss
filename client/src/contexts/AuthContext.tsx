@@ -63,12 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasPermission = (permission: string): boolean => {
     if (!user || !user.permissions) return false;
-    return user.permissions.includes(permission);
+    return user.permissions.includes('*') || user.permissions.includes(permission);
   };
 
   const hasRole = (role: string): boolean => {
     if (!user || !user.roles) return false;
-    return user.roles.includes(role);
+    return user.roles.includes('*') || user.roles.includes(role);
   };
 
   return (
