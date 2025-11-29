@@ -384,6 +384,7 @@ const moduleNavigation = [
 export function ExpandableSidebar() {
   const location = useLocation();
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [expandedNestedMenus, setExpandedNestedMenus] = useState<Set<string>>(new Set());
   const [isCompactMode, setIsCompactMode] = useState(false);
   
   const getActiveModule = () => {
@@ -542,18 +543,29 @@ export function ExpandableSidebar() {
                             {module.subPages.map((subPage) => {
                               const SubPageIcon = 'icon' in subPage ? subPage.icon : null;
                               const hasNestedMenu = 'subMenu' in subPage && subPage.subMenu;
-                              const [expandedNested, setExpandedNested] = useState(false);
+                              const nestedMenuKey = `${module.name}-${subPage.name}`;
+                              const isNestedExpanded = expandedNestedMenus.has(nestedMenuKey);
+                              
+                              const toggleNestedMenu = () => {
+                                const newExpanded = new Set(expandedNestedMenus);
+                                if (newExpanded.has(nestedMenuKey)) {
+                                  newExpanded.delete(nestedMenuKey);
+                                } else {
+                                  newExpanded.add(nestedMenuKey);
+                                }
+                                setExpandedNestedMenus(newExpanded);
+                              };
                               
                               return (
                                 <div key={subPage.href}>
                                   {hasNestedMenu ? (
                                     <button
-                                      onClick={() => setExpandedNested(!expandedNested)}
+                                      onClick={toggleNestedMenu}
                                       className="w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
                                     >
                                       {SubPageIcon && <SubPageIcon className="h-4 w-4" />}
                                       <span className="flex-1 text-left">{subPage.name}</span>
-                                      {expandedNested ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                      {isNestedExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                                     </button>
                                   ) : (
                                     <NavLink
@@ -573,7 +585,7 @@ export function ExpandableSidebar() {
                                   )}
                                   
                                   {/* Nested submenu for items like Workflows */}
-                                  {hasNestedMenu && expandedNested && (
+                                  {hasNestedMenu && isNestedExpanded && (
                                     <div className="ml-4 space-y-0.5 mt-0.5">
                                       {subPage.subMenu?.map((nested) => (
                                         <NavLink
