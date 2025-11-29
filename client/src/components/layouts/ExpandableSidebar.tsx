@@ -82,7 +82,7 @@ const moduleNavigation = [
     ]
   },
   {
-    name: 'CMMS',
+    name: 'Maintenance Management',
     href: '/cmms',
     icon: Wrench,
     color: 'text-yellow-500',
