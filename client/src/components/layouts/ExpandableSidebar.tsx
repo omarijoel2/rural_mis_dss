@@ -86,7 +86,7 @@ const moduleNavigation = [
     href: '/cmms',
     icon: Wrench,
     color: 'text-yellow-500',
-    category: 'Infrastructure & Assets',
+    category: 'Operations & Customer',
     subPages: [
       { name: 'Dashboard', href: '/cmms/dashboard', icon: BarChart3 },
       { name: 'Assets', href: '/cmms/assets', icon: Settings },
