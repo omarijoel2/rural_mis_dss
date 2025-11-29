@@ -2,9 +2,9 @@ import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Users, Search, Plus, Shield, Key, Download, Upload } from 'lucide-react';
+import { Users, Search, Plus, Shield, Key, Download, Upload, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { parseCSV, generateCSV, downloadCSV } from '@/lib/csv-utils';
+import { parseCSV, generateCSV, downloadCSV, generateTemplateCSV } from '@/lib/csv-utils';
 
 interface User {
   id: number;
@@ -77,6 +77,17 @@ export function UsersManagement() {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    try {
+      const csvContent = generateTemplateCSV();
+      downloadCSV(csvContent, 'users-template.csv');
+      toast.success('Template downloaded successfully');
+    } catch (error) {
+      toast.error('Failed to download template');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -105,6 +116,14 @@ export function UsersManagement() {
           onChange={handleFileChange}
           className="hidden"
         />
+        <Button 
+          variant="outline"
+          onClick={handleDownloadTemplate}
+          title="Download CSV template with correct column format"
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          Template
+        </Button>
         <Button 
           variant="outline" 
           onClick={handleImportClick}

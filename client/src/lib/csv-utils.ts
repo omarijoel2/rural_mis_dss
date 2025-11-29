@@ -72,3 +72,19 @@ export function downloadCSV(csvContent: string, filename: string = 'users.csv'):
   link.click();
   document.body.removeChild(link);
 }
+
+export function generateTemplateCSV(): string {
+  const headers = ['name', 'email', 'role', 'tenant_id'];
+  const sampleRows = [
+    ['John Doe', 'john.doe@example.com', 'admin', '1'],
+    ['Jane Smith', 'jane.smith@example.com', 'manager', '1'],
+    ['Bob Johnson', 'bob.johnson@example.com', 'user', '1'],
+  ];
+
+  const csvContent = [
+    headers.join(','),
+    ...sampleRows.map(row => row.map(cell => `"${cell}"`).join(',')),
+  ].join('\n');
+
+  return csvContent;
+}
