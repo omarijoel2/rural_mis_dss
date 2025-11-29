@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-import { Calculator, Database, Users, Droplet, Wrench, Shield, Map, Briefcase, CloudRain } from 'lucide-react';
+import { Calculator, Database, Users, Droplet, Wrench, Shield, Map, Briefcase, CloudRain, LogOut } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const globalModules = [
   { name: 'Core Registry', href: '/core', icon: Database, color: 'text-blue-500' },
@@ -24,6 +25,12 @@ const globalModules = [
 
 export function GlobalSidebar() {
   const location = useLocation();
+  const { logout } = useAuth();
+  
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
   
   const isActive = (href: string) => {
     const basePath = '/' + location.pathname.split('/')[1];
@@ -72,6 +79,18 @@ export function GlobalSidebar() {
           );
         })}
       </nav>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="flex flex-col items-center gap-1 px-2 py-3 rounded-md transition-all text-muted-foreground hover:text-foreground hover:bg-muted mt-auto"
+        title="Logout"
+      >
+        <LogOut className="h-6 w-6 text-red-500" />
+        <span className="text-[9px] leading-tight text-center font-medium">
+          Logout
+        </span>
+      </button>
     </aside>
   );
 }
