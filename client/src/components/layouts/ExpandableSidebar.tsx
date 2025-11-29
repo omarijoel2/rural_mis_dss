@@ -62,11 +62,13 @@ import {
 } from 'lucide-react';
 
 const moduleNavigation = [
+  // INFRASTRUCTURE & ASSETS
   {
     name: 'Core Registry',
     href: '/core',
     icon: Database,
     color: 'text-blue-500',
+    category: 'Infrastructure & Assets',
     subPages: [
       { name: 'Home', href: '/core' },
       { name: 'Schemes', href: '/core/schemes' },
@@ -80,63 +82,11 @@ const moduleNavigation = [
     ]
   },
   {
-    name: 'CRM & Revenue',
-    href: '/crm',
-    icon: Users,
-    color: 'text-green-500',
-    subPages: [
-      { name: 'Customers', href: '/crm/customers', icon: Users },
-      { name: 'Account Search', href: '/crm/accounts/search', icon: Home },
-      { name: 'Complaints', href: '/crm/complaints', icon: AlertTriangle },
-      { name: 'Interactions', href: '/crm/interactions', icon: MessageSquare },
-      { name: 'Segmentation', href: '/crm/segmentation', icon: BarChart3 },
-      { name: 'Revenue Assurance', href: '/crm/ra', icon: AlertTriangle },
-      { name: 'Dunning & Collections', href: '/crm/dunning', icon: Receipt },
-      { name: 'Import Center', href: '/crm/import', icon: Upload },
-    ]
-  },
-  {
-    name: 'Hydro-Met',
-    href: '/hydromet',
-    icon: CloudRain,
-    color: 'text-cyan-500',
-    subPages: [
-      { name: 'Water Sources', href: '/hydromet/sources' },
-      { name: 'Stations Registry', href: '/hydromet/stations' },
-      { name: 'Aquifer Management', href: '/hydromet/aquifers', icon: Droplet },
-    ]
-  },
-  {
-    name: 'Projects',
-    href: '/projects',
-    icon: Briefcase,
-    color: 'text-purple-500',
-    subPages: []
-  },
-  {
-    name: 'Costing',
-    href: '/costing',
-    icon: Calculator,
-    color: 'text-orange-500',
-    subPages: [
-      { name: 'Budgets', href: '/costing/budgets', icon: Calculator },
-      { name: 'Allocation Console', href: '/costing/allocations', icon: PieChart },
-      { name: 'Cost-to-Serve', href: '/costing/cost-to-serve', icon: TrendingUp },
-      { name: 'GL Accounts', href: '/costing/gl-accounts', icon: DollarSign },
-      { name: 'Cost Centers', href: '/costing/cost-centers', icon: Building2 },
-      { name: 'Energy Tariffs', href: '/costing/energy/tariffs', icon: Zap },
-      { name: 'Energy Readings', href: '/costing/energy/readings', icon: Upload },
-      { name: 'Energy Dashboard', href: '/costing/energy/dashboard', icon: FileBarChart },
-      { name: 'Requisitions', href: '/procurement/requisitions', icon: ClipboardList },
-      { name: 'RFQ Builder', href: '/procurement/rfqs', icon: FileText },
-      { name: 'LPO Management', href: '/procurement/lpos', icon: ShoppingCart },
-    ]
-  },
-  {
     name: 'CMMS',
     href: '/cmms',
     icon: Wrench,
     color: 'text-yellow-500',
+    category: 'Infrastructure & Assets',
     subPages: [
       { name: 'Dashboard', href: '/cmms/dashboard', icon: BarChart3 },
       { name: 'Assets', href: '/cmms/assets', icon: Settings },
@@ -157,6 +107,7 @@ const moduleNavigation = [
     href: '/water-quality',
     icon: Droplet,
     color: 'text-blue-400',
+    category: 'Infrastructure & Assets',
     subPages: [
       { name: 'Parameters', href: '/water-quality/parameters', icon: TestTube },
       { name: 'Sampling Points', href: '/water-quality/sampling-points', icon: MapPin },
@@ -167,21 +118,147 @@ const moduleNavigation = [
     ]
   },
   {
+    name: 'Hydro-Met',
+    href: '/hydromet',
+    icon: CloudRain,
+    color: 'text-cyan-500',
+    category: 'Infrastructure & Assets',
+    subPages: [
+      { name: 'Water Sources', href: '/hydromet/sources' },
+      { name: 'Stations Registry', href: '/hydromet/stations' },
+      { name: 'Aquifer Management', href: '/hydromet/aquifers', icon: Droplet },
+    ]
+  },
+  {
     name: 'GIS',
     href: '/gis',
     icon: Map,
     color: 'text-red-500',
+    category: 'Infrastructure & Assets',
     subPages: [
       { name: 'Map Console', href: '/gis', icon: Map },
       { name: 'Files & Layers', href: '/gis', icon: Upload },
       { name: 'Settings', href: '/gis', icon: Settings },
     ]
   },
+
+  // OPERATIONS & CUSTOMER MANAGEMENT
+  {
+    name: 'CRM & Revenue',
+    href: '/crm',
+    icon: Users,
+    color: 'text-green-500',
+    category: 'Operations & Customer',
+    subPages: [
+      { name: 'Customers', href: '/crm/customers', icon: Users },
+      { name: 'Account Search', href: '/crm/accounts/search', icon: Home },
+      { name: 'Complaints', href: '/crm/complaints', icon: AlertTriangle },
+      { name: 'Interactions', href: '/crm/interactions', icon: MessageSquare },
+      { name: 'Segmentation', href: '/crm/segmentation', icon: BarChart3 },
+      { name: 'Revenue Assurance', href: '/crm/ra', icon: AlertTriangle },
+      { name: 'Dunning & Collections', href: '/crm/dunning', icon: Receipt },
+      { name: 'Import Center', href: '/crm/import', icon: Upload },
+    ]
+  },
+  {
+    name: 'Customer & Commercial',
+    href: '/customer',
+    icon: Phone,
+    color: 'text-pink-500',
+    category: 'Operations & Customer',
+    subPages: [
+      { name: 'Tariffs', href: '/customer/tariffs', icon: DollarSign },
+      { name: 'Billing Runs', href: '/customer/billing', icon: Receipt },
+      { name: 'Payment Reconciliation', href: '/customer/payments', icon: CreditCard },
+      { name: 'Meter Routes', href: '/customer/meter-routes', icon: MapPin },
+      { name: 'Tickets & Support', href: '/customer/tickets', icon: Phone },
+      { name: 'Kiosks', href: '/customer/kiosks', icon: Home },
+      { name: 'Water Trucking', href: '/customer/trucking', icon: Truck },
+      { name: 'Connections', href: '/customer/connections', icon: Package },
+    ]
+  },
+  {
+    name: 'Core Operations',
+    href: '/core-ops',
+    icon: Activity,
+    color: 'text-emerald-500',
+    category: 'Operations & Customer',
+    subPages: [
+      { name: 'Operations Console', href: '/core-ops/console', icon: Gauge },
+      { name: 'Topology Viewer', href: '/core-ops/topology', icon: Globe },
+      { name: 'Telemetry Dashboard', href: '/core-ops/telemetry', icon: BarChart2 },
+      { name: 'Outage Planner', href: '/core-ops/outages', icon: AlertTriangle },
+      { name: 'NRW Dashboard', href: '/core-ops/nrw', icon: Droplet },
+      { name: 'Dosing Control', href: '/core-ops/dosing', icon: TestTube },
+      { name: 'Pump Scheduling', href: '/core-ops/scheduling', icon: Clock },
+      { name: 'Pressure & Leak', href: '/core-ops/pressure-leak', icon: Gauge },
+      { name: 'Shifts & Events', href: '/core-ops/shifts', icon: Clock },
+      { name: 'Alerts & Events', href: '/core-ops/events', icon: AlertCircle },
+      { name: 'Checklists', href: '/core-ops/checklists', icon: ClipboardList },
+      { name: 'Playbooks', href: '/core-ops/playbooks', icon: BookOpen },
+      { name: 'Escalation Policies', href: '/core-ops/escalation-policies', icon: Bell },
+      { name: 'Workflows', href: '/core-ops/workflows/definitions', icon: GitBranch, subMenu: [
+        { name: 'Definitions', href: '/core-ops/workflows/definitions' },
+        { name: 'Instances', href: '/core-ops/workflows/instances' },
+      ]},
+      { name: 'Drought Response', href: '/core-ops/droughts', icon: AlertTriangle },
+      { name: 'Predictions', href: '/core-ops/predictions', icon: TrendingUp },
+    ]
+  },
+
+  // PLANNING & FINANCE
+  {
+    name: 'Projects',
+    href: '/projects',
+    icon: Briefcase,
+    color: 'text-purple-500',
+    category: 'Planning & Finance',
+    subPages: []
+  },
+  {
+    name: 'Costing & Procurement',
+    href: '/costing',
+    icon: Calculator,
+    color: 'text-orange-500',
+    category: 'Planning & Finance',
+    subPages: [
+      { name: 'Budgets', href: '/costing/budgets', icon: Calculator },
+      { name: 'Allocation Console', href: '/costing/allocations', icon: PieChart },
+      { name: 'Cost-to-Serve', href: '/costing/cost-to-serve', icon: TrendingUp },
+      { name: 'GL Accounts', href: '/costing/gl-accounts', icon: DollarSign },
+      { name: 'Cost Centers', href: '/costing/cost-centers', icon: Building2 },
+      { name: 'Energy Tariffs', href: '/costing/energy/tariffs', icon: Zap },
+      { name: 'Energy Readings', href: '/costing/energy/readings', icon: Upload },
+      { name: 'Energy Dashboard', href: '/costing/energy/dashboard', icon: FileBarChart },
+      { name: 'Requisitions', href: '/procurement/requisitions', icon: ClipboardList },
+      { name: 'RFQ Builder', href: '/procurement/rfqs', icon: FileText },
+      { name: 'LPO Management', href: '/procurement/lpos', icon: ShoppingCart },
+    ]
+  },
+  {
+    name: 'Decision Support & Analytics',
+    href: '/dsa',
+    icon: Brain,
+    color: 'text-violet-500',
+    category: 'Planning & Finance',
+    subPages: [
+      { name: 'Forecast Studio', href: '/dsa/forecast', icon: LineChart },
+      { name: 'Scenario Workbench', href: '/dsa/scenarios', icon: Cpu },
+      { name: 'Optimization Console', href: '/dsa/optimize', icon: Sparkles },
+      { name: 'Anomalies Inbox', href: '/dsa/anomalies', icon: AlertTriangle },
+      { name: 'Aquifer Dashboard', href: '/dsa/aquifer', icon: Droplet },
+      { name: 'Tariff Sandbox', href: '/dsa/tariffs', icon: DollarSign },
+      { name: 'EWS Console', href: '/dsa/ews', icon: Bell },
+    ]
+  },
+
+  // MONITORING & REPORTING
   {
     name: 'M&E & Service Levels',
     href: '/me',
     icon: Target,
     color: 'text-teal-500',
+    category: 'Monitoring & Reporting',
     subPages: [
       { name: 'KPI Dashboard', href: '/me/kpis', icon: Gauge },
       { name: 'Coverage Analytics', href: '/me/coverage', icon: Globe },
@@ -191,27 +268,14 @@ const moduleNavigation = [
       { name: 'Gender & Equity', href: '/me/gender-equity', icon: Users },
     ]
   },
-  {
-    name: 'Customer & Commercial',
-    href: '/customer',
-    icon: Phone,
-    color: 'text-pink-500',
-    subPages: [
-      { name: 'Tariffs', href: '/customer/tariffs', icon: DollarSign },
-      { name: 'Billing Runs', href: '/customer/billing', icon: Receipt },
-      { name: 'Payment Reconciliation', href: '/customer/payments', icon: CreditCard },
-      { name: 'Meter Routes', href: '/customer/meter-routes', icon: MapPin },
-      { name: 'Tickets (CRM)', href: '/customer/tickets', icon: Phone },
-      { name: 'Kiosks', href: '/customer/kiosks', icon: Home },
-      { name: 'Water Trucking', href: '/customer/trucking', icon: Truck },
-      { name: 'Connections', href: '/customer/connections', icon: Package },
-    ]
-  },
+
+  // COMMUNITY & ENGAGEMENT
   {
     name: 'Community & Stakeholder',
     href: '/community',
     icon: HandHeart,
     color: 'text-purple-500',
+    category: 'Community & Engagement',
     subPages: [
       { name: 'RWSS Committees', href: '/community/committees', icon: Users },
       { name: 'Committee Finance', href: '/community/finance', icon: DollarSign },
@@ -226,51 +290,14 @@ const moduleNavigation = [
       { name: 'Public Maps', href: '/community/public-maps', icon: Map },
     ]
   },
-  {
-    name: 'Core Operations',
-    href: '/core-ops',
-    icon: Activity,
-    color: 'text-emerald-500',
-    subPages: [
-      { name: 'Operations Console', href: '/core-ops/console', icon: Gauge },
-      { name: 'Topology Viewer', href: '/core-ops/topology', icon: Globe },
-      { name: 'Telemetry Dashboard', href: '/core-ops/telemetry', icon: BarChart2 },
-      { name: 'Outage Planner', href: '/core-ops/outages', icon: AlertTriangle },
-      { name: 'NRW Dashboard', href: '/core-ops/nrw', icon: Droplet },
-      { name: 'Dosing Control', href: '/core-ops/dosing', icon: TestTube },
-      { name: 'Pump Scheduling', href: '/core-ops/scheduling', icon: Clock },
-      { name: 'Pressure & Leak', href: '/core-ops/pressure-leak', icon: Gauge },
-      { name: 'Shifts', href: '/core-ops/shifts', icon: Clock },
-      { name: 'Events', href: '/core-ops/events', icon: AlertCircle },
-      { name: 'Checklists', href: '/core-ops/checklists', icon: ClipboardList },
-      { name: 'Playbooks', href: '/core-ops/playbooks', icon: BookOpen },
-      { name: 'Escalation Policies', href: '/core-ops/escalation-policies', icon: Bell },
-      { name: 'Workflows - Definitions', href: '/core-ops/workflows/definitions', icon: GitBranch },
-      { name: 'Workflows - Instances', href: '/core-ops/workflows/instances', icon: GitBranch },
-      { name: 'Drought Response', href: '/core-ops/droughts', icon: AlertTriangle },
-      { name: 'Predictions', href: '/core-ops/predictions', icon: TrendingUp },
-    ]
-  },
-  {
-    name: 'Decision Support & Analytics',
-    href: '/dsa',
-    icon: Brain,
-    color: 'text-violet-500',
-    subPages: [
-      { name: 'Forecast Studio', href: '/dsa/forecast', icon: LineChart },
-      { name: 'Scenario Workbench', href: '/dsa/scenarios', icon: Cpu },
-      { name: 'Optimization Console', href: '/dsa/optimize', icon: Sparkles },
-      { name: 'Anomalies Inbox', href: '/dsa/anomalies', icon: AlertTriangle },
-      { name: 'Aquifer Dashboard', href: '/dsa/aquifer', icon: Droplet },
-      { name: 'Tariff Sandbox', href: '/dsa/tariffs', icon: DollarSign },
-      { name: 'EWS Console', href: '/dsa/ews', icon: Bell },
-    ]
-  },
+
+  // GOVERNANCE & SECURITY
   {
     name: 'Risk, Compliance & Governance',
     href: '/risk-compliance',
     icon: Gavel,
     color: 'text-orange-500',
+    category: 'Governance & Security',
     subPages: [
       { name: 'Dashboard', href: '/risk-compliance/home', icon: Activity },
       { name: 'Risk Register', href: '/risk-compliance/risks', icon: AlertTriangle },
@@ -284,14 +311,15 @@ const moduleNavigation = [
     ]
   },
   {
-    name: 'Security',
+    name: 'Security & Access',
     href: '/security',
     icon: Shield,
     color: 'text-red-500',
+    category: 'Governance & Security',
     subPages: [
       { name: 'Audit Logs', href: '/security/audit', icon: FileText },
       { name: 'Security Alerts', href: '/security/alerts', icon: AlertTriangle },
-      { name: 'Roles', href: '/security/roles', icon: Key },
+      { name: 'Roles & Permissions', href: '/security/roles', icon: Key },
       { name: 'API Keys', href: '/security/api-keys', icon: Lock },
       { name: 'DSR Requests', href: '/security/dsr', icon: FileText },
       { name: 'Consents', href: '/security/consents', icon: Shield },
@@ -302,10 +330,11 @@ const moduleNavigation = [
     ]
   },
   {
-    name: 'Admin',
+    name: 'Admin & Configuration',
     href: '/admin',
     icon: Settings,
     color: 'text-gray-500',
+    category: 'Governance & Security',
     subPages: [
       { name: 'Users Management', href: '/admin/users', icon: Users },
       { name: 'Roles & Permissions', href: '/admin/rbac/roles', icon: Key },
@@ -317,11 +346,14 @@ const moduleNavigation = [
       { name: 'API Keys', href: '/admin/security/api-keys', icon: Lock },
     ]
   },
+
+  // INTEGRATION & ENABLEMENT
   {
     name: 'Integration',
     href: '/integration',
     icon: Settings,
     color: 'text-indigo-500',
+    category: 'Integration & Enablement',
     subPages: [
       { name: 'API Catalog', href: '/integration/api', icon: Database },
       { name: 'Connector Gallery', href: '/integration/connectors', icon: Settings },
@@ -336,6 +368,7 @@ const moduleNavigation = [
     href: '/training',
     icon: FileText,
     color: 'text-amber-500',
+    category: 'Integration & Enablement',
     subPages: [
       { name: 'Course Catalog', href: '/training/courses', icon: FileText },
       { name: 'My Learning', href: '/training/my-learning', icon: Activity },
@@ -402,6 +435,25 @@ export function ExpandableSidebar() {
     }
   };
 
+  const groupedModules = moduleNavigation.reduce((acc, module) => {
+    const category = module.category || 'Other';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(module);
+    return acc;
+  }, {} as Record<string, typeof moduleNavigation>);
+
+  const categoryOrder = [
+    'Infrastructure & Assets',
+    'Operations & Customer',
+    'Planning & Finance',
+    'Monitoring & Reporting',
+    'Community & Engagement',
+    'Governance & Security',
+    'Integration & Enablement'
+  ];
+
   return (
     <aside className="w-64 bg-card border-r flex flex-col h-screen">
       {/* Logo/Title */}
@@ -419,86 +471,140 @@ export function ExpandableSidebar() {
 
       {/* Module Navigation */}
       <ScrollArea className="flex-1">
-        <nav className="p-3 space-y-1">
-        {moduleNavigation.map((module) => {
-          const isActive = activeModule?.href === module.href;
-          const hasSubPages = module.subPages.length > 0;
-          const isExpanded = expandedModules.has(module.name);
-          const shouldShowSubPages = hasSubPages && isExpanded;
-          
-          const moduleButtonClass = cn(
-            'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
-            isActive
-              ? 'bg-primary/10 text-primary'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          );
-          
-          return (
-            <div key={module.name}>
-              {/* Module Main Link */}
-              {hasSubPages ? (
-                <button
-                  onClick={() => toggleModule(module.name)}
-                  className={moduleButtonClass}
-                  aria-expanded={shouldShowSubPages}
-                  aria-label={`${module.name} ${isExpanded ? 'expanded' : 'collapsed'}`}
-                >
-                  <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
-                  <span className="flex-1 text-left">{module.name}</span>
-                  {isExpanded 
-                    ? <ChevronDown className="h-4 w-4" />
-                    : <ChevronRight className="h-4 w-4" />
-                  }
-                </button>
-              ) : (
-                <NavLink
-                  to={module.href}
-                  className={({ isActive: isNavActive }) =>
-                    cn(
-                      'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
-                      isNavActive
+        <nav className="p-3 space-y-4">
+          {categoryOrder.map((category) => {
+            const modules = groupedModules[category] || [];
+            if (modules.length === 0) return null;
+
+            return (
+              <div key={category}>
+                {/* Category Header */}
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {category}
+                </div>
+                
+                {/* Modules in Category */}
+                <div className="space-y-1">
+                  {modules.map((module) => {
+                    const isActive = activeModule?.href === module.href;
+                    const hasSubPages = module.subPages.length > 0;
+                    const isExpanded = expandedModules.has(module.name);
+                    const shouldShowSubPages = hasSubPages && isExpanded;
+                    
+                    const moduleButtonClass = cn(
+                      'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
+                      isActive
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    )
-                  }
-                >
-                  <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
-                  <span className="flex-1 text-left">{module.name}</span>
-                </NavLink>
-              )}
-
-              {/* Sub-pages (only shown when expanded) */}
-              {shouldShowSubPages && (
-                <div 
-                  className="mt-1 ml-6 space-y-0.5 animate-in slide-in-from-top-2 duration-200"
-                  role="group"
-                  aria-label={`${module.name} submenu`}
-                >
-                  {module.subPages.map((subPage) => {
-                    const SubPageIcon = 'icon' in subPage ? subPage.icon : null;
+                    );
+                    
                     return (
-                      <NavLink
-                        key={subPage.href}
-                        to={subPage.href}
-                        className={({ isActive: isSubActive }) =>
-                          cn(
-                            'flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition-colors',
-                            isSubActive
-                              ? 'bg-primary text-primary-foreground font-medium'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          )
-                        }
-                      >
-                        {SubPageIcon && <SubPageIcon className="h-4 w-4" />}
-                        <span>{subPage.name}</span>
-                      </NavLink>
+                      <div key={module.name}>
+                        {/* Module Main Link */}
+                        {hasSubPages ? (
+                          <button
+                            onClick={() => toggleModule(module.name)}
+                            className={moduleButtonClass}
+                            aria-expanded={shouldShowSubPages}
+                            aria-label={`${module.name} ${isExpanded ? 'expanded' : 'collapsed'}`}
+                          >
+                            <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
+                            <span className="flex-1 text-left">{module.name}</span>
+                            {isExpanded 
+                              ? <ChevronDown className="h-4 w-4" />
+                              : <ChevronRight className="h-4 w-4" />
+                            }
+                          </button>
+                        ) : (
+                          <NavLink
+                            to={module.href}
+                            className={({ isActive: isNavActive }) =>
+                              cn(
+                                'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors group',
+                                isNavActive
+                                  ? 'bg-primary/10 text-primary'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                              )
+                            }
+                          >
+                            <module.icon className={cn('h-5 w-5 flex-shrink-0', isActive && module.color)} />
+                            <span className="flex-1 text-left">{module.name}</span>
+                          </NavLink>
+                        )}
+
+                        {/* Sub-pages (only shown when expanded) */}
+                        {shouldShowSubPages && (
+                          <div 
+                            className="mt-1 ml-6 space-y-0.5 animate-in slide-in-from-top-2 duration-200"
+                            role="group"
+                            aria-label={`${module.name} submenu`}
+                          >
+                            {module.subPages.map((subPage) => {
+                              const SubPageIcon = 'icon' in subPage ? subPage.icon : null;
+                              const hasNestedMenu = 'subMenu' in subPage && subPage.subMenu;
+                              const [expandedNested, setExpandedNested] = useState(false);
+                              
+                              return (
+                                <div key={subPage.href}>
+                                  {hasNestedMenu ? (
+                                    <button
+                                      onClick={() => setExpandedNested(!expandedNested)}
+                                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+                                    >
+                                      {SubPageIcon && <SubPageIcon className="h-4 w-4" />}
+                                      <span className="flex-1 text-left">{subPage.name}</span>
+                                      {expandedNested ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                    </button>
+                                  ) : (
+                                    <NavLink
+                                      to={subPage.href}
+                                      className={({ isActive: isSubActive }) =>
+                                        cn(
+                                          'flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition-colors',
+                                          isSubActive
+                                            ? 'bg-primary text-primary-foreground font-medium'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                        )
+                                      }
+                                    >
+                                      {SubPageIcon && <SubPageIcon className="h-4 w-4" />}
+                                      <span>{subPage.name}</span>
+                                    </NavLink>
+                                  )}
+                                  
+                                  {/* Nested submenu for items like Workflows */}
+                                  {hasNestedMenu && expandedNested && (
+                                    <div className="ml-4 space-y-0.5 mt-0.5">
+                                      {subPage.subMenu?.map((nested) => (
+                                        <NavLink
+                                          key={nested.href}
+                                          to={nested.href}
+                                          className={({ isActive: isNestedActive }) =>
+                                            cn(
+                                              'block px-3 py-1 text-xs rounded-md transition-colors',
+                                              isNestedActive
+                                                ? 'bg-primary text-primary-foreground font-medium'
+                                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                            )
+                                          }
+                                        >
+                                          {nested.name}
+                                        </NavLink>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
         </nav>
       </ScrollArea>
       
