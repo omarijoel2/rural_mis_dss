@@ -4,6 +4,8 @@ import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { SignupPage } from './pages/auth/SignupPage';
 import { CoreRegistryHome } from './pages/core-registry/CoreRegistryHome';
 import { SchemesPage } from './pages/core-registry/SchemesPage';
 import { SchemesExplorerPage } from './pages/core-registry/SchemesExplorerPage';
@@ -181,6 +183,9 @@ export function AppMIS() {
           <div className="min-h-screen bg-background">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/auth/login" element={<LoginPage />} />
+              <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/auth/register" element={<SignupPage />} />
               
               <Route path="/" element={
                 <ProtectedRoute>

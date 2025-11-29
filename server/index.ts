@@ -128,6 +128,114 @@ app.get('/api/v1/admin/users/export', (req, res) => {
   });
 });
 
+// ============ AUTH ENDPOINTS (Mock) ============
+app.post('/api/v1/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  const demoUsers: Record<string, { password: string; user: any }> = {
+    'admin@waterutility.go.ke': {
+      password: 'admin123',
+      user: { id: '1', name: 'System Administrator', email: 'admin@waterutility.go.ke', current_tenant_id: '1', two_factor_enabled: false, roles: ['admin'], permissions: ['*'] }
+    },
+    'ops@waterutility.go.ke': {
+      password: 'ops123',
+      user: { id: '2', name: 'Operations Manager', email: 'ops@waterutility.go.ke', current_tenant_id: '1', two_factor_enabled: false, roles: ['manager'], permissions: ['operations.*', 'reports.*'] }
+    },
+    'field@waterutility.go.ke': {
+      password: 'field123',
+      user: { id: '3', name: 'Field Officer', email: 'field@waterutility.go.ke', current_tenant_id: '1', two_factor_enabled: false, roles: ['field_officer'], permissions: ['readings.*', 'inspections.*'] }
+    },
+    'demo@example.com': {
+      password: 'demo123',
+      user: { id: '4', name: 'Demo User', email: 'demo@example.com', current_tenant_id: '1', two_factor_enabled: false, roles: ['admin'], permissions: ['*'] }
+    }
+  };
+
+  const userEntry = demoUsers[email];
+  if (userEntry && userEntry.password === password) {
+    return res.json({ user: userEntry.user });
+  }
+  
+  if (email && password) {
+    return res.json({ 
+      user: { id: '99', name: 'Authenticated User', email, current_tenant_id: '1', two_factor_enabled: false, roles: ['user'], permissions: ['read.*'] }
+    });
+  }
+  
+  res.status(401).json({ message: 'Invalid credentials' });
+});
+
+app.post('/api/v1/auth/logout', (req, res) => {
+  res.json({ message: 'Logged out successfully' });
+});
+
+app.post('/api/v1/auth/2fa/challenge', (req, res) => {
+  const { email, password, code } = req.body;
+  
+  if (!email || !password || !code) {
+    return res.status(400).json({ message: 'Email, password and verification code are required' });
+  }
+  
+  if (code.length !== 6 || !/^\d+$/.test(code)) {
+    return res.status(400).json({ message: 'Invalid verification code format' });
+  }
+  
+  res.json({ 
+    user: { 
+      id: '1', 
+      name: 'Two-Factor User', 
+      email, 
+      current_tenant_id: '1', 
+      two_factor_enabled: true, 
+      roles: ['admin'], 
+      permissions: ['*'] 
+    }
+  });
+});
+
+app.post('/api/v1/auth/password/forgot', (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+  res.json({ message: `Password reset instructions sent to ${email}` });
+});
+
+app.post('/api/v1/auth/password/reset', (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ message: 'Token and password are required' });
+  }
+  res.json({ message: 'Password has been reset successfully' });
+});
+
+const registeredUsers: Array<{ id: string; name: string; email: string; organization?: string }> = [];
+
+app.post('/api/v1/auth/register', (req, res) => {
+  const { name, email, password, organization } = req.body;
+  
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Name, email and password are required' });
+  }
+  
+  if (registeredUsers.some(u => u.email === email)) {
+    return res.status(400).json({ message: 'An account with this email already exists' });
+  }
+  
+  const newUser = {
+    id: String(registeredUsers.length + 100),
+    name,
+    email,
+    organization,
+  };
+  registeredUsers.push(newUser);
+  
+  res.json({ 
+    message: 'Account created successfully',
+    user: { ...newUser, current_tenant_id: '1', two_factor_enabled: false, roles: ['user'], permissions: [] }
+  });
+});
+
 // ============ CRM MODULE (Mock) ============
 app.get('/api/v1/crm/customers', (req, res) => {
   res.json({ data: [
