@@ -1,5 +1,6 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { cn } from '../../lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -58,7 +59,8 @@ import {
   GitBranch,
   Trophy,
   CheckCircle2,
-  Gavel
+  Gavel,
+  LogOut
 } from 'lucide-react';
 
 const moduleNavigation = [
@@ -383,9 +385,15 @@ const moduleNavigation = [
 
 export function ExpandableSidebar() {
   const location = useLocation();
+  const { logout } = useAuth();
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [expandedNestedMenus, setExpandedNestedMenus] = useState<Set<string>>(new Set());
   const [isCompactMode, setIsCompactMode] = useState(false);
+  
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
   
   const getActiveModule = () => {
     const basePath = '/' + location.pathname.split('/')[1];
@@ -626,6 +634,17 @@ export function ExpandableSidebar() {
           <p className="leading-tight">Compact mode active - single section expanded</p>
         </div>
       )}
+      
+      {/* Logout Button */}
+      <div className="px-3 py-2 border-t flex-shrink-0">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted text-red-500 hover:text-red-600"
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="text-sm font-medium">Logout</span>
+        </button>
+      </div>
     </aside>
   );
 }
