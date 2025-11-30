@@ -54,8 +54,11 @@ export function OperationsConsole() {
 
         eventSource.onmessage = (event) => {
           try {
-            const alarm = JSON.parse(event.data) as LiveAlarm;
-            setLiveAlarms(prev => [alarm, ...prev].slice(0, 20)); // Keep last 20 alarms
+            const data = JSON.parse(event.data);
+            // Only add to alarms if it has required alarm fields (filter out connection messages)
+            if (data.tag_name && data.severity && data.timestamp) {
+              setLiveAlarms(prev => [data as LiveAlarm, ...prev].slice(0, 20)); // Keep last 20 alarms
+            }
           } catch (e) {
             console.error('Failed to parse SSE message:', e);
           }
