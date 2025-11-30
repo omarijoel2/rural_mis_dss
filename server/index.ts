@@ -889,17 +889,20 @@ app.get('/api/core-ops/interventions/:dmaId', (req, res) => {
 });
 
 // ============ STAKEHOLDER MAPPING ============
-app.get('/api/community/stakeholders', (req, res) => {
+app.get('/api/v1/community/stakeholders', (req, res) => {
   res.json({ data: [
-    { id: 1, name: 'County Water Director', category: 'Government', influence: 5, interest: 5, engagement: 'monthly', lastEngagement: '2025-11-20', status: 'active' },
-    { id: 2, name: 'Community Chairperson', category: 'Community', influence: 4, interest: 5, engagement: 'bi-weekly', lastEngagement: '2025-11-18', status: 'active' },
-    { id: 3, name: 'Water Users Association', category: 'Users', influence: 3, interest: 4, engagement: 'quarterly', lastEngagement: '2025-10-15', status: 'active' },
-    { id: 4, name: 'NGO Partner', category: 'NGO', influence: 3, interest: 4, engagement: 'monthly', lastEngagement: '2025-11-15', status: 'active' },
-    { id: 5, name: 'Women Vendors Group', category: 'Vulnerable', influence: 2, interest: 5, engagement: 'bi-weekly', lastEngagement: '2025-11-22', status: 'active' },
+    { id: 1, name: 'County Water Director', category: 'Government', influence: 5, interest: 5, engagement: 'monthly', lastEngagement: '2025-11-20', status: 'active', isVulnerable: false },
+    { id: 2, name: 'Community Chairperson', category: 'Community', influence: 4, interest: 5, engagement: 'bi-weekly', lastEngagement: '2025-11-18', status: 'active', isVulnerable: false },
+    { id: 3, name: 'Water Users Association', category: 'Users', influence: 3, interest: 4, engagement: 'quarterly', lastEngagement: '2025-10-15', status: 'active', isVulnerable: false },
+    { id: 4, name: 'NGO Partner', category: 'NGO', influence: 3, interest: 4, engagement: 'monthly', lastEngagement: '2025-11-15', status: 'active', isVulnerable: false },
+    { id: 5, name: 'Women Vendors Group', category: 'Vulnerable', influence: 2, interest: 5, engagement: 'bi-weekly', lastEngagement: '2025-11-22', status: 'active', isVulnerable: true, vulnerableReason: 'Economic disadvantage' },
+    { id: 6, name: 'Elderly Residents Committee', category: 'Vulnerable', influence: 2, interest: 4, engagement: 'monthly', lastEngagement: '2025-11-10', status: 'active', isVulnerable: true, vulnerableReason: 'Mobility challenges' },
+    { id: 7, name: 'Ministry of Water', category: 'Government', influence: 5, interest: 3, engagement: 'quarterly', lastEngagement: '2025-09-15', status: 'active', isVulnerable: false },
+    { id: 8, name: 'Private Sector Partner', category: 'Private', influence: 4, interest: 3, engagement: 'quarterly', lastEngagement: '2025-10-20', status: 'active', isVulnerable: false },
   ]});
 });
 
-app.get('/api/community/stakeholder-matrix', (req, res) => {
+app.get('/api/v1/community/stakeholder-matrix', (req, res) => {
   res.json({ data: {
     champions: 32,
     keysupporters: 65,
@@ -913,11 +916,13 @@ app.get('/api/community/stakeholder-matrix', (req, res) => {
   }});
 });
 
-app.get('/api/community/engagement-history', (req, res) => {
+app.get('/api/v1/community/engagement-history', (req, res) => {
   res.json({ data: [
     { id: 1, stakeholderId: 1, type: 'meeting', date: '2025-11-20', outcome: 'positive', notes: 'Discussed water quality monitoring' },
     { id: 2, stakeholderId: 2, type: 'consultation', date: '2025-11-18', outcome: 'positive', notes: 'Community feedback on tariff increase' },
     { id: 3, stakeholderId: 5, type: 'focus_group', date: '2025-11-22', outcome: 'positive', notes: 'Women vendors water access program' },
+    { id: 4, stakeholderId: 6, type: 'survey', date: '2025-11-10', outcome: 'neutral', notes: 'Elderly access needs assessment' },
+    { id: 5, stakeholderId: 7, type: 'presentation', date: '2025-09-15', outcome: 'positive', notes: 'Quarterly progress report' },
   ]});
 });
 
