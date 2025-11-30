@@ -1114,9 +1114,9 @@ app.get('/api/v1/core-ops/dosing/plans', (req, res) => {
 app.get('/api/v1/core-ops/nrw/snapshots', (req, res) => {
   res.json({
     data: [
-      { id: 1, dma: { id: 1, name: 'Zone A' }, as_of: '2025-11-25', system_input_volume_m3: 50000, nrw_m3: 11500, nrw_pct: 23, billed_authorized_m3: 38500, unbilled_authorized_m3: 500, apparent_losses_m3: 3500, real_losses_m3: 8000 },
-      { id: 2, dma: { id: 2, name: 'Zone B' }, as_of: '2025-11-25', system_input_volume_m3: 35000, nrw_m3: 6300, nrw_pct: 18, billed_authorized_m3: 28700, unbilled_authorized_m3: 300, apparent_losses_m3: 2100, real_losses_m3: 4200 },
-      { id: 3, dma: { id: 3, name: 'Zone C' }, as_of: '2025-11-25', system_input_volume_m3: 28000, nrw_m3: 8400, nrw_pct: 30, billed_authorized_m3: 19600, unbilled_authorized_m3: 200, apparent_losses_m3: 2800, real_losses_m3: 5600 }
+      { id: 1, dma: { id: 1, name: 'Zone A' }, as_of: '2025-11-25T00:00:00.000Z', system_input_volume_m3: 50000, nrw_m3: 11500, nrw_pct: 23, billed_authorized_m3: 38500, unbilled_authorized_m3: 500, apparent_losses_m3: 3500, real_losses_m3: 8000 },
+      { id: 2, dma: { id: 2, name: 'Zone B' }, as_of: '2025-11-25T00:00:00.000Z', system_input_volume_m3: 35000, nrw_m3: 6300, nrw_pct: 18, billed_authorized_m3: 28700, unbilled_authorized_m3: 300, apparent_losses_m3: 2100, real_losses_m3: 4200 },
+      { id: 3, dma: { id: 3, name: 'Zone C' }, as_of: '2025-11-25T00:00:00.000Z', system_input_volume_m3: 28000, nrw_m3: 8400, nrw_pct: 30, billed_authorized_m3: 19600, unbilled_authorized_m3: 200, apparent_losses_m3: 2800, real_losses_m3: 5600 }
     ],
     meta: { total: 3, per_page: 50, current_page: 1 }
   });
@@ -1168,9 +1168,9 @@ app.get('/api/v1/core-ops/dosing/stocks', (req, res) => {
 app.get('/api/v1/core-ops/nrw/interventions', (req, res) => {
   res.json({
     data: [
-      { id: 1, type: 'leak_repair', dma: { id: 1, name: 'Zone A' }, description: 'Repaired major leak on main transmission line', savings_m3_day: 150, cost: 25000, date: '2025-11-10', status: 'completed' },
-      { id: 2, type: 'meter_replacement', dma: { id: 2, name: 'Zone B' }, description: 'Replaced 45 faulty customer meters', savings_m3_day: 80, cost: 180000, date: '2025-11-18', status: 'completed' },
-      { id: 3, type: 'pressure_management', dma: { id: 1, name: 'Zone A' }, description: 'Installed PRV at zone inlet', savings_m3_day: 200, cost: 45000, date: '2025-11-25', status: 'in_progress' }
+      { id: 1, type: 'leak_repair', dma: { id: 1, name: 'Zone A' }, description: 'Repaired major leak on main transmission line', savings_m3_day: 150, cost: 25000, date: '2025-11-10T00:00:00.000Z', status: 'completed' },
+      { id: 2, type: 'meter_replacement', dma: { id: 2, name: 'Zone B' }, description: 'Replaced 45 faulty customer meters', savings_m3_day: 80, cost: 180000, date: '2025-11-18T00:00:00.000Z', status: 'completed' },
+      { id: 3, type: 'pressure_management', dma: { id: 1, name: 'Zone A' }, description: 'Installed PRV at zone inlet', savings_m3_day: 200, cost: 45000, date: '2025-11-25T00:00:00.000Z', status: 'in_progress' }
     ],
     meta: { total: 3, per_page: 50, current_page: 1 }
   });
