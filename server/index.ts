@@ -1013,6 +1013,84 @@ app.get('/api/v1/community/events/stats/summary', (req, res) => {
   res.json({ data: { upcoming, completed, totalAttendance } });
 });
 
+// ============ OPERATIONS DASHBOARD & MONITORING ============
+app.get('/api/v1/core-ops/dashboard', (req, res) => {
+  res.json({ 
+    data: {
+      timestamp: new Date().toISOString(),
+      status: 'operational',
+      schemeCount: 12,
+      dmaCount: 45,
+      assetsMonitored: 234,
+      pumpStationsActive: 18,
+      reservoirLevels: { average: 67, critical: 2, warning: 5 },
+      flowRate: { current: 1245.5, capacity: 1500, percentage: 83 },
+      pressureZones: { optimal: 28, warning: 8, critical: 1 },
+      qualityIndicators: { tds: 250, ph: 7.2, chlorine: 0.8, turbidity: 0.3 },
+      outages: { active: 2, resolved_today: 5, pending: 3 },
+      maintenance: { scheduled: 8, in_progress: 3, overdue: 1 },
+      networkHealth: 94,
+      nrwPercentage: 22.5,
+      lastUpdated: new Date().toISOString()
+    }
+  });
+});
+
+app.get('/api/v1/operations/dashboard', (req, res) => {
+  res.json({ 
+    data: {
+      timestamp: new Date().toISOString(),
+      status: 'operational',
+      schemeCount: 12,
+      dmaCount: 45,
+      assetsMonitored: 234,
+      pumpStationsActive: 18,
+      reservoirLevels: { average: 67, critical: 2, warning: 5 },
+      flowRate: { current: 1245.5, capacity: 1500, percentage: 83 },
+      pressureZones: { optimal: 28, warning: 8, critical: 1 },
+      qualityIndicators: { tds: 250, ph: 7.2, chlorine: 0.8, turbidity: 0.3 },
+      outages: { active: 2, resolved_today: 5, pending: 3 },
+      maintenance: { scheduled: 8, in_progress: 3, overdue: 1 },
+      networkHealth: 94,
+      nrwPercentage: 22.5,
+      lastUpdated: new Date().toISOString()
+    }
+  });
+});
+
+// SSE endpoint for real-time alarms
+const clients: Set<Response> = new Set();
+app.get('/api/v1/console/alarms', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  clients.add(res);
+  console.log('SSE client connected, total clients:', clients.size);
+
+  // Send initial connection message
+  res.write('data: {"type":"connected","message":"Connected to alarm stream"}\n\n');
+
+  // Send periodic test alarms every 10 seconds
+  const alarmInterval = setInterval(() => {
+    const alarms = [
+      { id: '1', tag_name: 'Reservoir_Level_Zone_A', severity: 'warning', message: 'Low reservoir level', value: 35, threshold: 50 },
+      { id: '2', tag_name: 'Pump_Pressure_Zone_B', severity: 'critical', message: 'High pressure detected', value: 8.5, threshold: 6 },
+      { id: '3', tag_name: 'Water_Quality_TDS', severity: 'info', message: 'TDS reading normal', value: 250, threshold: 500 },
+    ];
+    const alarm = alarms[Math.floor(Math.random() * alarms.length)];
+    alarm.timestamp = new Date().toISOString();
+    res.write(`data: ${JSON.stringify(alarm)}\n\n`);
+  }, 10000);
+
+  res.on('close', () => {
+    clients.delete(res);
+    clearInterval(alarmInterval);
+    console.log('SSE client disconnected, remaining clients:', clients.size);
+  });
+});
+
 // ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
 registerCoreRegistryRoutes(app);
 
