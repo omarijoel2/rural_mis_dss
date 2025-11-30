@@ -19,7 +19,10 @@ export function InfluenceInterestMatrix() {
 
   useEffect(() => {
     apiClient.get<{ data: MatrixData }>('/community/stakeholder-matrix')
-      .then(res => setMatrix(res.data))
+      .then(res => {
+        const data = res.data || res;
+        setMatrix(data as MatrixData);
+      })
       .catch(err => console.error(err));
   }, []);
 
