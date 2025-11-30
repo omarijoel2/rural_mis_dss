@@ -1041,11 +1041,11 @@ const dashboardData = {
 };
 
 app.get('/api/v1/core-ops/dashboard', (req, res) => {
-  res.json({ data: dashboardData });
+  res.json(dashboardData);
 });
 
 app.get('/api/v1/operations/dashboard', (req, res) => {
-  res.json({ data: dashboardData });
+  res.json(dashboardData);
 });
 
 // SSE endpoint for real-time alarms
