@@ -1184,6 +1184,57 @@ app.get('/api/v1/core-ops/telemetry/tags', (req, res) => {
   });
 });
 
+// Operations Shifts
+app.get('/api/v1/operations/shifts', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, name: 'Morning Shift', start_time: '06:00', end_time: '14:00', status: 'active', operators: [{ id: 1, name: 'John Kamau' }, { id: 2, name: 'Mary Wanjiku' }], scheme: { id: 1, name: 'Elwak Scheme' }, date: new Date().toISOString().split('T')[0] },
+      { id: 2, name: 'Afternoon Shift', start_time: '14:00', end_time: '22:00', status: 'scheduled', operators: [{ id: 3, name: 'Peter Ochieng' }], scheme: { id: 1, name: 'Elwak Scheme' }, date: new Date().toISOString().split('T')[0] },
+      { id: 3, name: 'Night Shift', start_time: '22:00', end_time: '06:00', status: 'scheduled', operators: [{ id: 4, name: 'Grace Muthoni' }], scheme: { id: 2, name: 'Merti Scheme' }, date: new Date().toISOString().split('T')[0] },
+      { id: 4, name: 'Morning Shift', start_time: '06:00', end_time: '14:00', status: 'completed', operators: [{ id: 1, name: 'John Kamau' }], scheme: { id: 1, name: 'Elwak Scheme' }, date: new Date(Date.now() - 86400000).toISOString().split('T')[0] }
+    ],
+    meta: { total: 4, per_page: 50, current_page: 1 }
+  });
+});
+
+app.post('/api/v1/operations/shifts', (req, res) => {
+  res.json({ data: { id: 5, ...req.body, status: 'scheduled' }, message: 'Shift created successfully' });
+});
+
+// DMAs endpoint
+app.get('/api/v1/dmas', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, name: 'Zone A', code: 'DMA-001', scheme: { id: 1, name: 'Elwak Scheme' }, connections: 1250, nrw_pct: 23 },
+      { id: 2, name: 'Zone B', code: 'DMA-002', scheme: { id: 1, name: 'Elwak Scheme' }, connections: 980, nrw_pct: 18 },
+      { id: 3, name: 'Zone C', code: 'DMA-003', scheme: { id: 2, name: 'Merti Scheme' }, connections: 650, nrw_pct: 30 }
+    ],
+    meta: { total: 3, per_page: 100, current_page: 1 }
+  });
+});
+
+// PRV Targets endpoint
+app.get('/api/v1/prv-targets', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, name: 'PRV Zone A Inlet', target_pressure_bar: 4.5, current_pressure_bar: 4.2, status: 'optimal', dma: { id: 1, name: 'Zone A' } },
+      { id: 2, name: 'PRV Zone B Main', target_pressure_bar: 3.8, current_pressure_bar: 4.1, status: 'high', dma: { id: 2, name: 'Zone B' } }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+// Leak Suspicions endpoint
+app.get('/api/v1/leak-suspicions', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, location: 'Main St & 2nd Ave', dma: { id: 1, name: 'Zone A' }, score: 0.85, detected_at: new Date(Date.now() - 172800000).toISOString(), status: 'investigating', estimated_loss_m3_day: 45 },
+      { id: 2, location: 'Industrial Park Road', dma: { id: 2, name: 'Zone B' }, score: 0.72, detected_at: new Date(Date.now() - 86400000).toISOString(), status: 'confirmed', estimated_loss_m3_day: 120 }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
 // ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
 registerCoreRegistryRoutes(app);
 
