@@ -1074,13 +1074,13 @@ app.get('/api/v1/console/alarms', (req, res) => {
 
   // Send periodic test alarms every 10 seconds
   const alarmInterval = setInterval(() => {
-    const alarms = [
+    const alarmTemplates = [
       { id: '1', tag_name: 'Reservoir_Level_Zone_A', severity: 'warning', message: 'Low reservoir level', value: 35, threshold: 50 },
       { id: '2', tag_name: 'Pump_Pressure_Zone_B', severity: 'critical', message: 'High pressure detected', value: 8.5, threshold: 6 },
       { id: '3', tag_name: 'Water_Quality_TDS', severity: 'info', message: 'TDS reading normal', value: 250, threshold: 500 },
     ];
-    const alarm = alarms[Math.floor(Math.random() * alarms.length)];
-    alarm.timestamp = new Date().toISOString();
+    const template = alarmTemplates[Math.floor(Math.random() * alarmTemplates.length)];
+    const alarm = { ...template, timestamp: new Date().toISOString() };
     res.write(`data: ${JSON.stringify(alarm)}\n\n`);
   }, 10000);
 
