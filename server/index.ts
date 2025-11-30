@@ -926,6 +926,93 @@ app.get('/api/v1/community/engagement-history', (req, res) => {
   ]});
 });
 
+// ============ ENGAGEMENT PLANNER EVENTS ============
+let eventCounter = 8;
+const eventStore = [
+  { id: 1, title: 'Community Baraza - Water Tariff Review', type: 'baraza', date: '2025-12-05', time: '10:00', location: 'Elwak Community Hall', description: 'Quarterly tariff review discussion with community leaders', expectedAttendance: 150, actualAttendance: null, status: 'upcoming', stakeholderGroups: ['Community', 'Government'], qrCode: 'EVT-001-2025' },
+  { id: 2, title: 'Women Vendors Focus Group', type: 'focus_group', date: '2025-12-08', time: '14:00', location: 'Market Center Meeting Room', description: 'Access needs assessment for women water vendors', expectedAttendance: 30, actualAttendance: null, status: 'upcoming', stakeholderGroups: ['Vulnerable'], qrCode: 'EVT-002-2025' },
+  { id: 3, title: 'NGO Partners Coordination Meeting', type: 'meeting', date: '2025-12-10', time: '09:00', location: 'County Water Office', description: 'Monthly coordination with NGO partners', expectedAttendance: 15, actualAttendance: null, status: 'upcoming', stakeholderGroups: ['NGO'], qrCode: 'EVT-003-2025' },
+  { id: 4, title: 'Youth Water Conservation Workshop', type: 'workshop', date: '2025-12-12', time: '11:00', location: 'Merti Secondary School', description: 'Water conservation awareness for youth groups', expectedAttendance: 80, actualAttendance: null, status: 'upcoming', stakeholderGroups: ['Community', 'Users'], qrCode: 'EVT-004-2025' },
+  { id: 5, title: 'Quarterly Progress Review', type: 'presentation', date: '2025-12-15', time: '10:00', location: 'Ministry of Water Conference Room', description: 'Q4 progress presentation to government stakeholders', expectedAttendance: 25, actualAttendance: null, status: 'upcoming', stakeholderGroups: ['Government'], qrCode: 'EVT-005-2025' },
+  { id: 6, title: 'Community Baraza - Infrastructure Update', type: 'baraza', date: '2025-11-15', time: '10:00', location: 'Elwak Community Hall', description: 'Update on ongoing infrastructure projects', expectedAttendance: 120, actualAttendance: 135, status: 'completed', stakeholderGroups: ['Community', 'Government'], qrCode: 'EVT-006-2025' },
+  { id: 7, title: 'Elderly Access Consultation', type: 'consultation', date: '2025-11-10', time: '14:00', location: 'Community Center', description: 'Special consultation on elderly water access needs', expectedAttendance: 40, actualAttendance: 38, status: 'completed', stakeholderGroups: ['Vulnerable'], qrCode: 'EVT-007-2025' },
+  { id: 8, title: 'Private Sector Partnership Discussion', type: 'meeting', date: '2025-11-20', time: '09:00', location: 'County Water Office', description: 'Exploring PPP opportunities', expectedAttendance: 12, actualAttendance: 10, status: 'completed', stakeholderGroups: ['Private', 'Government'], qrCode: 'EVT-008-2025' },
+];
+
+const attendanceStore: Record<number, Array<{ id: number; name: string; organization: string; phone: string; checkedIn: boolean; checkinTime: string | null }>> = {
+  6: [
+    { id: 1, name: 'John Mwangi', organization: 'Elwak Community', phone: '+254712345678', checkedIn: true, checkinTime: '09:45' },
+    { id: 2, name: 'Mary Atieno', organization: 'Women Group', phone: '+254723456789', checkedIn: true, checkinTime: '09:50' },
+    { id: 3, name: 'James Kipchoge', organization: 'County Water Dept', phone: '+254734567890', checkedIn: true, checkinTime: '09:55' },
+  ],
+  7: [
+    { id: 1, name: 'Grace Wanjiku', organization: 'Elderly Association', phone: '+254745678901', checkedIn: true, checkinTime: '13:55' },
+    { id: 2, name: 'Peter Ochieng', organization: 'Community Health', phone: '+254756789012', checkedIn: true, checkinTime: '14:05' },
+  ],
+  8: [
+    { id: 1, name: 'Sarah Kimani', organization: 'Private Water Co.', phone: '+254767890123', checkedIn: true, checkinTime: '08:55' },
+    { id: 2, name: 'David Mutua', organization: 'County Government', phone: '+254778901234', checkedIn: true, checkinTime: '09:00' },
+  ],
+};
+
+app.get('/api/v1/community/events', (req, res) => {
+  res.json({ data: eventStore });
+});
+
+app.get('/api/v1/community/events/:id', (req, res) => {
+  const event = eventStore.find(e => e.id === parseInt(req.params.id));
+  if (!event) return res.status(404).json({ error: 'Event not found' });
+  res.json({ data: event });
+});
+
+app.post('/api/v1/community/events', (req, res) => {
+  const newEvent = {
+    id: ++eventCounter,
+    ...req.body,
+    qrCode: `EVT-${String(eventCounter).padStart(3, '0')}-2025`,
+    status: 'upcoming',
+    actualAttendance: null,
+  };
+  eventStore.push(newEvent);
+  res.json({ data: newEvent, message: 'Event created successfully' });
+});
+
+app.put('/api/v1/community/events/:id', (req, res) => {
+  const index = eventStore.findIndex(e => e.id === parseInt(req.params.id));
+  if (index === -1) return res.status(404).json({ error: 'Event not found' });
+  eventStore[index] = { ...eventStore[index], ...req.body };
+  res.json({ data: eventStore[index], message: 'Event updated successfully' });
+});
+
+app.get('/api/v1/community/events/:id/attendance', (req, res) => {
+  const eventId = parseInt(req.params.id);
+  const attendance = attendanceStore[eventId] || [];
+  res.json({ data: attendance });
+});
+
+app.post('/api/v1/community/events/:id/checkin', (req, res) => {
+  const eventId = parseInt(req.params.id);
+  const { name, organization, phone } = req.body;
+  if (!attendanceStore[eventId]) attendanceStore[eventId] = [];
+  const newAttendee = {
+    id: attendanceStore[eventId].length + 1,
+    name,
+    organization,
+    phone,
+    checkedIn: true,
+    checkinTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+  };
+  attendanceStore[eventId].push(newAttendee);
+  res.json({ data: newAttendee, message: 'Check-in successful' });
+});
+
+app.get('/api/v1/community/events/stats/summary', (req, res) => {
+  const upcoming = eventStore.filter(e => e.status === 'upcoming').length;
+  const completed = eventStore.filter(e => e.status === 'completed').length;
+  const totalAttendance = eventStore.reduce((sum, e) => sum + (e.actualAttendance || 0), 0);
+  res.json({ data: { upcoming, completed, totalAttendance } });
+});
+
 // ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
 registerCoreRegistryRoutes(app);
 
