@@ -1010,6 +1010,11 @@ export function AppMIS() {
                     <DataWarehousePage />
                   </ProtectedRoute>
                 } />
+                <Route path="dw" element={
+                  <ProtectedRoute requiredPermission="integration.dw.view">
+                    <DataWarehousePage />
+                  </ProtectedRoute>
+                } />
                 <Route path="notifications" element={
                   <ProtectedRoute requiredPermission="integration.notifications.view">
                     <NotificationsPage />
