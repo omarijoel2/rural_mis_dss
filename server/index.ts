@@ -1014,48 +1014,38 @@ app.get('/api/v1/community/events/stats/summary', (req, res) => {
 });
 
 // ============ OPERATIONS DASHBOARD & MONITORING ============
+const dashboardData = {
+  kpis: {
+    outages_count: 2,
+    schedules_count: 3,
+    dose_plans_count: 2
+  },
+  active_outages: [
+    { id: 1, code: 'OUT-001', state: 'live', cause: 'planned', summary: 'Scheduled maintenance Zone A', scheme: { id: 1, name: 'Elwak Scheme' }, starts_at: new Date(Date.now() - 3600000).toISOString(), ends_at: new Date(Date.now() + 7200000).toISOString(), estimated_customers_affected: 2500 },
+    { id: 2, code: 'OUT-002', state: 'approved', cause: 'fault', summary: 'Pump failure at Merti station', scheme: { id: 2, name: 'Merti Scheme' }, starts_at: new Date(Date.now() + 1800000).toISOString(), estimated_customers_affected: 1800 }
+  ],
+  active_schedules: [
+    { id: 1, status: 'running', start_at: new Date(Date.now() - 1800000).toISOString(), end_at: new Date(Date.now() + 3600000).toISOString(), target_volume_m3: 5000, asset: { id: 1, name: 'Main Pump 1', code: 'PUMP-001' }, scheme: { id: 1, name: 'Elwak Scheme' } },
+    { id: 2, status: 'scheduled', start_at: new Date(Date.now() + 7200000).toISOString(), end_at: new Date(Date.now() + 14400000).toISOString(), target_volume_m3: 3000, asset: { id: 2, name: 'Backup Pump', code: 'PUMP-002' }, scheme: { id: 2, name: 'Merti Scheme' } },
+    { id: 3, status: 'running', start_at: new Date(Date.now() - 3600000).toISOString(), end_at: new Date(Date.now() + 7200000).toISOString(), target_volume_m3: 8000, asset: { id: 3, name: 'Distribution Pump', code: 'PUMP-003' }, scheme: { id: 1, name: 'Elwak Scheme' } }
+  ],
+  active_dose_plans: [
+    { id: 1, asset: { id: 1, name: 'Treatment Plant A', code: 'TP-001' }, scheme: { id: 1, name: 'Elwak Scheme' }, chemical: 'Chlorine' },
+    { id: 2, asset: { id: 2, name: 'Treatment Plant B', code: 'TP-002' }, scheme: { id: 2, name: 'Merti Scheme' }, chemical: 'Alum' }
+  ],
+  alarm_tags: [
+    { id: 1, tag_name: 'Reservoir_Level_Zone_A', data_type: 'float', unit: 'm', scheme: { id: 1, name: 'Elwak Scheme' }, thresholds: { warning: 5, critical: 2 } },
+    { id: 2, tag_name: 'Pump_Pressure_Zone_B', data_type: 'float', unit: 'bar', asset: { id: 1, name: 'Main Pump 1', code: 'PUMP-001' }, thresholds: { warning: 5, critical: 8 } },
+    { id: 3, tag_name: 'Water_Quality_TDS', data_type: 'float', unit: 'ppm', facility: { id: 1, name: 'Treatment Plant A' }, thresholds: { warning: 400, critical: 500 } }
+  ]
+};
+
 app.get('/api/v1/core-ops/dashboard', (req, res) => {
-  res.json({ 
-    data: {
-      timestamp: new Date().toISOString(),
-      status: 'operational',
-      schemeCount: 12,
-      dmaCount: 45,
-      assetsMonitored: 234,
-      pumpStationsActive: 18,
-      reservoirLevels: { average: 67, critical: 2, warning: 5 },
-      flowRate: { current: 1245.5, capacity: 1500, percentage: 83 },
-      pressureZones: { optimal: 28, warning: 8, critical: 1 },
-      qualityIndicators: { tds: 250, ph: 7.2, chlorine: 0.8, turbidity: 0.3 },
-      outages: { active: 2, resolved_today: 5, pending: 3 },
-      maintenance: { scheduled: 8, in_progress: 3, overdue: 1 },
-      networkHealth: 94,
-      nrwPercentage: 22.5,
-      lastUpdated: new Date().toISOString()
-    }
-  });
+  res.json({ data: dashboardData });
 });
 
 app.get('/api/v1/operations/dashboard', (req, res) => {
-  res.json({ 
-    data: {
-      timestamp: new Date().toISOString(),
-      status: 'operational',
-      schemeCount: 12,
-      dmaCount: 45,
-      assetsMonitored: 234,
-      pumpStationsActive: 18,
-      reservoirLevels: { average: 67, critical: 2, warning: 5 },
-      flowRate: { current: 1245.5, capacity: 1500, percentage: 83 },
-      pressureZones: { optimal: 28, warning: 8, critical: 1 },
-      qualityIndicators: { tds: 250, ph: 7.2, chlorine: 0.8, turbidity: 0.3 },
-      outages: { active: 2, resolved_today: 5, pending: 3 },
-      maintenance: { scheduled: 8, in_progress: 3, overdue: 1 },
-      networkHealth: 94,
-      nrwPercentage: 22.5,
-      lastUpdated: new Date().toISOString()
-    }
-  });
+  res.json({ data: dashboardData });
 });
 
 // SSE endpoint for real-time alarms
