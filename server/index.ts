@@ -888,6 +888,39 @@ app.get('/api/core-ops/interventions/:dmaId', (req, res) => {
   });
 });
 
+// ============ STAKEHOLDER MAPPING ============
+app.get('/api/community/stakeholders', (req, res) => {
+  res.json({ data: [
+    { id: 1, name: 'County Water Director', category: 'Government', influence: 5, interest: 5, engagement: 'monthly', lastEngagement: '2025-11-20', status: 'active' },
+    { id: 2, name: 'Community Chairperson', category: 'Community', influence: 4, interest: 5, engagement: 'bi-weekly', lastEngagement: '2025-11-18', status: 'active' },
+    { id: 3, name: 'Water Users Association', category: 'Users', influence: 3, interest: 4, engagement: 'quarterly', lastEngagement: '2025-10-15', status: 'active' },
+    { id: 4, name: 'NGO Partner', category: 'NGO', influence: 3, interest: 4, engagement: 'monthly', lastEngagement: '2025-11-15', status: 'active' },
+    { id: 5, name: 'Women Vendors Group', category: 'Vulnerable', influence: 2, interest: 5, engagement: 'bi-weekly', lastEngagement: '2025-11-22', status: 'active' },
+  ]});
+});
+
+app.get('/api/community/stakeholder-matrix', (req, res) => {
+  res.json({ data: {
+    champions: 32,
+    keysupporters: 65,
+    neutral: 85,
+    resistors: 38,
+    vulnerable: 18,
+    highInfluenceHighInterest: 32,
+    highInfluenceLowInterest: 28,
+    lowInfluenceHighInterest: 65,
+    lowInfluenceLowInterest: 120,
+  }});
+});
+
+app.get('/api/community/engagement-history', (req, res) => {
+  res.json({ data: [
+    { id: 1, stakeholderId: 1, type: 'meeting', date: '2025-11-20', outcome: 'positive', notes: 'Discussed water quality monitoring' },
+    { id: 2, stakeholderId: 2, type: 'consultation', date: '2025-11-18', outcome: 'positive', notes: 'Community feedback on tariff increase' },
+    { id: 3, stakeholderId: 5, type: 'focus_group', date: '2025-11-22', outcome: 'positive', notes: 'Women vendors water access program' },
+  ]});
+});
+
 // ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
 registerCoreRegistryRoutes(app);
 

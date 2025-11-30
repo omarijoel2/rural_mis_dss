@@ -1,7 +1,13 @@
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, TrendingUp, Globe } from 'lucide-react';
+import { StakeholderRegistry } from './StakeholderRegistry';
+import { InfluenceInterestMatrix } from './InfluenceInterestMatrix';
 
 export function StakeholderMap() {
+  const [activeTab, setActiveTab] = useState('overview');
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -49,7 +55,18 @@ export function StakeholderMap() {
           <CardTitle>Stakeholder Directory & Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Stakeholder registry, influence/interest matrix, and engagement plans coming soon...</p>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="registry">Registry</TabsTrigger>
+              <TabsTrigger value="analysis">Influence Matrix</TabsTrigger>
+            </TabsList>
+            <TabsContent value="registry" className="mt-4">
+              <StakeholderRegistry />
+            </TabsContent>
+            <TabsContent value="analysis" className="mt-4">
+              <InfluenceInterestMatrix />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
