@@ -1186,12 +1186,14 @@ app.get('/api/v1/core-ops/telemetry/tags', (req, res) => {
 
 // Operations Shifts
 app.get('/api/v1/operations/shifts', (req, res) => {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
   res.json({
     data: [
-      { id: 1, name: 'Morning Shift', start_time: '06:00', end_time: '14:00', status: 'active', operators: [{ id: 1, name: 'John Kamau' }, { id: 2, name: 'Mary Wanjiku' }], scheme: { id: 1, name: 'Elwak Scheme' }, date: new Date().toISOString().split('T')[0] },
-      { id: 2, name: 'Afternoon Shift', start_time: '14:00', end_time: '22:00', status: 'scheduled', operators: [{ id: 3, name: 'Peter Ochieng' }], scheme: { id: 1, name: 'Elwak Scheme' }, date: new Date().toISOString().split('T')[0] },
-      { id: 3, name: 'Night Shift', start_time: '22:00', end_time: '06:00', status: 'scheduled', operators: [{ id: 4, name: 'Grace Muthoni' }], scheme: { id: 2, name: 'Merti Scheme' }, date: new Date().toISOString().split('T')[0] },
-      { id: 4, name: 'Morning Shift', start_time: '06:00', end_time: '14:00', status: 'completed', operators: [{ id: 1, name: 'John Kamau' }], scheme: { id: 1, name: 'Elwak Scheme' }, date: new Date(Date.now() - 86400000).toISOString().split('T')[0] }
+      { id: '1', name: 'Morning Shift', starts_at: `${todayStr}T06:00:00Z`, ends_at: `${todayStr}T14:00:00Z`, status: 'active', supervisor: { id: 1, name: 'John Kamau' }, facility: { id: 1, name: 'Elwak Treatment Plant' }, entries_count: 12 },
+      { id: '2', name: 'Afternoon Shift', starts_at: `${todayStr}T14:00:00Z`, ends_at: `${todayStr}T22:00:00Z`, status: 'planned', supervisor: { id: 2, name: 'Mary Wanjiku' }, facility: { id: 1, name: 'Elwak Treatment Plant' }, entries_count: 0 },
+      { id: '3', name: 'Night Shift', starts_at: `${todayStr}T22:00:00Z`, ends_at: `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T06:00:00Z`, status: 'planned', supervisor: { id: 3, name: 'Peter Ochieng' }, facility: { id: 2, name: 'Merti Pumping Station' }, entries_count: 0 },
+      { id: '4', name: 'Morning Shift', starts_at: `${new Date(Date.now() - 86400000).toISOString().split('T')[0]}T06:00:00Z`, ends_at: `${new Date(Date.now() - 86400000).toISOString().split('T')[0]}T14:00:00Z`, status: 'closed', supervisor: { id: 1, name: 'John Kamau' }, facility: { id: 1, name: 'Elwak Treatment Plant' }, entries_count: 18 }
     ],
     meta: { total: 4, per_page: 50, current_page: 1 }
   });
@@ -1233,6 +1235,86 @@ app.get('/api/v1/leak-suspicions', (req, res) => {
     ],
     meta: { total: 2, per_page: 50, current_page: 1 }
   });
+});
+
+// Operations Checklists
+app.get('/api/v1/operations/checklists', (req, res) => {
+  res.json({
+    data: [
+      { id: '1', name: 'Daily Plant Inspection', description: 'Daily inspection checklist for treatment plant', category: 'maintenance', is_template: true, items: [{ id: 1, order: 1, text: 'Check pump pressure', required: true }, { id: 2, order: 2, text: 'Verify chlorine levels', required: true }], created_at: new Date().toISOString() },
+      { id: '2', name: 'Weekly Safety Check', description: 'Weekly safety and compliance checklist', category: 'safety', is_template: true, items: [{ id: 1, order: 1, text: 'Inspect PPE', required: true }], created_at: new Date().toISOString() },
+      { id: '3', name: 'Pump Station Inspection', description: 'Routine pump station inspection', category: 'equipment', is_template: true, items: [{ id: 1, order: 1, text: 'Check oil levels', required: true }], created_at: new Date().toISOString() }
+    ],
+    meta: { total: 3, per_page: 50, current_page: 1 }
+  });
+});
+
+app.get('/api/v1/operations/checklist-runs', (req, res) => {
+  res.json({
+    data: [
+      { id: '1', checklist_id: '1', checklist: { name: 'Daily Plant Inspection' }, started_at: new Date().toISOString(), status: 'in_progress', completed_items: 1, total_items: 2, started_by: { id: 1, name: 'John Kamau' } }
+    ],
+    meta: { total: 1, per_page: 50, current_page: 1 }
+  });
+});
+
+app.post('/api/v1/operations/checklists', (req, res) => {
+  res.json({ data: { id: '4', ...req.body, created_at: new Date().toISOString() }, message: 'Checklist created successfully' });
+});
+
+// Operations Playbooks
+app.get('/api/v1/operations/playbooks', (req, res) => {
+  res.json({
+    data: [
+      { id: '1', name: 'Pipe Burst Response', description: 'Standard procedure for responding to pipe bursts', trigger_event: 'pipe_burst', priority: 'high', steps: [{ order: 1, action: 'Isolate affected section' }, { order: 2, action: 'Notify customers' }], active: true, created_at: new Date().toISOString() },
+      { id: '2', name: 'Low Pressure Alert', description: 'Response to low pressure alerts', trigger_event: 'low_pressure', priority: 'medium', steps: [{ order: 1, action: 'Check pump status' }], active: true, created_at: new Date().toISOString() },
+      { id: '3', name: 'Contamination Response', description: 'Emergency contamination response', trigger_event: 'contamination', priority: 'critical', steps: [{ order: 1, action: 'Stop supply immediately' }], active: true, created_at: new Date().toISOString() }
+    ],
+    meta: { total: 3, per_page: 50, current_page: 1 }
+  });
+});
+
+app.post('/api/v1/operations/playbooks', (req, res) => {
+  res.json({ data: { id: '4', ...req.body, created_at: new Date().toISOString() }, message: 'Playbook created successfully' });
+});
+
+// Escalation Policies
+app.get('/api/v1/operations/escalation-policies', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, name: 'Critical Alarm Escalation', description: 'Escalation for critical alarms', levels: [{ order: 1, delay_minutes: 0, contacts: ['Operator On-Call'] }, { order: 2, delay_minutes: 15, contacts: ['Shift Supervisor'] }, { order: 3, delay_minutes: 30, contacts: ['Plant Manager'] }], active: true, created_at: new Date().toISOString() },
+      { id: 2, name: 'High Priority Escalation', description: 'Escalation for high priority issues', levels: [{ order: 1, delay_minutes: 0, contacts: ['Operator On-Call'] }, { order: 2, delay_minutes: 30, contacts: ['Shift Supervisor'] }], active: true, created_at: new Date().toISOString() }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+app.post('/api/v1/operations/escalation-policies', (req, res) => {
+  res.json({ data: { id: 3, ...req.body, created_at: new Date().toISOString() }, message: 'Policy created successfully' });
+});
+
+// Operations Events
+app.get('/api/v1/operations/events', (req, res) => {
+  res.json({
+    data: [
+      { id: '1', event_type: 'alarm', title: 'High Turbidity Alert', description: 'Turbidity exceeded threshold at Treatment Plant', severity: 'high', status: 'open', occurred_at: new Date(Date.now() - 3600000).toISOString(), facility: { id: 1, name: 'Elwak Treatment Plant' }, acknowledged: false },
+      { id: '2', event_type: 'maintenance', title: 'Scheduled Pump Maintenance', description: 'Routine maintenance on Pump #2', severity: 'low', status: 'in_progress', occurred_at: new Date(Date.now() - 7200000).toISOString(), facility: { id: 2, name: 'Merti Pumping Station' }, acknowledged: true },
+      { id: '3', event_type: 'incident', title: 'Minor Leak Detected', description: 'Small leak at junction valve', severity: 'medium', status: 'resolved', occurred_at: new Date(Date.now() - 86400000).toISOString(), facility: { id: 1, name: 'Elwak Distribution' }, acknowledged: true, resolved_at: new Date(Date.now() - 43200000).toISOString() }
+    ],
+    meta: { total: 3, per_page: 50, current_page: 1 }
+  });
+});
+
+app.post('/api/v1/operations/events', (req, res) => {
+  res.json({ data: { id: '4', ...req.body, created_at: new Date().toISOString() }, message: 'Event created successfully' });
+});
+
+app.post('/api/v1/operations/events/:id/acknowledge', (req, res) => {
+  res.json({ data: { id: req.params.id, acknowledged: true, acknowledged_at: new Date().toISOString() }, message: 'Event acknowledged' });
+});
+
+app.post('/api/v1/operations/events/:id/resolve', (req, res) => {
+  res.json({ data: { id: req.params.id, status: 'resolved', resolved_at: new Date().toISOString() }, message: 'Event resolved' });
 });
 
 // ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
