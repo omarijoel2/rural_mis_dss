@@ -1081,6 +1081,107 @@ app.get('/api/v1/console/alarms', (req, res) => {
   });
 });
 
+// ============ CORE-OPS MODULE ENDPOINTS ============
+// Pump Scheduling
+app.get('/api/v1/core-ops/schedule', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, status: 'running', start_at: new Date(Date.now() - 1800000).toISOString(), end_at: new Date(Date.now() + 3600000).toISOString(), target_volume_m3: 5000, actual_volume_m3: 2800, asset: { id: 1, name: 'Main Pump 1', code: 'PUMP-001' }, scheme: { id: 1, name: 'Elwak Scheme' }, energy_kwh: 45.2, notes: 'Morning shift pumping' },
+      { id: 2, status: 'scheduled', start_at: new Date(Date.now() + 7200000).toISOString(), end_at: new Date(Date.now() + 14400000).toISOString(), target_volume_m3: 3000, actual_volume_m3: null, asset: { id: 2, name: 'Backup Pump', code: 'PUMP-002' }, scheme: { id: 2, name: 'Merti Scheme' }, energy_kwh: null, notes: 'Scheduled backup operation' },
+      { id: 3, status: 'running', start_at: new Date(Date.now() - 3600000).toISOString(), end_at: new Date(Date.now() + 7200000).toISOString(), target_volume_m3: 8000, actual_volume_m3: 5200, asset: { id: 3, name: 'Distribution Pump', code: 'PUMP-003' }, scheme: { id: 1, name: 'Elwak Scheme' }, energy_kwh: 78.5, notes: 'Distribution zone supply' },
+      { id: 4, status: 'completed', start_at: new Date(Date.now() - 10800000).toISOString(), end_at: new Date(Date.now() - 7200000).toISOString(), target_volume_m3: 4000, actual_volume_m3: 4150, asset: { id: 1, name: 'Main Pump 1', code: 'PUMP-001' }, scheme: { id: 1, name: 'Elwak Scheme' }, energy_kwh: 52.1, notes: 'Night shift completed' }
+    ],
+    meta: { total: 4, per_page: 100, current_page: 1 }
+  });
+});
+
+app.post('/api/v1/core-ops/schedule', (req, res) => {
+  res.json({ data: { id: 5, ...req.body, status: 'scheduled' }, message: 'Schedule created successfully' });
+});
+
+// Dosing Plans
+app.get('/api/v1/core-ops/dosing/plans', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, status: 'active', chemical: 'Chlorine', target_dose_mg_l: 0.8, current_dose_mg_l: 0.75, asset: { id: 1, name: 'Treatment Plant A', code: 'TP-001' }, scheme: { id: 1, name: 'Elwak Scheme' }, start_date: '2025-01-01', end_date: null },
+      { id: 2, status: 'active', chemical: 'Alum', target_dose_mg_l: 15, current_dose_mg_l: 14.5, asset: { id: 2, name: 'Treatment Plant B', code: 'TP-002' }, scheme: { id: 2, name: 'Merti Scheme' }, start_date: '2025-01-01', end_date: null }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+// NRW Snapshots
+app.get('/api/v1/core-ops/nrw/snapshots', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, dma: { id: 1, name: 'Zone A' }, period: '2025-11', system_input_m3: 50000, billed_consumption_m3: 38500, nrw_percentage: 23, physical_losses_m3: 8000, commercial_losses_m3: 3500 },
+      { id: 2, dma: { id: 2, name: 'Zone B' }, period: '2025-11', system_input_m3: 35000, billed_consumption_m3: 28700, nrw_percentage: 18, physical_losses_m3: 4200, commercial_losses_m3: 2100 }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+// Network Nodes
+app.get('/api/v1/core-ops/network/nodes', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, code: 'NODE-001', name: 'Main Reservoir', node_type: 'reservoir', elevation_m: 1250, capacity_m3: 5000, scheme: { id: 1, name: 'Elwak Scheme' }, lat: -1.2921, lng: 36.8219 },
+      { id: 2, code: 'NODE-002', name: 'Pump Station 1', node_type: 'pump_station', elevation_m: 1180, capacity_m3: null, scheme: { id: 1, name: 'Elwak Scheme' }, lat: -1.2850, lng: 36.8150 },
+      { id: 3, code: 'NODE-003', name: 'Junction A', node_type: 'junction', elevation_m: 1200, capacity_m3: null, scheme: { id: 1, name: 'Elwak Scheme' }, lat: -1.2800, lng: 36.8100 }
+    ],
+    meta: { total: 3, per_page: 50, current_page: 1 }
+  });
+});
+
+// Network Edges
+app.get('/api/v1/core-ops/network/edges', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, from_node: { id: 1, name: 'Main Reservoir' }, to_node: { id: 2, name: 'Pump Station 1' }, edge_type: 'transmission', length_m: 2500, diameter_mm: 300, material: 'DI' },
+      { id: 2, from_node: { id: 2, name: 'Pump Station 1' }, to_node: { id: 3, name: 'Junction A' }, edge_type: 'distribution', length_m: 1800, diameter_mm: 200, material: 'HDPE' }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+// Outages
+app.get('/api/v1/core-ops/outages', (req, res) => {
+  res.json({
+    data: dashboardData.active_outages,
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+// Dosing Stocks
+app.get('/api/v1/core-ops/dosing/stocks', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, chemical: 'Chlorine', quantity_kg: 250, reorder_level_kg: 50, unit_cost: 85, supplier: 'ChemSupply Ltd', last_delivery: '2025-11-15' },
+      { id: 2, chemical: 'Alum', quantity_kg: 500, reorder_level_kg: 100, unit_cost: 45, supplier: 'Water Chem Co', last_delivery: '2025-11-20' }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+// NRW Interventions
+app.get('/api/v1/core-ops/nrw/interventions', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, type: 'leak_repair', dma: { id: 1, name: 'Zone A' }, description: 'Repaired major leak on main transmission line', savings_m3_day: 150, cost: 25000, completed_at: '2025-11-10' },
+      { id: 2, type: 'meter_replacement', dma: { id: 2, name: 'Zone B' }, description: 'Replaced 45 faulty customer meters', savings_m3_day: 80, cost: 180000, completed_at: '2025-11-18' }
+    ],
+    meta: { total: 2, per_page: 50, current_page: 1 }
+  });
+});
+
+// Telemetry Tags
+app.get('/api/v1/core-ops/telemetry/tags', (req, res) => {
+  res.json({
+    data: dashboardData.alarm_tags,
+    meta: { total: 3, per_page: 50, current_page: 1 }
+  });
+});
+
 // ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
 registerCoreRegistryRoutes(app);
 
