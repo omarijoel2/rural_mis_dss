@@ -1,12 +1,64 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { registerRoutes } from "./routes";
 import { registerCoreRegistryRoutes } from "./routes/core-registry";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Configure multer for file uploads
+const uploadDir = path.join(process.cwd(), 'uploads', 'shapefiles');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['.zip', '.shp', '.geojson', '.json', '.gpkg'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Allowed: ZIP, SHP, GeoJSON, GPKG'));
+    }
+  }
+});
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// GIS Shapefile Store
+interface ShapeFileRecord {
+  id: string;
+  name: string;
+  description: string;
+  file_size: number;
+  geom_type: string;
+  feature_count: number;
+  status: 'uploading' | 'processing' | 'processed' | 'failed';
+  projection_crs: string;
+  bounds: { minX: number; minY: number; maxX: number; maxY: number } | null;
+  uploaded_at: string;
+  uploaded_by: { name: string; email: string };
+  file_path: string;
+}
+
+let shapeFileCounter = 0;
+const shapeFileStore: ShapeFileRecord[] = [];
 
 // GW4R Phase 1 Mock API Endpoints (before proxy)
 let aquiferCounter = 7;
@@ -350,6 +402,110 @@ app.get('/api/v1/admin/users/export', (req, res) => {
   res.json({ 
     data: userStore,
     message: `Exported ${userStore.length} users`
+  });
+});
+
+// ============ GIS SHAPEFILE ENDPOINTS ============
+// List all shapefiles
+app.get('/api/v1/gis/shape-files', (req, res) => {
+  res.json({ 
+    data: shapeFileStore,
+    meta: { total: shapeFileStore.length }
+  });
+});
+
+// Upload a new shapefile
+app.post('/api/v1/gis/shape-files', upload.single('file'), (req: any, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { name, description } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    let geomType = 'Unknown';
+    if (ext === '.geojson' || ext === '.json') {
+      geomType = 'GeoJSON';
+    } else if (ext === '.zip') {
+      geomType = 'Shapefile (ZIP)';
+    } else if (ext === '.gpkg') {
+      geomType = 'GeoPackage';
+    } else if (ext === '.shp') {
+      geomType = 'Shapefile';
+    }
+
+    const newShapeFile: ShapeFileRecord = {
+      id: `sf-${++shapeFileCounter}`,
+      name,
+      description: description || '',
+      file_size: req.file.size,
+      geom_type: geomType,
+      feature_count: Math.floor(Math.random() * 500) + 10,
+      status: 'processed',
+      projection_crs: 'EPSG:4326',
+      bounds: { minX: 40.0, minY: 3.0, maxX: 42.0, maxY: 5.0 },
+      uploaded_at: new Date().toISOString(),
+      uploaded_by: { name: 'Current User', email: 'user@example.com' },
+      file_path: req.file.path,
+    };
+
+    shapeFileStore.push(newShapeFile);
+    log(`[GIS] Shapefile uploaded: ${name} (${req.file.size} bytes)`);
+
+    res.json({ 
+      data: newShapeFile,
+      message: 'Shapefile uploaded successfully'
+    });
+  } catch (error) {
+    log(`[GIS] Upload error: ${(error as Error).message}`);
+    res.status(500).json({ error: 'Failed to upload shapefile' });
+  }
+});
+
+// Get shapefile by ID
+app.get('/api/v1/gis/shape-files/:id', (req, res) => {
+  const shapeFile = shapeFileStore.find(sf => sf.id === req.params.id);
+  if (!shapeFile) {
+    return res.status(404).json({ error: 'Shapefile not found' });
+  }
+  res.json({ data: shapeFile });
+});
+
+// Delete shapefile
+app.delete('/api/v1/gis/shape-files/:id', (req, res) => {
+  const index = shapeFileStore.findIndex(sf => sf.id === req.params.id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Shapefile not found' });
+  }
+  
+  const deleted = shapeFileStore.splice(index, 1)[0];
+  
+  // Try to delete the actual file
+  if (deleted.file_path && fs.existsSync(deleted.file_path)) {
+    try {
+      fs.unlinkSync(deleted.file_path);
+    } catch (e) {
+      log(`[GIS] Failed to delete file: ${deleted.file_path}`);
+    }
+  }
+  
+  log(`[GIS] Shapefile deleted: ${deleted.name}`);
+  res.json({ message: 'Shapefile deleted successfully' });
+});
+
+// Get shapefile layers (vector layers for styling)
+app.get('/api/v1/gis/shape-files/:id/layers', (req, res) => {
+  const shapeFile = shapeFileStore.find(sf => sf.id === req.params.id);
+  if (!shapeFile) {
+    return res.status(404).json({ error: 'Shapefile not found' });
+  }
+  res.json({ 
+    data: [],
+    meta: { total: 0 }
   });
 });
 
