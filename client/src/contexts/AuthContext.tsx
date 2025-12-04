@@ -54,11 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = async () => {
+    const token = localStorage.getItem('auth_token');
+    console.log('[Auth] refreshUser - token exists:', !!token);
+    
+    if (!token) {
+      console.log('[Auth] No token, skipping refresh');
+      setUser(null);
+      setTenant(null);
+      return;
+    }
+    
     try {
       const response = await apiClient.get<{ user: User; tenant: Tenant }>('/auth/user');
+      console.log('[Auth] refreshUser success:', response.user?.email);
       setUser(response.user);
       setTenant(response.tenant || null);
     } catch (error) {
+      console.error('[Auth] refreshUser failed:', error);
+      localStorage.removeItem('auth_token');
       setUser(null);
       setTenant(null);
     }
@@ -69,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
+    console.log('[Auth] Attempting login for:', email);
+    
     const response = await apiClient.post<{
       token: string;
       user: User;
@@ -81,9 +96,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
 
+    console.log('[Auth] Login response:', { 
+      hasToken: !!response.token,
+      tokenPreview: response.token ? response.token.substring(0, 20) + '...' : 'NO TOKEN',
+      user: response.user?.email,
+      roles: response.user?.role_names || response.user?.roles
+    });
+
     // Store token in localStorage for API calls
     if (response.token) {
       localStorage.setItem('auth_token', response.token);
+      console.log('[Auth] Token stored in localStorage');
+    } else {
+      console.error('[Auth] NO TOKEN in response!');
     }
 
     setUser(response.user);
