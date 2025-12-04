@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Trash2, Download, Eye, Plus } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Upload, Trash2, Download, Eye, Plus, CheckCircle2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 interface ShapeFile {
   id: string;
@@ -31,6 +33,8 @@ export function FileManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '' });
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch shape files
@@ -42,22 +46,74 @@ export function FileManager() {
     },
   });
 
-  // Upload mutation
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
+  const uploadFileWithProgress = async (file: File): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
       const fd = new FormData();
       fd.append('file', file);
       fd.append('name', formData.name || file.name);
       fd.append('description', formData.description);
 
-      const response = await apiClient.post('/gis/shape-files', fd) as any;
-      return response.data?.data;
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch {
+            resolve({ success: true });
+          }
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Upload failed'));
+      });
+
+      xhr.open('POST', '/api/v1/gis/shape-files');
+      xhr.send(fd);
+    });
+  };
+
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      setIsUploading(true);
+      setUploadProgress(0);
+      return uploadFileWithProgress(file);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setIsUploading(false);
+      setUploadProgress(100);
       queryClient.invalidateQueries({ queryKey: ['shape-files'] });
-      setIsDialogOpen(false);
-      setSelectedFile(null);
-      setFormData({ name: '', description: '' });
+      
+      toast.success('Shapefile Uploaded Successfully', {
+        description: `"${formData.name}" has been uploaded and is being processed.`,
+        duration: 5000,
+      });
+      
+      setTimeout(() => {
+        setIsDialogOpen(false);
+        setSelectedFile(null);
+        setFormData({ name: '', description: '' });
+        setUploadProgress(0);
+      }, 500);
+    },
+    onError: (error: Error) => {
+      setIsUploading(false);
+      setUploadProgress(0);
+      toast.error('Upload Failed', {
+        description: error.message || 'Failed to upload shapefile. Please try again.',
+        duration: 5000,
+      });
     },
   });
 
@@ -118,6 +174,7 @@ export function FileManager() {
                   accept=".zip,.shp,.geojson,.json,.gpkg"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                   className="mt-1"
+                  disabled={isUploading}
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Supported: ZIP (Shapefile), GeoJSON, GPKG
@@ -130,6 +187,7 @@ export function FileManager() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Water Supply Zones"
+                  disabled={isUploading}
                 />
               </div>
 
@@ -140,15 +198,39 @@ export function FileManager() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Optional description"
                   rows={3}
+                  disabled={isUploading}
                 />
               </div>
 
+              {isUploading && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Uploading...</span>
+                    <span className="font-medium text-blue-600">{uploadProgress}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
+                  {uploadProgress === 100 && (
+                    <p className="text-sm text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Upload complete! Processing file...
+                    </p>
+                  )}
+                </div>
+              )}
+
               <Button
                 onClick={handleUpload}
-                disabled={!selectedFile || !formData.name || uploadMutation.isPending}
+                disabled={!selectedFile || !formData.name || isUploading}
                 className="w-full"
               >
-                {uploadMutation.isPending ? 'Uploading...' : 'Upload'}
+                {isUploading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    Uploading... {uploadProgress}%
+                  </span>
+                ) : (
+                  'Upload'
+                )}
               </Button>
             </div>
           </DialogContent>
