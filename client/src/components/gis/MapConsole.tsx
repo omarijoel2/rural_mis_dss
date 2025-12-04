@@ -1,14 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Map, { Source, Layer, NavigationControl, ScaleControl, FullscreenControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { NetworkLayersPanel } from './NetworkLayersPanel';
-import { Layers } from 'lucide-react';
+import { Layers, MapPin, Building2 } from 'lucide-react';
+import { useAuth, Tenant } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api-client';
 
 interface MapLayer {
   id: string;
@@ -180,11 +182,26 @@ const MAP_LAYERS: MapLayer[] = [
 ];
 
 
+interface TenantBoundary {
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: number[][][];
+  };
+  properties: {
+    name: string;
+  };
+}
+
 interface MapConsoleProps {
   className?: string;
 }
 
 export function MapConsole({ className }: MapConsoleProps) {
+  const { tenant } = useAuth();
+  const [tenantBoundary, setTenantBoundary] = useState<TenantBoundary | null>(null);
+  const [showTenantBoundary, setShowTenantBoundary] = useState(true);
+  
   const [viewState, setViewState] = useState({
     longitude: 36.8219,
     latitude: -1.2921,
@@ -199,6 +216,33 @@ export function MapConsole({ className }: MapConsoleProps) {
   const [layerOpacity, setLayerOpacity] = useState(80);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  useEffect(() => {
+    const fetchTenantBoundary = async () => {
+      try {
+        const response = await apiClient.get<{ data: TenantBoundary }>('/tenants/current/boundary');
+        if (response.data) {
+          setTenantBoundary(response.data);
+          const coords = response.data.geometry.coordinates[0];
+          if (coords && coords.length > 0) {
+            const lngs = coords.map(c => c[0]);
+            const lats = coords.map(c => c[1]);
+            const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+            const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+            setViewState(prev => ({
+              ...prev,
+              longitude: centerLng,
+              latitude: centerLat,
+              zoom: 7
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch tenant boundary:', error);
+      }
+    };
+    fetchTenantBoundary();
+  }, [tenant?.id]);
 
   const toggleLayer = useCallback((layerId: string) => {
     setEnabledLayers((prev) => {
@@ -238,6 +282,47 @@ export function MapConsole({ className }: MapConsoleProps) {
         <ScaleControl position="bottom-left" />
         <FullscreenControl position="top-right" />
 
+        {tenantBoundary && showTenantBoundary && (
+          <Source
+            id="tenant-boundary"
+            type="geojson"
+            data={tenantBoundary}
+          >
+            <Layer
+              id="tenant-boundary-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#3b82f6',
+                'fill-opacity': 0.1
+              }}
+            />
+            <Layer
+              id="tenant-boundary-line"
+              type="line"
+              paint={{
+                'line-color': '#1d4ed8',
+                'line-width': 3,
+                'line-dasharray': [2, 2]
+              }}
+            />
+            <Layer
+              id="tenant-boundary-label"
+              type="symbol"
+              layout={{
+                'text-field': ['get', 'name'],
+                'text-size': 14,
+                'text-anchor': 'center',
+                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold']
+              }}
+              paint={{
+                'text-color': '#1d4ed8',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 2
+              }}
+            />
+          </Source>
+        )}
+
         {MAP_LAYERS.map((layer) => {
           if (!enabledLayers.has(layer.id)) return null;
           if (categoryFilter !== 'all' && layer.category !== categoryFilter) return null;
@@ -273,8 +358,18 @@ export function MapConsole({ className }: MapConsoleProps) {
         })}
       </Map>
 
-      <Card className="absolute top-4 left-4 w-64 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
+      <Card className="absolute top-4 left-4 w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
         <CardContent className="p-4">
+          {tenant && (
+            <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-blue-600" />
+              <div>
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">{tenant.county} County</p>
+                <p className="text-[10px] text-blue-500">{tenant.name}</p>
+              </div>
+            </div>
+          )}
+          
           <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Map Controls</h3>
           
           <div className="mb-4">
@@ -303,6 +398,29 @@ export function MapConsole({ className }: MapConsoleProps) {
           </Button>
 
           <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400">Base Layers</h4>
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">Tenant</Badge>
+            </div>
+            <div className="space-y-2 mb-3">
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="tenant-boundary"
+                  className="text-xs cursor-pointer text-gray-700 dark:text-gray-300 flex items-center gap-1.5"
+                >
+                  <MapPin className="w-3 h-3 text-blue-600" />
+                  County Boundary
+                </Label>
+                <Switch
+                  id="tenant-boundary"
+                  checked={showTenantBoundary}
+                  onCheckedChange={setShowTenantBoundary}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400">Quick Layers</h4>
               <Badge variant="outline" className="text-xs">Vector Tiles</Badge>

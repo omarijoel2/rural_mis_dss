@@ -73,7 +73,7 @@ export function AquiferManagementPage() {
       toast.success('Aquifer registered successfully');
       queryClient.invalidateQueries({ queryKey: ['aquifers'] });
       setIsCreateOpen(false);
-      setNewAquifer({ name: '', safeYield: '', county: '', aquiferType: 'Alluvial' });
+      setNewAquifer({ name: '', safeYield: '', county: tenant?.county || '', aquiferType: 'Alluvial' });
     },
     onError: () => {
       toast.error('Failed to register aquifer');
