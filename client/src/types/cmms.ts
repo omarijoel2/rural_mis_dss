@@ -1,7 +1,11 @@
 export interface AssetClass {
   id: number;
+  code: string;
   name: string;
-  category: string;
+  category?: string;
+  parent_id?: number;
+  criticality?: 'low' | 'medium' | 'high';
+  attributes_schema?: Record<string, any>;
   icon?: string;
   description?: string;
   specs?: Record<string, any>;
@@ -18,6 +22,8 @@ export interface Asset {
   scheme_id?: string;
   dma_id?: string;
   parent_id?: number;
+  source_id?: number;
+  kiosk_id?: number;
   status: 'active' | 'inactive' | 'retired' | 'under_maintenance';
   install_date?: string;
   barcode?: string;
@@ -45,6 +51,17 @@ export interface Asset {
   children?: Asset[];
   work_orders?: WorkOrder[];
   pm_policies?: PmPolicy[];
+  source?: {
+    id: number;
+    name: string;
+    code: string;
+  };
+  kiosk?: {
+    id: number;
+    kiosk_code: string;
+    vendor_name: string;
+    location?: string;
+  };
 }
 
 export interface Part {
@@ -246,6 +263,8 @@ export interface CreateAssetDto {
   scheme_id?: string;
   dma_id?: string;
   parent_id?: number;
+  source_id?: number;
+  kiosk_id?: number;
   status: Asset['status'];
   install_date?: string;
   barcode?: string;
