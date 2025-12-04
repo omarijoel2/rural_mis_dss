@@ -21,6 +21,11 @@ export class ApiClient {
     
     const token = localStorage.getItem('auth_token');
     
+    // Debug: Log token status for API calls
+    if (!endpoint.includes('/auth/')) {
+      console.log(`[API] ${endpoint} - Token: ${token ? 'present (' + token.substring(0, 20) + '...)' : 'MISSING'}`);
+    }
+    
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
