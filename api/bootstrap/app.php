@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.context' => \App\Http\Middleware\TenantContextMiddleware::class,
             'audit' => \App\Http\Middleware\AuditMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'permission' => \App\Http\Middleware\CheckPermissionOrAdmin::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'core_ops.monitor' => \App\Http\Middleware\CoreOpsMonitoring::class,
         ]);

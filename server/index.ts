@@ -1844,7 +1844,17 @@ app.use('/api', createProxyMiddleware({
   },
   on: {
     proxyReq: (proxyReq: any, req: any) => {
-      log(`[Proxy] ${req.method} ${req.url} → Laravel`);
+      // Ensure Authorization header is forwarded
+      const authHeader = req.headers['authorization'];
+      if (authHeader) {
+        proxyReq.setHeader('Authorization', authHeader);
+      }
+      // Forward Accept and Content-Type headers
+      proxyReq.setHeader('Accept', 'application/json');
+      if (req.headers['content-type']) {
+        proxyReq.setHeader('Content-Type', req.headers['content-type']);
+      }
+      log(`[Proxy] ${req.method} ${req.url} → Laravel (Auth: ${authHeader ? 'yes' : 'no'})`);
     },
     proxyRes: (proxyRes: any, req: any) => {
       log(`[Proxy] ✓ ${proxyRes.statusCode}`);
