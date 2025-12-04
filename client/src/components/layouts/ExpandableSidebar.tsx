@@ -92,6 +92,7 @@ const moduleNavigation = [
     subPages: [
       { name: 'Dashboard', href: '/cmms/dashboard', icon: BarChart3 },
       { name: 'Assets', href: '/cmms/assets', icon: Settings },
+      { name: 'Asset Classes', href: '/cmms/asset-classes', icon: Database },
       { name: 'Work Orders', href: '/cmms/work-orders', icon: ClipboardList },
       { name: 'Job Plans', href: '/cmms/job-plans', icon: FileText },
       { name: 'Preventive Maintenance', href: '/cmms/pm', icon: Calendar },

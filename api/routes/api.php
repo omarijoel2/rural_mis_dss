@@ -233,6 +233,16 @@ Route::prefix('v1')->group(function () {
         Route::post('/kms/decrypt', [KmsController::class, 'decrypt']);
     });
 
+    Route::prefix('asset-classes')->middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\API\V1\AssetClassController::class, 'index'])->middleware('permission:view assets');
+        Route::post('/', [\App\Http\Controllers\API\V1\AssetClassController::class, 'store'])->middleware('permission:create assets');
+        Route::get('/tree', [\App\Http\Controllers\API\V1\AssetClassController::class, 'tree'])->middleware('permission:view assets');
+        Route::get('/{id}', [\App\Http\Controllers\API\V1\AssetClassController::class, 'show'])->middleware('permission:view assets');
+        Route::put('/{id}', [\App\Http\Controllers\API\V1\AssetClassController::class, 'update'])->middleware('permission:edit assets');
+        Route::patch('/{id}', [\App\Http\Controllers\API\V1\AssetClassController::class, 'update'])->middleware('permission:edit assets');
+        Route::delete('/{id}', [\App\Http\Controllers\API\V1\AssetClassController::class, 'destroy'])->middleware('permission:delete assets');
+    });
+
     Route::prefix('assets')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [\App\Http\Controllers\API\V1\AssetController::class, 'index'])->middleware('permission:view assets');
         Route::post('/', [\App\Http\Controllers\API\V1\AssetController::class, 'store'])->middleware('permission:create assets');
