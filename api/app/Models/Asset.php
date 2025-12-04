@@ -45,10 +45,11 @@ class Asset extends Model
     {
         static::addGlobalScope('tenant', function (Builder $query) {
             if (auth()->check()) {
-                try {
-                    $query->where('tenant_id', auth()->user()->currentTenantId());
-                } catch (\RuntimeException $e) {
-                    // Tenant not selected - force empty results to prevent cross-tenant access
+                $organizationId = auth()->user()->currentOrganizationId();
+                if ($organizationId) {
+                    $query->where('tenant_id', $organizationId);
+                } else {
+                    // Organization not found - force empty results to prevent cross-tenant access
                     $query->whereRaw('1 = 0');
                 }
             }

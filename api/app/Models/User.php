@@ -64,6 +64,20 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the current organization ID for the user's current tenant.
+     * This maps the tenant to its corresponding organization.
+     */
+    public function currentOrganizationId(): ?string
+    {
+        if (!$this->current_tenant_id) {
+            return null;
+        }
+        
+        $organization = Organization::where('tenant_id', $this->current_tenant_id)->first();
+        return $organization?->id;
+    }
+
+    /**
      * Get all tenants this user has access to
      */
     public function tenants()

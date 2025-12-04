@@ -71,7 +71,7 @@ class AssetController extends Controller
             'geom' => 'nullable|array'
         ]);
 
-        $validated['tenant_id'] = auth()->user()->tenant_id;
+        $validated['tenant_id'] = auth()->user()->currentOrganizationId();
 
         if (isset($validated['geom']) && is_array($validated['geom'])) {
             $validated['geom'] = Point::fromJson(json_encode($validated['geom']));
