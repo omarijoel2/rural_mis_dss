@@ -10,9 +10,12 @@ import { AuthLayout } from '../../components/layouts/AuthLayout';
 import { Shield, Eye, EyeOff, Loader2, Users, ChevronDown, ChevronUp } from 'lucide-react';
 
 const demoCredentials = [
-  { role: 'Administrator', email: 'admin@waterutility.go.ke', password: 'admin123', description: 'Full system access' },
-  { role: 'Operations Manager', email: 'ops@waterutility.go.ke', password: 'ops123', description: 'Operations & maintenance' },
-  { role: 'Field Officer', email: 'field@waterutility.go.ke', password: 'field123', description: 'Field data collection' },
+  { role: 'Super Admin', email: 'superadmin@rwmis.go.ke', password: 'SuperAdmin@2025!', description: 'All counties access' },
+  { role: 'Turkana Admin', email: 'admin@turkana.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Turkana County' },
+  { role: 'Wajir Admin', email: 'admin@wajir.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Wajir County' },
+  { role: 'Marsabit Admin', email: 'admin@marsabit.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Marsabit County' },
+  { role: 'Mandera Admin', email: 'admin@mandera.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Mandera County' },
+  { role: 'Garissa Admin', email: 'admin@garissa.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Garissa County' },
 ];
 
 export function LoginPage() {
