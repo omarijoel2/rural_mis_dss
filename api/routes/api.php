@@ -231,7 +231,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/kms/decrypt', [KmsController::class, 'decrypt']);
     });
 
-    Route::prefix('assets')->group(function () {
+    Route::prefix('assets')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [\App\Http\Controllers\API\V1\AssetController::class, 'index'])->middleware('permission:view assets');
         Route::post('/', [\App\Http\Controllers\API\V1\AssetController::class, 'store'])->middleware('permission:create assets');
         Route::get('/tree', [\App\Http\Controllers\API\V1\AssetController::class, 'tree'])->middleware('permission:view assets');
@@ -246,7 +246,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('/{asset}', [\App\Http\Controllers\API\V1\AssetController::class, 'destroy'])->middleware('permission:delete assets');
     });
 
-    Route::prefix('work-orders')->group(function () {
+    Route::prefix('work-orders')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'index'])->middleware('permission:view work orders');
         Route::post('/', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'store'])->middleware('permission:create work orders');
         Route::get('/overdue', [\App\Http\Controllers\API\V1\WorkOrderController::class, 'overdue'])->middleware('permission:view work orders');
@@ -274,7 +274,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // GIS Module - Shape Files and Vector Layers
-    Route::prefix('gis')->group(function () {
+    Route::prefix('gis')->middleware(['auth:sanctum'])->group(function () {
         // Shape files management
         Route::prefix('shape-files')->group(function () {
             Route::get('/', [ShapeFileController::class, 'index'])->middleware('permission:view gis');
