@@ -14,6 +14,7 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'short_code',
+        'county',
         'country',
         'timezone',
         'currency',

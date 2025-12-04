@@ -30,6 +30,7 @@ class CoreRegistrySeeder extends Seeder
             $tenant = Tenant::create([
                 'name' => 'Nairobi Water & Sewerage Company',
                 'short_code' => 'NWSC',
+                'county' => 'Nairobi',
                 'country' => 'KE',
                 'timezone' => 'Africa/Nairobi',
                 'currency' => 'KES',
