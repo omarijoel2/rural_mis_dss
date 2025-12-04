@@ -29,8 +29,20 @@ export function ProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
+  // Check for admin access using multiple sources
+  const roleNames = user?.role_names || [];
+  const roles = user?.roles || [];
+  
+  // Check if user has Super Admin or Admin role
+  const isAdmin = 
+    roleNames.includes('Super Admin') || 
+    roleNames.includes('Admin') ||
+    roles.some((r: any) => r === 'Super Admin' || r === 'Admin' || r?.name === 'Super Admin' || r?.name === 'Admin') ||
+    hasRole('Super Admin') || 
+    hasRole('Admin');
+
   // Super Admin and Admin roles have full access to all pages
-  if (hasRole('Super Admin') || hasRole('Admin')) {
+  if (isAdmin) {
     return <>{children}</>;
   }
 
