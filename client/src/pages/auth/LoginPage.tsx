@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth, Tenant } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { AuthLayout } from '../../components/layouts/AuthLayout';
-import { Shield, Eye, EyeOff, Loader2, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield, Eye, EyeOff, Loader2, Users, ChevronDown, ChevronUp, Building2, MapPin } from 'lucide-react';
 
 const demoCredentials = [
   { role: 'Super Admin', email: 'superadmin@rwmis.go.ke', password: 'SuperAdmin@2025!', description: 'All counties access' },
@@ -32,14 +32,32 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showDemoCredentials, setShowDemoCredentials] = useState(false);
+  const [showTenantSelection, setShowTenantSelection] = useState(false);
+  const [availableTenants, setAvailableTenants] = useState<Tenant[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
 
-  const { login, setUser } = useAuth();
+  const { login, selectTenant, setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleQuickFill = (cred: typeof demoCredentials[0]) => {
     setEmail(cred.email);
     setPassword(cred.password);
     setError('');
+  };
+
+  const handleTenantSelect = async (tenantId: string) => {
+    setSelectedTenantId(tenantId);
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      await selectTenant(tenantId);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Failed to select county. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,8 +78,14 @@ export function LoginPage() {
         navigate('/');
       } else {
         try {
-          await login(email, password);
-          navigate('/');
+          const response = await login(email, password);
+          
+          if (response.requires_tenant_selection && response.accessible_tenants?.length) {
+            setAvailableTenants(response.accessible_tenants);
+            setShowTenantSelection(true);
+          } else {
+            navigate('/');
+          }
         } catch (err: any) {
           if (err.message?.includes('2FA') || err.message?.includes('two-factor')) {
             setRequires2FA(true);
@@ -77,6 +101,84 @@ export function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (showTenantSelection) {
+    return (
+      <AuthLayout>
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="space-y-1 pb-4">
+            <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-2">
+              <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">
+              Select Your County
+            </CardTitle>
+            <CardDescription className="text-center">
+              As a Super Admin, please select which county you'd like to work with
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {error && (
+              <Alert variant="destructive" className="animate-in fade-in-50">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            {availableTenants.map((tenant) => (
+              <button
+                key={tenant.id}
+                type="button"
+                onClick={() => handleTenantSelect(tenant.id)}
+                disabled={isLoading}
+                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  selectedTenantId === tenant.id
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                    {tenant.short_code || tenant.county?.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {tenant.name}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                      <MapPin className="w-3 h-3" />
+                      {tenant.county} County, Kenya
+                    </div>
+                  </div>
+                  {isLoading && selectedTenantId === tenant.id && (
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                  )}
+                </div>
+              </button>
+            ))}
+          </CardContent>
+          <CardFooter className="flex flex-col gap-3 pt-4">
+            <p className="text-xs text-center text-muted-foreground">
+              You can switch counties later from the settings menu
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowTenantSelection(false);
+                setAvailableTenants([]);
+                setError('');
+              }}
+              disabled={isLoading}
+              className="text-muted-foreground"
+            >
+              Back to login
+            </Button>
+          </CardFooter>
+        </Card>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>

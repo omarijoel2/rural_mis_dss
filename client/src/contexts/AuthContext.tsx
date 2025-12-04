@@ -28,9 +28,22 @@ export interface User {
 export interface Tenant {
   id: string;
   name: string;
+  short_code?: string;
   county: string;
-  region: string;
-  code: string;
+  country?: string;
+  region?: string;
+  code?: string;
+  status?: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: User;
+  requires_2fa?: boolean;
+  requires_tenant_selection?: boolean;
+  is_super_admin?: boolean;
+  accessible_tenants?: Tenant[];
+  current_tenant?: Tenant | null;
 }
 
 interface AuthContextType {
@@ -39,11 +52,15 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<LoginResponse>;
+  selectTenant: (tenantId: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
+  pendingTenantSelection: boolean;
+  accessibleTenants: Tenant[];
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingTenantSelection, setPendingTenantSelection] = useState(false);
+  const [accessibleTenants, setAccessibleTenants] = useState<Tenant[]>([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const refreshUser = async () => {
     const token = localStorage.getItem('auth_token');
@@ -61,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth] No token, skipping refresh');
       setUser(null);
       setTenant(null);
+      setPendingTenantSelection(false);
+      setAccessibleTenants([]);
       return;
     }
     
@@ -69,11 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth] refreshUser success:', response.user?.email);
       setUser(response.user);
       setTenant(response.tenant || null);
+      
+      const roleNames = response.user?.role_names || [];
+      setIsSuperAdmin(roleNames.includes('Super Admin'));
     } catch (error) {
       console.error('[Auth] refreshUser failed:', error);
       localStorage.removeItem('auth_token');
       setUser(null);
       setTenant(null);
+      setPendingTenantSelection(false);
+      setAccessibleTenants([]);
     }
   };
 
@@ -81,17 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser().finally(() => setIsLoading(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResponse> => {
     console.log('[Auth] Attempting login for:', email);
     
-    const response = await apiClient.post<{
-      token: string;
-      user: User;
-      requires_2fa?: boolean;
-      requires_tenant_selection?: boolean;
-      accessible_tenants?: Tenant[];
-      current_tenant?: Tenant;
-    }>('/auth/login', {
+    const response = await apiClient.post<LoginResponse>('/auth/login', {
       email,
       password,
     });
@@ -100,10 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       hasToken: !!response.token,
       tokenPreview: response.token ? response.token.substring(0, 20) + '...' : 'NO TOKEN',
       user: response.user?.email,
-      roles: response.user?.role_names || response.user?.roles
+      roles: response.user?.role_names || response.user?.roles,
+      requires_tenant_selection: response.requires_tenant_selection,
+      is_super_admin: response.is_super_admin,
+      accessible_tenants_count: response.accessible_tenants?.length
     });
 
-    // Store token in localStorage for API calls
     if (response.token) {
       localStorage.setItem('auth_token', response.token);
       console.log('[Auth] Token stored in localStorage');
@@ -112,8 +134,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(response.user);
-    if (response.current_tenant) {
+    setIsSuperAdmin(response.is_super_admin || false);
+    
+    if (response.requires_tenant_selection && response.accessible_tenants?.length) {
+      console.log('[Auth] Tenant selection required for super admin');
+      setPendingTenantSelection(true);
+      setAccessibleTenants(response.accessible_tenants);
+    } else if (response.current_tenant) {
       setTenant(response.current_tenant);
+      setPendingTenantSelection(false);
+    }
+    
+    return response;
+  };
+
+  const selectTenant = async (tenantId: string) => {
+    console.log('[Auth] Selecting tenant:', tenantId);
+    
+    try {
+      const response = await apiClient.post<{ user: User; tenant: Tenant }>('/auth/select-tenant', {
+        tenant_id: tenantId,
+      });
+      
+      console.log('[Auth] Tenant selected:', response.tenant?.name);
+      setTenant(response.tenant);
+      setUser(response.user);
+      setPendingTenantSelection(false);
+      setAccessibleTenants([]);
+    } catch (error) {
+      console.error('[Auth] Tenant selection failed:', error);
+      throw error;
     }
   };
 
@@ -126,6 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('auth_token');
       setUser(null);
       setTenant(null);
+      setPendingTenantSelection(false);
+      setAccessibleTenants([]);
+      setIsSuperAdmin(false);
     }
   };
 
@@ -174,10 +227,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
+        selectTenant,
         logout,
         refreshUser,
         hasPermission,
         hasRole,
+        pendingTenantSelection,
+        accessibleTenants,
+        isSuperAdmin,
       }}
     >
       {children}

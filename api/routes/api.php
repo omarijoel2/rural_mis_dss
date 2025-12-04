@@ -54,9 +54,11 @@ Route::prefix('v1/auth')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/user', [AuthController::class, 'me']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::get('/tenants', [AuthController::class, 'getTenants']);
         Route::post('/switch-tenant', [AuthController::class, 'switchTenant']);
+        Route::post('/select-tenant', [AuthController::class, 'selectTenant']);
         
         Route::post('/2fa/enroll', [AuthController::class, 'enrollTwoFactor']);
         Route::post('/2fa/enable', [AuthController::class, 'enableTwoFactor']);

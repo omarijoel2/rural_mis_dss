@@ -263,4 +263,54 @@ class AuthController extends Controller
             'current_tenant' => $user->currentTenant,
         ]);
     }
+
+    /**
+     * Select tenant after initial login
+     * Used when super admin needs to select a county after authentication
+     */
+    public function selectTenant(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'tenant_id' => 'required|uuid|exists:tenants,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        // Check if user can access this tenant
+        if (!$user->canAccessTenant($request->tenant_id)) {
+            return response()->json([
+                'message' => 'You do not have access to this county',
+            ], 403);
+        }
+
+        try {
+            $user->switchTenant($request->tenant_id);
+            $user->refresh();
+            $user->load(['currentTenant', 'roles.permissions']);
+
+            // Get flattened role and permission names
+            $roleNames = $user->roles->pluck('name')->toArray();
+            $permissionNames = $user->getAllPermissions()->pluck('name')->unique()->values()->toArray();
+
+            return response()->json([
+                'message' => 'County selected successfully',
+                'user' => array_merge($user->toArray(), [
+                    'role_names' => $roleNames,
+                    'permission_names' => $permissionNames,
+                ]),
+                'tenant' => $user->currentTenant,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 403);
+        }
+    }
 }
