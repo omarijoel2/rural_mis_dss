@@ -4,6 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import shp from "shpjs";
+import AdmZip from "adm-zip";
 import { registerRoutes } from "./routes";
 import { registerCoreRegistryRoutes } from "./routes/core-registry";
 import { setupVite, serveStatic, log } from "./vite";
@@ -551,8 +552,34 @@ app.get('/api/v1/gis/shape-files/:id/geojson', async (req, res) => {
       
       res.json({ data: geojson, bounds });
     } else if (ext === '.zip') {
-      // Parse shapefile from ZIP using shpjs
+      // Validate ZIP contents before parsing
       const zipBuffer = fs.readFileSync(filePath);
+      const zip = new AdmZip(zipBuffer);
+      const entries = zip.getEntries();
+      const fileNames = entries.map(e => e.entryName.toLowerCase());
+      
+      // Check for .gdb folder (File Geodatabase - not supported)
+      if (fileNames.some(f => f.includes('.gdb/') || f.endsWith('.gdb'))) {
+        log('[GIS] File Geodatabase format detected - not supported');
+        return res.status(400).json({ 
+          error: 'File Geodatabase (.gdb) format is not supported. Please export your data as a Shapefile or GeoJSON instead.' 
+        });
+      }
+      
+      // Check for required shapefile components (.shp, .dbf are required)
+      const hasShp = fileNames.some(f => f.endsWith('.shp'));
+      const hasDbf = fileNames.some(f => f.endsWith('.dbf'));
+      
+      if (!hasShp || !hasDbf) {
+        // List what was found to help debugging
+        const foundTypes = [...new Set(fileNames.map(f => path.extname(f)).filter(Boolean))];
+        log(`[GIS] Invalid shapefile ZIP - missing required components. Found: ${foundTypes.join(', ')}`);
+        return res.status(400).json({ 
+          error: `Invalid shapefile ZIP. Required files (.shp, .dbf) not found. This ZIP contains: ${foundTypes.join(', ') || 'no recognized files'}. Please ensure your ZIP contains a valid Shapefile (.shp, .shx, .dbf files).`
+        });
+      }
+      
+      // Parse shapefile from ZIP using shpjs
       const geojson = await shp(zipBuffer);
       
       let bounds = null;

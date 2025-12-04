@@ -57,9 +57,13 @@ function ShapeFilePreview({ shapeFile, onClose }: ShapeFilePreviewProps) {
     map.current.on('load', async () => {
       try {
         const response = await fetch(`/api/v1/gis/shape-files/${shapeFile.id}/geojson`);
-        if (!response.ok) throw new Error('Failed to load GeoJSON');
+        const responseData = await response.json();
         
-        const geojson = await response.json();
+        if (!response.ok) {
+          throw new Error(responseData.error || 'Failed to load GeoJSON');
+        }
+        
+        const geojson = responseData;
         
         if (map.current && geojson.data) {
           map.current.addSource('shapefile', {
