@@ -21,6 +21,8 @@ export interface User {
   two_factor_enabled: boolean;
   roles?: (string | RoleObject)[];
   permissions?: (string | PermissionObject)[];
+  role_names?: string[];
+  permission_names?: string[];
 }
 
 export interface Tenant {
@@ -103,21 +105,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const hasPermission = (permission: string): boolean => {
-    if (!user || !user.permissions) return false;
-    const permissionNames = user.permissions.map(p => 
-      typeof p === 'string' ? p : p.name
-    );
-    return permissionNames.includes('*') || permissionNames.includes(permission);
+    if (!user) return false;
+    
+    // Check permission_names array first (from login response)
+    if (user.permission_names && user.permission_names.length > 0) {
+      return user.permission_names.includes('*') || user.permission_names.includes(permission);
+    }
+    
+    // Fallback to permissions array
+    if (user.permissions) {
+      const permNames = user.permissions.map(p => typeof p === 'string' ? p : p.name);
+      return permNames.includes('*') || permNames.includes(permission);
+    }
+    
+    return false;
   };
 
   const hasRole = (role: string): boolean => {
-    if (!user || !user.roles) return false;
-    const roleNames = user.roles.map(r => 
-      typeof r === 'string' ? r : r.name
-    );
-    // Super Admin has access to everything
-    if (roleNames.includes('Super Admin')) return true;
-    return roleNames.includes('*') || roleNames.includes(role);
+    if (!user) return false;
+    
+    // Check role_names array first (from login response)
+    if (user.role_names && user.role_names.length > 0) {
+      if (user.role_names.includes('Super Admin')) return true;
+      return user.role_names.includes('*') || user.role_names.includes(role);
+    }
+    
+    // Fallback to roles array
+    if (user.roles) {
+      const roleNames = user.roles.map(r => typeof r === 'string' ? r : r.name);
+      if (roleNames.includes('Super Admin')) return true;
+      return roleNames.includes('*') || roleNames.includes(role);
+    }
+    
+    return false;
   };
 
   return (

@@ -141,9 +141,19 @@ class AuthService
             ]
         );
 
+        // Load user with roles and permissions
+        $user->load(['currentTenant', 'roles', 'permissions']);
+        
+        // Get role names for frontend
+        $roleNames = $user->roles->pluck('name')->toArray();
+        $permissionNames = $user->getAllPermissions()->pluck('name')->toArray();
+        
         return [
             'token' => $token,
-            'user' => $user->load(['currentTenant', 'roles']),
+            'user' => array_merge($user->toArray(), [
+                'role_names' => $roleNames,
+                'permission_names' => $permissionNames,
+            ]),
             'requires_2fa' => false,
             'requires_tenant_selection' => $requiresTenantSelection,
             'is_super_admin' => $isSuperAdmin,
