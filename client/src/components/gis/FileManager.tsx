@@ -79,6 +79,17 @@ function ShapeFilePreview({ shapeFile, onClose }: ShapeFilePreviewProps) {
           });
 
           map.current.addLayer({
+            id: 'shapefile-outline',
+            type: 'line',
+            source: 'shapefile',
+            paint: {
+              'line-color': '#1e40af',
+              'line-width': 2,
+            },
+            filter: ['==', '$type', 'Polygon'],
+          });
+
+          map.current.addLayer({
             id: 'shapefile-line',
             type: 'line',
             source: 'shapefile',
@@ -86,6 +97,7 @@ function ShapeFilePreview({ shapeFile, onClose }: ShapeFilePreviewProps) {
               'line-color': '#1e40af',
               'line-width': 2,
             },
+            filter: ['==', '$type', 'LineString'],
           });
 
           map.current.addLayer({
@@ -299,13 +311,13 @@ export function FileManager() {
                 <Label>Select File</Label>
                 <Input
                   type="file"
-                  accept=".zip,.shp,.geojson,.json,.gpkg"
+                  accept=".zip,.shp,.geojson,.json"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                   className="mt-1"
                   disabled={isUploading}
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Supported: ZIP (Shapefile), GeoJSON, GPKG
+                  Supported: ZIP (Shapefile), GeoJSON
                 </p>
               </div>
 

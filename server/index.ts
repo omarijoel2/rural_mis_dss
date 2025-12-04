@@ -28,12 +28,12 @@ const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['.zip', '.shp', '.geojson', '.json', '.gpkg'];
+    const allowedTypes = ['.zip', '.shp', '.geojson', '.json'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowedTypes.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Allowed: ZIP, SHP, GeoJSON, GPKG'));
+      cb(new Error('Invalid file type. Allowed: ZIP, SHP, GeoJSON'));
     }
   }
 });
@@ -433,8 +433,6 @@ app.post('/api/v1/gis/shape-files', upload.single('file'), (req: any, res) => {
       geomType = 'GeoJSON';
     } else if (ext === '.zip') {
       geomType = 'Shapefile (ZIP)';
-    } else if (ext === '.gpkg') {
-      geomType = 'GeoPackage';
     } else if (ext === '.shp') {
       geomType = 'Shapefile';
     }
