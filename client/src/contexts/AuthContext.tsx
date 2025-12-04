@@ -83,17 +83,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTenant(null);
       setPendingTenantSelection(false);
       setAccessibleTenants([]);
+      setIsSuperAdmin(false);
       return;
     }
     
     try {
-      const response = await apiClient.get<{ user: User; tenant: Tenant }>('/auth/user');
-      console.log('[Auth] refreshUser success:', response.user?.email);
+      const response = await apiClient.get<{
+        user: User;
+        tenant: Tenant | null;
+        is_super_admin: boolean;
+        accessible_tenants: Tenant[];
+        requires_tenant_selection: boolean;
+      }>('/auth/user');
+      
+      console.log('[Auth] refreshUser success:', {
+        email: response.user?.email,
+        tenant: response.tenant?.name,
+        is_super_admin: response.is_super_admin,
+        requires_tenant_selection: response.requires_tenant_selection,
+      });
+      
       setUser(response.user);
       setTenant(response.tenant || null);
+      setIsSuperAdmin(response.is_super_admin || false);
       
-      const roleNames = response.user?.role_names || [];
-      setIsSuperAdmin(roleNames.includes('Super Admin'));
+      if (response.requires_tenant_selection && response.accessible_tenants?.length) {
+        console.log('[Auth] Tenant selection required after refresh');
+        setPendingTenantSelection(true);
+        setAccessibleTenants(response.accessible_tenants);
+      } else {
+        setPendingTenantSelection(false);
+        setAccessibleTenants([]);
+      }
     } catch (error) {
       console.error('[Auth] refreshUser failed:', error);
       localStorage.removeItem('auth_token');
@@ -101,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTenant(null);
       setPendingTenantSelection(false);
       setAccessibleTenants([]);
+      setIsSuperAdmin(false);
     }
   };
 

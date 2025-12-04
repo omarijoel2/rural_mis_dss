@@ -108,12 +108,30 @@ class AuthController extends Controller
     }
 
     /**
-     * Get current authenticated user
+     * Get current authenticated user with tenant context
      */
     public function me(Request $request)
     {
+        $user = $request->user()->load(['currentTenant', 'roles.permissions']);
+        
+        $roleNames = $user->roles->pluck('name')->toArray();
+        $permissionNames = $user->getAllPermissions()->pluck('name')->unique()->values()->toArray();
+        
+        $isSuperAdmin = $user->isSuperAdmin();
+        $accessibleTenants = $user->getAccessibleTenants();
+        $currentTenant = $user->currentTenant;
+        
+        $requiresTenantSelection = $isSuperAdmin && !$currentTenant && $accessibleTenants->count() > 0;
+        
         return response()->json([
-            'user' => $request->user()->load(['currentTenant', 'roles', 'permissions']),
+            'user' => array_merge($user->toArray(), [
+                'role_names' => $roleNames,
+                'permission_names' => $permissionNames,
+            ]),
+            'tenant' => $currentTenant,
+            'is_super_admin' => $isSuperAdmin,
+            'accessible_tenants' => $requiresTenantSelection ? $accessibleTenants : [],
+            'requires_tenant_selection' => $requiresTenantSelection,
         ]);
     }
 
