@@ -11,8 +11,17 @@ export interface User {
   permissions?: string[];
 }
 
+export interface Tenant {
+  id: string;
+  name: string;
+  county: string;
+  region: string;
+  code: string;
+}
+
 interface AuthContextType {
   user: User | null;
+  tenant: Tenant | null;
   setUser: (user: User | null) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -27,14 +36,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = async () => {
     try {
-      const response = await apiClient.get<{ user: User }>('/auth/user');
+      const response = await apiClient.get<{ user: User; tenant: Tenant }>('/auth/user');
       setUser(response.user);
+      setTenant(response.tenant || null);
     } catch (error) {
       setUser(null);
+      setTenant(null);
     }
   };
 
@@ -75,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        tenant,
         setUser,
         isAuthenticated: !!user,
         isLoading,

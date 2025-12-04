@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
+import { useAuth } from '../../contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -11,7 +12,7 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Plus, TrendingDown, AlertTriangle, ChevronLeft, ChevronRight, Droplets, MapPin, Layers, Activity, Eye, Search } from 'lucide-react';
+import { Plus, TrendingDown, AlertTriangle, ChevronLeft, ChevronRight, Droplets, MapPin, Layers, Activity, Eye, Search, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Aquifer {
@@ -40,6 +41,7 @@ interface MonitoringData {
 
 export function AquiferManagementPage() {
   const queryClient = useQueryClient();
+  const { tenant } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedAquifer, setSelectedAquifer] = useState<Aquifer | null>(null);
   const [newAquifer, setNewAquifer] = useState({ name: '', safeYield: '', county: '', aquiferType: 'Alluvial' });
@@ -47,6 +49,12 @@ export function AquiferManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const pageSize = 5;
+
+  useEffect(() => {
+    if (tenant?.county) {
+      setNewAquifer(prev => ({ ...prev, county: tenant.county }));
+    }
+  }, [tenant?.county]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['aquifers', page],
@@ -131,6 +139,13 @@ export function AquiferManagementPage() {
               <DialogDescription>Add a new aquifer to the monitoring system</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="p-3 bg-muted/50 rounded-lg flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Registering for</p>
+                  <p className="font-medium">{tenant?.name || 'Current Tenant'}</p>
+                </div>
+              </div>
               <div>
                 <label className="text-sm font-medium">Aquifer Name</label>
                 <Input
@@ -142,10 +157,11 @@ export function AquiferManagementPage() {
               <div>
                 <label className="text-sm font-medium">County</label>
                 <Input
-                  placeholder="e.g., Mandera"
-                  value={newAquifer.county}
-                  onChange={(e) => setNewAquifer({ ...newAquifer, county: e.target.value })}
+                  value={newAquifer.county || tenant?.county || ''}
+                  disabled
+                  className="bg-muted"
                 />
+                <p className="text-xs text-muted-foreground mt-1">Auto-populated from tenant</p>
               </div>
               <div>
                 <label className="text-sm font-medium">Aquifer Type</label>
