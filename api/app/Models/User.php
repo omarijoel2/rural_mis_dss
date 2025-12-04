@@ -69,7 +69,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function tenants()
     {
         return $this->belongsToMany(Tenant::class, 'tenant_user')
-            ->withPivot('role')
+            ->withPivot('attrs')
             ->withTimestamps();
     }
 
@@ -175,11 +175,44 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if user is a Super Admin (can access all tenants)
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('Super Admin');
+    }
+
+    /**
+     * Get all accessible tenants for this user
+     * Super admins can access all tenants, others only their assigned tenants
+     */
+    public function getAccessibleTenants()
+    {
+        if ($this->isSuperAdmin()) {
+            return Tenant::where('status', 'active')->get();
+        }
+        
+        return $this->tenants()->where('status', 'active')->get();
+    }
+
+    /**
+     * Check if user can access a specific tenant
+     */
+    public function canAccessTenant(string $tenantId): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return Tenant::where('id', $tenantId)->where('status', 'active')->exists();
+        }
+        
+        return $this->tenants()->where('tenants.id', $tenantId)->exists();
+    }
+
+    /**
      * Switch tenant context
      */
     public function switchTenant(?string $tenantId): void
     {
-        if ($tenantId && !$this->tenants()->where('tenants.id', $tenantId)->exists()) {
+        if ($tenantId && !$this->canAccessTenant($tenantId)) {
             throw new \Exception('User does not have access to this tenant');
         }
 
