@@ -31,7 +31,8 @@ import { TwoFactorSetupPage } from './pages/security/TwoFactorSetupPage';
 import { CmmsLayout } from './components/layouts/CmmsLayout';
 import { 
   CmmsDashboard, 
-  AssetsPage, 
+  AssetsPage,
+  AssetClassesPage,
   AssetDetailPage, 
   WorkOrdersPage, 
   PartsPage, 
@@ -267,6 +268,11 @@ export function AppMIS() {
                 <Route path="assets" element={
                   <ProtectedRoute requiredPermission="view assets">
                     <AssetsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="asset-classes" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <AssetClassesPage />
                   </ProtectedRoute>
                 } />
                 <Route path="assets/:id" element={
