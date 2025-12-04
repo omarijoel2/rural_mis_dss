@@ -32,7 +32,6 @@ import { CmmsLayout } from './components/layouts/CmmsLayout';
 import { 
   CmmsDashboard, 
   AssetsPage,
-  AssetClassesPage,
   AssetDetailPage, 
   WorkOrdersPage, 
   PartsPage, 
@@ -45,6 +44,7 @@ import {
   ContractorsPage,
   HsePage
 } from './pages/cmms';
+import { AssetClassesPage } from './pages/core-registry/AssetClassesPage';
 import { WaterQualityLayout } from './components/layouts/WaterQualityLayout';
 import { ParametersPage } from './pages/water-quality/ParametersPage';
 import { SamplingPointsPage } from './pages/water-quality/SamplingPointsPage';
@@ -210,6 +210,11 @@ export function AppMIS() {
                     <AssetsPageWithForm />
                   </ProtectedRoute>
                 } />
+                <Route path="asset-classes" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <AssetClassesPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="facilities" element={
                   <ProtectedRoute requiredPermission="view facilities">
                     <FacilitiesPage />
@@ -268,11 +273,6 @@ export function AppMIS() {
                 <Route path="assets" element={
                   <ProtectedRoute requiredPermission="view assets">
                     <AssetsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="asset-classes" element={
-                  <ProtectedRoute requiredPermission="view assets">
-                    <AssetClassesPage />
                   </ProtectedRoute>
                 } />
                 <Route path="assets/:id" element={

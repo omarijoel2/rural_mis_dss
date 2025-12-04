@@ -75,6 +75,7 @@ const moduleNavigation = [
       { name: 'Home', href: '/core' },
       { name: 'Schemes', href: '/core/schemes' },
       { name: 'Assets', href: '/core/assets' },
+      { name: 'Asset Classes', href: '/core/asset-classes' },
       { name: 'Facilities', href: '/core/facilities' },
       { name: 'DMAs', href: '/core/dmas' },
       { name: 'Pipelines', href: '/core/pipelines' },
@@ -92,7 +93,6 @@ const moduleNavigation = [
     subPages: [
       { name: 'Dashboard', href: '/cmms/dashboard', icon: BarChart3 },
       { name: 'Assets', href: '/cmms/assets', icon: Settings },
-      { name: 'Asset Classes', href: '/cmms/asset-classes', icon: Database },
       { name: 'Work Orders', href: '/cmms/work-orders', icon: ClipboardList },
       { name: 'Job Plans', href: '/cmms/job-plans', icon: FileText },
       { name: 'Preventive Maintenance', href: '/cmms/pm', icon: Calendar },

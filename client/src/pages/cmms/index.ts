@@ -1,6 +1,5 @@
 export { CmmsDashboard } from './CmmsDashboard';
 export { AssetsPage } from './AssetsPage';
-export { AssetClassesPage } from './AssetClassesPage';
 export { AssetDetailPage } from './AssetDetailPage';
 export { WorkOrdersPage } from './WorkOrdersPage';
 export { PartsPage } from './PartsPage';
