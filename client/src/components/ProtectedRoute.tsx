@@ -12,14 +12,7 @@ export function ProtectedRoute({
   requiredPermission, 
   requiredRole 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, hasPermission, hasRole } = useAuth();
-
-  // DEMO MODE: Bypass authentication to view pages without login
-  const DEMO_MODE = false;
-
-  if (DEMO_MODE) {
-    return <>{children}</>;
-  }
+  const { isAuthenticated, isLoading, hasPermission, hasRole, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -34,6 +27,11 @@ export function ProtectedRoute({
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Super Admin and Admin roles have full access to all pages
+  if (hasRole('Super Admin') || hasRole('Admin')) {
+    return <>{children}</>;
   }
 
   if (requiredPermission && !hasPermission(requiredPermission)) {
