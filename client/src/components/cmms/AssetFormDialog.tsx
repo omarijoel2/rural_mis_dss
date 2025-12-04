@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { assetService } from '../../services/asset.service';
 import { Asset, CreateAssetDto } from '../../types/cmms';
+import { apiClient } from '../../lib/api-client';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { Alert, AlertDescription } from '../ui/alert';
+import { Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AssetFormDialogProps {
@@ -62,6 +65,36 @@ export function AssetFormDialog({ open, onOpenChange, asset }: AssetFormDialogPr
     queryKey: ['assets-for-parent'],
     queryFn: () => assetService.getAssets({ per_page: 200 }),
   });
+
+  const { data: sources } = useQuery({
+    queryKey: ['sources-for-assets'],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get<any>('/sources', { per_page: 200 });
+        const items = response?.data?.data || response?.data || [];
+        return Array.isArray(items) ? items : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: kiosks } = useQuery({
+    queryKey: ['kiosks-for-assets'],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get<any>('/crm/kiosks', { per_page: 200 });
+        const items = response?.data?.data || response?.data || [];
+        return Array.isArray(items) ? items : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const selectedClassCode = watch('class_id') ? classes?.find((c: any) => c.id === watch('class_id'))?.code : null;
+  const isBorehole = selectedClassCode === 'BOREHOLE';
+  const isKiosk = selectedClassCode === 'KIOSK';
 
   const createMutation = useMutation({
     mutationFn: (data: CreateAssetDto) => assetService.createAsset(data),
@@ -232,6 +265,62 @@ export function AssetFormDialog({ open, onOpenChange, asset }: AssetFormDialogPr
               <Input id="barcode" {...register('barcode')} />
             </div>
           </div>
+
+          {isBorehole && (
+            <div className="space-y-2">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Link this asset to a water source from the Hydro-Met module to track abstraction and water quality data.
+                </AlertDescription>
+              </Alert>
+              <Label htmlFor="source_id">Linked Water Source</Label>
+              <Select
+                onValueChange={(value) => setValue('source_id', value && value !== 'none' ? Number(value) : undefined)}
+                defaultValue={asset?.source_id?.toString() || 'none'}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select water source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {sources?.map((s: any) => (
+                    <SelectItem key={s.id} value={s.id.toString()}>
+                      {s.code} - {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {isKiosk && (
+            <div className="space-y-2">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Link this asset to a kiosk from the Customer module to track sales, vendor, and revenue data.
+                </AlertDescription>
+              </Alert>
+              <Label htmlFor="kiosk_id">Linked Kiosk</Label>
+              <Select
+                onValueChange={(value) => setValue('kiosk_id', value && value !== 'none' ? Number(value) : undefined)}
+                defaultValue={asset?.kiosk_id?.toString() || 'none'}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select kiosk" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {kiosks?.map((k: any) => (
+                    <SelectItem key={k.id} value={k.id.toString()}>
+                      {k.kiosk_code} - {k.vendor_name} {k.location ? `(${k.location})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -120,6 +120,39 @@ class CoreOpsAssetClassesSeeder extends Seeder
                     'digital_outputs' => 'number',
                 ]),
             ],
+            [
+                'code' => 'BOREHOLE',
+                'name' => 'Borehole / Well',
+                'parent_id' => null,
+                'criticality' => 'high',
+                'attributes_schema' => json_encode([
+                    'depth_m' => 'number',
+                    'casing_diameter_mm' => 'number',
+                    'static_water_level_m' => 'number',
+                    'dynamic_water_level_m' => 'number',
+                    'yield_m3_hr' => 'number',
+                    'pump_depth_m' => 'number',
+                    'drill_date' => 'date',
+                    'aquifer_type' => 'string',
+                    'water_quality_class' => 'string',
+                ]),
+            ],
+            [
+                'code' => 'KIOSK',
+                'name' => 'Water Kiosk',
+                'parent_id' => null,
+                'criticality' => 'medium',
+                'attributes_schema' => json_encode([
+                    'kiosk_type' => 'string',
+                    'num_taps' => 'number',
+                    'has_meter' => 'boolean',
+                    'has_storage' => 'boolean',
+                    'storage_capacity_m3' => 'number',
+                    'solar_powered' => 'boolean',
+                    'prepaid_enabled' => 'boolean',
+                    'vendor_managed' => 'boolean',
+                ]),
+            ],
         ];
 
         foreach ($coreOpsClasses as $class) {

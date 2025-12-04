@@ -19,7 +19,7 @@ class AssetController extends Controller
 
     public function index(Request $request)
     {
-        $query = Asset::with(['assetClass', 'scheme', 'dma', 'parent']);
+        $query = Asset::with(['assetClass', 'scheme', 'dma', 'parent', 'source', 'kiosk']);
 
         if ($request->has('q')) {
             $search = $request->q;
@@ -59,6 +59,8 @@ class AssetController extends Controller
             'scheme_id' => 'nullable|uuid|exists:schemes,id',
             'dma_id' => 'nullable|uuid|exists:dmas,id',
             'parent_id' => 'nullable|integer|exists:assets,id',
+            'source_id' => 'nullable|integer|exists:sources,id',
+            'kiosk_id' => 'nullable|integer|exists:crm_kiosks,id',
             'status' => 'required|in:active,inactive,retired,under_maintenance',
             'install_date' => 'nullable|date',
             'barcode' => 'nullable|string|max:100',
@@ -76,14 +78,14 @@ class AssetController extends Controller
         }
 
         $asset = Asset::create($validated);
-        $asset->load(['assetClass', 'scheme', 'dma']);
+        $asset->load(['assetClass', 'scheme', 'dma', 'source', 'kiosk']);
 
         return response()->json($asset, 201);
     }
 
     public function show(Asset $asset)
     {
-        $asset->load(['assetClass', 'scheme', 'dma', 'parent', 'children', 'workOrders', 'pmPolicies']);
+        $asset->load(['assetClass', 'scheme', 'dma', 'parent', 'children', 'source', 'kiosk', 'workOrders', 'pmPolicies']);
         return response()->json($asset);
     }
 
@@ -96,6 +98,8 @@ class AssetController extends Controller
             'scheme_id' => 'nullable|uuid|exists:schemes,id',
             'dma_id' => 'nullable|uuid|exists:dmas,id',
             'parent_id' => 'nullable|integer|exists:assets,id',
+            'source_id' => 'nullable|integer|exists:sources,id',
+            'kiosk_id' => 'nullable|integer|exists:crm_kiosks,id',
             'status' => 'in:active,inactive,retired,under_maintenance',
             'install_date' => 'nullable|date',
             'barcode' => 'nullable|string|max:100',
@@ -111,7 +115,7 @@ class AssetController extends Controller
         }
 
         $asset->update($validated);
-        $asset->load(['assetClass', 'scheme', 'dma']);
+        $asset->load(['assetClass', 'scheme', 'dma', 'source', 'kiosk']);
 
         return response()->json($asset);
     }

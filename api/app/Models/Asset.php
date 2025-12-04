@@ -19,6 +19,8 @@ class Asset extends Model
         'dma_id',
         'class_id',
         'parent_id',
+        'source_id',
+        'kiosk_id',
         'code',
         'name',
         'barcode',
@@ -81,6 +83,16 @@ class Asset extends Model
     public function children(): HasMany
     {
         return $this->hasMany(Asset::class, 'parent_id');
+    }
+
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(Source::class);
+    }
+
+    public function kiosk(): BelongsTo
+    {
+        return $this->belongsTo(CrmKiosk::class, 'kiosk_id');
     }
 
     public function locationHistory(): HasMany
