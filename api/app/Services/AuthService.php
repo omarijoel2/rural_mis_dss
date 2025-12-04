@@ -31,8 +31,7 @@ class AuthService
                 null,
                 User::class,
                 $user?->id,
-                ['email' => $email],
-                'warning'
+                ['email' => $email]
             );
 
             throw new \Exception('Invalid credentials');
@@ -79,8 +78,7 @@ class AuthService
                 $user->id,
                 User::class,
                 $user->id,
-                ['code' => substr($code, 0, 2) . '****'],
-                'warning'
+                ['code' => substr($code, 0, 2) . '****']
             );
 
             throw new \Exception('Invalid 2FA code');
@@ -229,9 +227,7 @@ class AuthService
             'auth.2fa.disabled',
             $user->id,
             User::class,
-            $user->id,
-            [],
-            'warning'
+            $user->id
         );
     }
 
