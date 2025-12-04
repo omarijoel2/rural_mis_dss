@@ -38,11 +38,11 @@ export function FileManager() {
   const queryClient = useQueryClient();
 
   // Fetch shape files
-  const { data: filesData = [], isLoading } = useQuery({
+  const { data: filesData = [], isLoading, refetch } = useQuery({
     queryKey: ['shape-files'],
     queryFn: async () => {
       const response = await apiClient.get('/gis/shape-files') as any;
-      return response.data?.data || [];
+      return response.data || [];
     },
   });
 
