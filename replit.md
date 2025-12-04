@@ -49,6 +49,14 @@ A dual ORM strategy is employed, using Drizzle ORM for Node.js and Eloquent ORM 
 ### Tenant Model
 Each tenant represents one of the 5 ASAL (Arid and Semi-Arid Lands) counties: Turkana, Wajir, Marsabit, Mandera, and Garissa. Each tenant includes: name, short_code, county, country, timezone, currency, status.
 
+### Test User Accounts
+- **Super Admin**: superadmin@rwmis.go.ke / SuperAdmin@2025! (access to all 5 counties)
+- **County Admins**: admin@{county}.rwmis.go.ke / CountyAdmin@2025! (restricted to their county)
+  - admin@turkana.rwmis.go.ke, admin@wajir.rwmis.go.ke, admin@marsabit.rwmis.go.ke, admin@mandera.rwmis.go.ke, admin@garissa.rwmis.go.ke
+
+### Permission Tables
+Spatie permission tables (model_has_roles, model_has_permissions) use varchar(36) for model_id to support UUID primary keys. The tenant_user pivot table uses `attrs` JSONB column for ABAC attributes instead of a role column.
+
 ## Authentication & Authorization
 
 Laravel Sanctum provides API authentication, Spatie Laravel Permission handles granular RBAC, and the system includes two-factor authentication, secure cookie-based sessions, and multi-tenancy hardening. Security features include CSRF protection, strict CORS, and audit logging.

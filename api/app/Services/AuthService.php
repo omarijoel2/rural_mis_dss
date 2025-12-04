@@ -21,7 +21,7 @@ class AuthService
     /**
      * Authenticate user with email and password
      */
-    public function login(string $email, string $password, ?string $deviceFingerprint = null): array
+    public function login(string $email, string $password, ?string $deviceFingerprint = null, ?string $tenantId = null): array
     {
         $user = User::where('email', $email)->first();
 
@@ -41,6 +41,9 @@ class AuthService
         if ($user->two_factor_enabled) {
             $tempToken = Str::random(64);
             
+            // Get accessible tenants for 2FA flow
+            $accessibleTenants = $user->getAccessibleTenants();
+            
             $this->auditService->log(
                 'auth.2fa_required',
                 $user->id,
@@ -53,16 +56,18 @@ class AuthService
                 'requires_2fa' => true,
                 'temp_token' => $tempToken,
                 'user_id' => $user->id,
+                'is_super_admin' => $user->isSuperAdmin(),
+                'accessible_tenants' => $accessibleTenants,
             ];
         }
 
-        return $this->completeLogin($user, $deviceFingerprint);
+        return $this->completeLogin($user, $deviceFingerprint, $tenantId);
     }
 
     /**
      * Verify 2FA code and complete login
      */
-    public function verifyTwoFactor(string $userId, string $code, ?string $deviceFingerprint = null): array
+    public function verifyTwoFactor(string $userId, string $code, ?string $deviceFingerprint = null, ?string $tenantId = null): array
     {
         $user = User::findOrFail($userId);
 
@@ -88,13 +93,16 @@ class AuthService
             $user->id
         );
 
-        return $this->completeLogin($user, $deviceFingerprint);
+        return $this->completeLogin($user, $deviceFingerprint, $tenantId);
     }
 
     /**
      * Complete login and issue token
+     * Handles tenant selection based on user role:
+     * - Super Admin: Can select any active tenant
+     * - County Admin: Auto-assigned to their tenant(s)
      */
-    protected function completeLogin(User $user, ?string $deviceFingerprint = null): array
+    protected function completeLogin(User $user, ?string $deviceFingerprint = null, ?string $tenantId = null): array
     {
         $token = $user->createToken('auth_token', ['*'], now()->addDays(7))->plainTextToken;
 
@@ -102,18 +110,47 @@ class AuthService
             $this->trustDevice($user, $deviceFingerprint);
         }
 
+        // Get accessible tenants for the user
+        $accessibleTenants = $user->getAccessibleTenants();
+        $isSuperAdmin = $user->isSuperAdmin();
+
+        // Handle tenant selection
+        $requiresTenantSelection = false;
+        $selectedTenant = null;
+
+        if ($tenantId && $user->canAccessTenant($tenantId)) {
+            // Tenant was specified and user has access
+            $user->switchTenant($tenantId);
+            $selectedTenant = $user->load('currentTenant')->currentTenant;
+        } elseif ($accessibleTenants->count() === 1 && !$isSuperAdmin) {
+            // County admin with single tenant - auto-select
+            $user->switchTenant($accessibleTenants->first()->id);
+            $selectedTenant = $accessibleTenants->first();
+        } elseif ($accessibleTenants->count() > 0) {
+            // Multiple tenants available - require selection
+            $requiresTenantSelection = true;
+        }
+
         $this->auditService->log(
             'auth.login.success',
             $user->id,
             User::class,
             $user->id,
-            ['email' => $user->email]
+            [
+                'email' => $user->email,
+                'is_super_admin' => $isSuperAdmin,
+                'selected_tenant' => $selectedTenant?->county,
+            ]
         );
 
         return [
             'token' => $token,
-            'user' => $user->load('currentTenant'),
+            'user' => $user->load(['currentTenant', 'roles']),
             'requires_2fa' => false,
+            'requires_tenant_selection' => $requiresTenantSelection,
+            'is_super_admin' => $isSuperAdmin,
+            'accessible_tenants' => $accessibleTenants,
+            'current_tenant' => $selectedTenant,
         ];
     }
 

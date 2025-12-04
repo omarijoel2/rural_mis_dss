@@ -60,6 +60,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             ASALCountySeeders::class,
+            UserSeeder::class,
             OperationsPermissionSeeder::class,
             OperationsSeeder::class,
             CostingPermissionSeeder::class,

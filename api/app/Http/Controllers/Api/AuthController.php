@@ -18,6 +18,8 @@ class AuthController extends Controller
 
     /**
      * Login with email and password
+     * Super admins can optionally select a tenant during login
+     * County admins are auto-assigned to their tenant
      */
     public function login(Request $request)
     {
@@ -25,6 +27,7 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required|string',
             'device_fingerprint' => 'nullable|string',
+            'tenant_id' => 'nullable|uuid|exists:tenants,id',
         ]);
 
         if ($validator->fails()) {
@@ -38,7 +41,8 @@ class AuthController extends Controller
             $result = $this->authService->login(
                 $request->email,
                 $request->password,
-                $request->device_fingerprint
+                $request->device_fingerprint,
+                $request->tenant_id
             );
 
             return response()->json($result);
@@ -51,6 +55,7 @@ class AuthController extends Controller
 
     /**
      * Verify 2FA code
+     * Accepts optional tenant_id for super admins
      */
     public function verifyTwoFactor(Request $request)
     {
@@ -58,6 +63,7 @@ class AuthController extends Controller
             'user_id' => 'required|uuid',
             'code' => 'required|string|size:6',
             'device_fingerprint' => 'nullable|string',
+            'tenant_id' => 'nullable|uuid|exists:tenants,id',
         ]);
 
         if ($validator->fails()) {
@@ -71,7 +77,8 @@ class AuthController extends Controller
             $result = $this->authService->verifyTwoFactor(
                 $request->user_id,
                 $request->code,
-                $request->device_fingerprint
+                $request->device_fingerprint,
+                $request->tenant_id
             );
 
             return response()->json($result);
@@ -202,6 +209,8 @@ class AuthController extends Controller
 
     /**
      * Switch tenant context
+     * Super admins can switch to any tenant
+     * County admins can only switch to their assigned tenants
      */
     public function switchTenant(Request $request)
     {
@@ -216,12 +225,21 @@ class AuthController extends Controller
             ], 422);
         }
 
+        $user = $request->user();
+
+        // Check if user can access this tenant
+        if (!$user->canAccessTenant($request->tenant_id)) {
+            return response()->json([
+                'message' => 'You do not have access to this county',
+            ], 403);
+        }
+
         try {
-            $request->user()->switchTenant($request->tenant_id);
+            $user->switchTenant($request->tenant_id);
 
             return response()->json([
-                'message' => 'Tenant switched successfully',
-                'current_tenant' => $request->user()->load('currentTenant')->currentTenant,
+                'message' => 'County switched successfully',
+                'current_tenant' => $user->load('currentTenant')->currentTenant,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -231,12 +249,18 @@ class AuthController extends Controller
     }
 
     /**
-     * Get user's tenants
+     * Get user's accessible tenants
+     * Super admins get all active tenants
+     * County admins get only their assigned tenants
      */
     public function getTenants(Request $request)
     {
+        $user = $request->user();
+        
         return response()->json([
-            'tenants' => $request->user()->tenants,
+            'tenants' => $user->getAccessibleTenants(),
+            'is_super_admin' => $user->isSuperAdmin(),
+            'current_tenant' => $user->currentTenant,
         ]);
     }
 }
