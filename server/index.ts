@@ -3,6 +3,7 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import shp from "shpjs";
 import { registerRoutes } from "./routes";
 import { registerCoreRegistryRoutes } from "./routes/core-registry";
 import { setupVite, serveStatic, log } from "./vite";
@@ -507,6 +508,115 @@ app.get('/api/v1/gis/shape-files/:id/layers', (req, res) => {
     data: [],
     meta: { total: 0 }
   });
+});
+
+// Get shapefile GeoJSON data for preview
+app.get('/api/v1/gis/shape-files/:id/geojson', async (req, res) => {
+  const shapeFile = shapeFileStore.find(sf => sf.id === req.params.id);
+  if (!shapeFile) {
+    return res.status(404).json({ error: 'Shapefile not found' });
+  }
+
+  try {
+    const filePath = shapeFile.file_path;
+    const ext = path.extname(filePath).toLowerCase();
+
+    if (ext === '.geojson' || ext === '.json') {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const geojson = JSON.parse(content);
+      
+      let bounds = null;
+      if (geojson.features && geojson.features.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        const processCoords = (coords: any) => {
+          if (typeof coords[0] === 'number') {
+            minX = Math.min(minX, coords[0]);
+            maxX = Math.max(maxX, coords[0]);
+            minY = Math.min(minY, coords[1]);
+            maxY = Math.max(maxY, coords[1]);
+          } else {
+            coords.forEach(processCoords);
+          }
+        };
+        
+        geojson.features.forEach((f: any) => {
+          if (f.geometry && f.geometry.coordinates) {
+            processCoords(f.geometry.coordinates);
+          }
+        });
+        
+        if (minX !== Infinity) {
+          bounds = { minX, minY, maxX, maxY };
+        }
+      }
+      
+      res.json({ data: geojson, bounds });
+    } else if (ext === '.zip') {
+      // Parse shapefile from ZIP using shpjs
+      const zipBuffer = fs.readFileSync(filePath);
+      const geojson = await shp(zipBuffer);
+      
+      let bounds = null;
+      const features = Array.isArray(geojson) ? geojson[0]?.features || [] : geojson.features || [];
+      
+      if (features.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        
+        const processCoords = (coords: any) => {
+          if (typeof coords[0] === 'number') {
+            minX = Math.min(minX, coords[0]);
+            maxX = Math.max(maxX, coords[0]);
+            minY = Math.min(minY, coords[1]);
+            maxY = Math.max(maxY, coords[1]);
+          } else {
+            coords.forEach(processCoords);
+          }
+        };
+        
+        features.forEach((f: any) => {
+          if (f.geometry && f.geometry.coordinates) {
+            processCoords(f.geometry.coordinates);
+          }
+        });
+        
+        if (minX !== Infinity) {
+          bounds = { minX, minY, maxX, maxY };
+        }
+      }
+      
+      // Handle case where shpjs returns array of feature collections
+      const resultGeojson = Array.isArray(geojson) ? geojson[0] : geojson;
+      
+      res.json({ data: resultGeojson, bounds });
+    } else {
+      res.status(400).json({ error: 'Unsupported file format for preview' });
+    }
+  } catch (error) {
+    log(`[GIS] Error reading shapefile: ${(error as Error).message}`);
+    res.status(500).json({ error: 'Failed to read shapefile' });
+  }
+});
+
+// Download shapefile
+app.get('/api/v1/gis/shape-files/:id/download', (req, res) => {
+  const shapeFile = shapeFileStore.find(sf => sf.id === req.params.id);
+  if (!shapeFile) {
+    return res.status(404).json({ error: 'Shapefile not found' });
+  }
+
+  if (!fs.existsSync(shapeFile.file_path)) {
+    return res.status(404).json({ error: 'File not found on server' });
+  }
+
+  const ext = path.extname(shapeFile.file_path);
+  const filename = `${shapeFile.name}${ext}`;
+  
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.setHeader('Content-Type', 'application/octet-stream');
+  
+  const fileStream = fs.createReadStream(shapeFile.file_path);
+  fileStream.pipe(res);
 });
 
 // ============ AUTH ENDPOINTS (Mock) ============
