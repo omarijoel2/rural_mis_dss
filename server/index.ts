@@ -132,18 +132,55 @@ app.get('/api/training/assessments', (req, res) => {
 app.post('/api/training/assessments', (req, res) => { res.json({ id: 4, status: 'pending', message: 'Assessment recorded', ...req.body }); });
 
 // ============ AUTHENTICATION (Mock) ============
+const tenantStore = [
+  { id: '1', name: 'Mandera County Water Service', county: 'Mandera', region: 'ASAL North', code: 'MCW', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.0], [41.5, 3.0], [41.5, 4.5], [40.0, 4.5], [40.0, 3.0]]] }, properties: { name: 'Mandera County' } } },
+  { id: '2', name: 'Isiolo County Water Services', county: 'Isiolo', region: 'ASAL Central', code: 'ICW', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[37.5, 0.0], [39.0, 0.0], [39.0, 2.0], [37.5, 2.0], [37.5, 0.0]]] }, properties: { name: 'Isiolo County' } } },
+  { id: '3', name: 'Turkana County Water Board', county: 'Turkana', region: 'ASAL North West', code: 'TCW', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[34.0, 2.5], [36.5, 2.5], [36.5, 5.0], [34.0, 5.0], [34.0, 2.5]]] }, properties: { name: 'Turkana County' } } },
+  { id: '4', name: 'Marsabit County Water Company', county: 'Marsabit', region: 'ASAL North', code: 'MCWC', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[36.5, 2.0], [38.5, 2.0], [38.5, 4.5], [36.5, 4.5], [36.5, 2.0]]] }, properties: { name: 'Marsabit County' } } },
+  { id: '5', name: 'Garissa County Water Services', county: 'Garissa', region: 'ASAL East', code: 'GCW', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[39.0, -1.0], [41.5, -1.0], [41.5, 2.0], [39.0, 2.0], [39.0, -1.0]]] }, properties: { name: 'Garissa County' } } },
+];
+
 app.get('/api/v1/auth/user', (req, res) => {
+  const tenantId = req.query.tenant_id as string || '1';
+  const tenant = tenantStore.find(t => t.id === tenantId) || tenantStore[0];
+  
   res.json({ 
     user: {
       id: '1',
       name: 'Demo User',
       email: 'demo@example.com',
-      current_tenant_id: '1',
+      current_tenant_id: tenant.id,
       two_factor_enabled: false,
       roles: ['admin'],
       permissions: ['*']
+    },
+    tenant: {
+      id: tenant.id,
+      name: tenant.name,
+      county: tenant.county,
+      region: tenant.region,
+      code: tenant.code
     }
   });
+});
+
+// Tenant details endpoint
+app.get('/api/v1/tenants/current', (req, res) => {
+  const tenantId = req.query.tenant_id as string || '1';
+  const tenant = tenantStore.find(t => t.id === tenantId) || tenantStore[0];
+  res.json({ data: tenant });
+});
+
+// Tenant boundary GeoJSON endpoint
+app.get('/api/v1/tenants/current/boundary', (req, res) => {
+  const tenantId = req.query.tenant_id as string || '1';
+  const tenant = tenantStore.find(t => t.id === tenantId) || tenantStore[0];
+  res.json({ data: tenant.boundary_geojson });
+});
+
+// All tenants list
+app.get('/api/v1/tenants', (req, res) => {
+  res.json({ data: tenantStore.map(t => ({ id: t.id, name: t.name, county: t.county, region: t.region, code: t.code })), meta: { total: tenantStore.length } });
 });
 
 // ============ ADMIN USERS MODULE (Mock) ============
