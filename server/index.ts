@@ -246,29 +246,7 @@ const tenantStore = [
   { id: '5', name: 'Garissa County Water Services', county: 'Garissa', region: 'ASAL East', code: 'GCW', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[39.0, -1.0], [41.5, -1.0], [41.5, 2.0], [39.0, 2.0], [39.0, -1.0]]] }, properties: { name: 'Garissa County' } } },
 ];
 
-app.get('/api/v1/auth/user', (req, res) => {
-  const tenantId = req.query.tenant_id as string || '1';
-  const tenant = tenantStore.find(t => t.id === tenantId) || tenantStore[0];
-  
-  res.json({ 
-    user: {
-      id: '1',
-      name: 'Demo User',
-      email: 'demo@example.com',
-      current_tenant_id: tenant.id,
-      two_factor_enabled: false,
-      roles: ['admin'],
-      permissions: ['*']
-    },
-    tenant: {
-      id: tenant.id,
-      name: tenant.name,
-      county: tenant.county,
-      region: tenant.region,
-      code: tenant.code
-    }
-  });
-});
+// auth/user endpoint is handled by Laravel backend via proxy
 
 // Tenant details endpoint
 app.get('/api/v1/tenants/current', (req, res) => {
@@ -644,80 +622,13 @@ app.get('/api/v1/gis/shape-files/:id/download', (req, res) => {
   fileStream.pipe(res);
 });
 
-// ============ AUTH ENDPOINTS (Mock) ============
-app.post('/api/v1/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  
-  const demoUsers: Record<string, { password: string; user: any }> = {
-    'admin@waterutility.go.ke': {
-      password: 'admin123',
-      user: { id: '1', name: 'System Administrator', email: 'admin@waterutility.go.ke', current_tenant_id: '1', two_factor_enabled: false, roles: ['admin'], permissions: ['*'] }
-    },
-    'ops@waterutility.go.ke': {
-      password: 'ops123',
-      user: { id: '2', name: 'Operations Manager', email: 'ops@waterutility.go.ke', current_tenant_id: '1', two_factor_enabled: false, roles: ['manager'], permissions: ['operations.*', 'reports.*'] }
-    },
-    'field@waterutility.go.ke': {
-      password: 'field123',
-      user: { id: '3', name: 'Field Officer', email: 'field@waterutility.go.ke', current_tenant_id: '1', two_factor_enabled: false, roles: ['field_officer'], permissions: ['readings.*', 'inspections.*'] }
-    },
-    'demo@example.com': {
-      password: 'demo123',
-      user: { id: '4', name: 'Demo User', email: 'demo@example.com', current_tenant_id: '1', two_factor_enabled: false, roles: ['admin'], permissions: ['*'] }
-    }
-  };
+// ============ AUTH ENDPOINTS - Proxied to Laravel ============
+// Auth endpoints are handled by Laravel backend via proxy
+// See: api/routes/api.php for actual auth implementation
 
-  const userEntry = demoUsers[email];
-  if (userEntry && userEntry.password === password) {
-    return res.json({ user: userEntry.user });
-  }
-  
-  if (email && password) {
-    return res.json({ 
-      user: { id: '99', name: 'Authenticated User', email, current_tenant_id: '1', two_factor_enabled: false, roles: ['user'], permissions: ['read.*'] }
-    });
-  }
-  
-  res.status(401).json({ message: 'Invalid credentials' });
-});
+// 2FA, password reset endpoints are handled by Laravel backend via proxy
 
-app.post('/api/v1/auth/logout', (req, res) => {
-  res.json({ message: 'Logged out successfully' });
-});
-
-app.post('/api/v1/auth/2fa/challenge', (req, res) => {
-  const { email, password, code } = req.body;
-  
-  if (!email || !password || !code) {
-    return res.status(400).json({ message: 'Email, password and verification code are required' });
-  }
-  
-  if (code.length !== 6 || !/^\d+$/.test(code)) {
-    return res.status(400).json({ message: 'Invalid verification code format' });
-  }
-  
-  res.json({ 
-    user: { 
-      id: '1', 
-      name: 'Two-Factor User', 
-      email, 
-      current_tenant_id: '1', 
-      two_factor_enabled: true, 
-      roles: ['admin'], 
-      permissions: ['*'] 
-    }
-  });
-});
-
-app.post('/api/v1/auth/password/forgot', (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required' });
-  }
-  res.json({ message: `Password reset instructions sent to ${email}` });
-});
-
-app.post('/api/v1/auth/password/reset', (req, res) => {
+app.post('/api/v1/auth/password/reset-mock', (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) {
     return res.status(400).json({ message: 'Token and password are required' });
@@ -1854,6 +1765,14 @@ app.use('/api', createProxyMiddleware({
       if (req.headers['content-type']) {
         proxyReq.setHeader('Content-Type', req.headers['content-type']);
       }
+      
+      // Re-stream body for POST/PUT/PATCH requests (express.json() consumes the body)
+      if (req.body && ['POST', 'PUT', 'PATCH'].includes(req.method)) {
+        const bodyData = JSON.stringify(req.body);
+        proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+        proxyReq.write(bodyData);
+      }
+      
       log(`[Proxy] ${req.method} ${req.url} → Laravel (Auth: ${authHeader ? 'yes' : 'no'})`);
     },
     proxyRes: (proxyRes: any, req: any) => {
