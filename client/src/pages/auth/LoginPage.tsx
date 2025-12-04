@@ -16,6 +16,11 @@ const demoCredentials = [
   { role: 'Marsabit Admin', email: 'admin@marsabit.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Marsabit County' },
   { role: 'Mandera Admin', email: 'admin@mandera.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Mandera County' },
   { role: 'Garissa Admin', email: 'admin@garissa.rwmis.go.ke', password: 'CountyAdmin@2025!', description: 'Garissa County' },
+  { role: 'Operator', email: 'operator@rwmis.go.ke', password: 'Demo@2025!', description: 'Operations & work orders' },
+  { role: 'Technician', email: 'technician@rwmis.go.ke', password: 'Demo@2025!', description: 'Field maintenance' },
+  { role: 'Meter Reader', email: 'meterreader@rwmis.go.ke', password: 'Demo@2025!', description: 'Meter readings' },
+  { role: 'Billing Clerk', email: 'billing@rwmis.go.ke', password: 'Demo@2025!', description: 'Billing & payments' },
+  { role: 'Customer Service', email: 'customerservice@rwmis.go.ke', password: 'Demo@2025!', description: 'Customer support' },
 ];
 
 export function LoginPage() {
