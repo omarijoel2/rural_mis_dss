@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             ['short_code' => 'KWU'],
             [
                 'name' => 'Kenya Water Utilities',
+                'county' => 'Nairobi',
                 'country' => 'KE',
                 'timezone' => 'Africa/Nairobi',
                 'currency' => 'KES',

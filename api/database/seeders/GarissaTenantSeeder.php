@@ -30,6 +30,7 @@ class GarissaTenantSeeder extends Seeder
             [
                 'name' => 'Garissa Water & Sanitation Company',
                 'short_code' => 'GWC',
+                'county' => 'Garissa',
                 'country' => 'KE',
                 'timezone' => 'Africa/Nairobi',
                 'currency' => 'KES',
