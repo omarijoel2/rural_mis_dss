@@ -10,22 +10,24 @@ class AuditEvent extends Model
 {
     use HasFactory, HasUuids;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'tenant_id',
-        'user_id',
+        'actor_id',
+        'actor_type',
         'action',
         'entity_type',
         'entity_id',
-        'changes',
-        'ip_address',
-        'user_agent',
-        'severity',
-        'metadata',
+        'ip',
+        'ua',
+        'diff',
+        'occurred_at',
     ];
 
     protected $casts = [
-        'changes' => 'array',
-        'metadata' => 'array',
+        'diff' => 'array',
+        'occurred_at' => 'datetime',
     ];
 
     public function tenant()
@@ -33,31 +35,17 @@ class AuditEvent extends Model
         return $this->belongsTo(Tenant::class);
     }
 
-    public function user()
+    public function actor()
     {
-        return $this->belongsTo(User::class);
+        return $this->morphTo();
     }
 
-    /**
-     * Scope to filter by severity
-     */
-    public function scopeSeverity($query, string $severity)
-    {
-        return $query->where('severity', $severity);
-    }
-
-    /**
-     * Scope to filter by entity
-     */
     public function scopeForEntity($query, string $entityType, string $entityId)
     {
         return $query->where('entity_type', $entityType)
                      ->where('entity_id', $entityId);
     }
 
-    /**
-     * Scope to filter by action
-     */
     public function scopeAction($query, string $action)
     {
         return $query->where('action', $action);
