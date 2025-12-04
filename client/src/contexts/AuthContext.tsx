@@ -1,14 +1,26 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiClient } from '../lib/api-client';
 
+interface RoleObject {
+  id: number;
+  name: string;
+  guard_name?: string;
+}
+
+interface PermissionObject {
+  id: number;
+  name: string;
+  guard_name?: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   current_tenant_id: string;
   two_factor_enabled: boolean;
-  roles?: string[];
-  permissions?: string[];
+  roles?: (string | RoleObject)[];
+  permissions?: (string | PermissionObject)[];
 }
 
 export interface Tenant {
@@ -55,12 +67,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await apiClient.post<{ user: User }>('/auth/login', {
+    const response = await apiClient.post<{
+      token: string;
+      user: User;
+      requires_2fa?: boolean;
+      requires_tenant_selection?: boolean;
+      accessible_tenants?: Tenant[];
+      current_tenant?: Tenant;
+    }>('/auth/login', {
       email,
       password,
     });
 
+    // Store token in localStorage for API calls
+    if (response.token) {
+      localStorage.setItem('auth_token', response.token);
+    }
+
     setUser(response.user);
+    if (response.current_tenant) {
+      setTenant(response.current_tenant);
+    }
   };
 
   const logout = async () => {
@@ -69,18 +96,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      localStorage.removeItem('auth_token');
       setUser(null);
+      setTenant(null);
     }
   };
 
   const hasPermission = (permission: string): boolean => {
     if (!user || !user.permissions) return false;
-    return user.permissions.includes('*') || user.permissions.includes(permission);
+    const permissionNames = user.permissions.map(p => 
+      typeof p === 'string' ? p : p.name
+    );
+    return permissionNames.includes('*') || permissionNames.includes(permission);
   };
 
   const hasRole = (role: string): boolean => {
     if (!user || !user.roles) return false;
-    return user.roles.includes('*') || user.roles.includes(role);
+    const roleNames = user.roles.map(r => 
+      typeof r === 'string' ? r : r.name
+    );
+    // Super Admin has access to everything
+    if (roleNames.includes('Super Admin')) return true;
+    return roleNames.includes('*') || roleNames.includes(role);
   };
 
   return (
