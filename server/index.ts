@@ -9,18 +9,45 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // GW4R Phase 1 Mock API Endpoints (before proxy)
-let aquiferCounter = 3;
+let aquiferCounter = 7;
 const aquiferStore = [
-  { id: 1, name: 'Elwak Aquifer', safeYieldMcm: 15, currentYieldMcm: 12, rechargeRateMcm: 3, riskLevel: 'medium', waterQualityStatus: 'Good', areaKm2: 5000 },
-  { id: 2, name: 'Merti Aquifer', safeYieldMcm: 20, currentYieldMcm: 18, rechargeRateMcm: 4, riskLevel: 'low', waterQualityStatus: 'Excellent', areaKm2: 8000 },
-  { id: 3, name: 'Neogene Aquifer', safeYieldMcm: 10, currentYieldMcm: 9, rechargeRateMcm: 2, riskLevel: 'high', waterQualityStatus: 'Fair', areaKm2: 3000 },
+  { id: 1, name: 'Elwak Aquifer', safeYieldMcm: 15, currentYieldMcm: 12, rechargeRateMcm: 3, riskLevel: 'medium', waterQualityStatus: 'Good', areaKm2: 5000, county: 'Mandera', aquiferType: 'Alluvial', depth_m: 45, boreholes: 12, lastAssessment: '2025-10-15' },
+  { id: 2, name: 'Merti Aquifer', safeYieldMcm: 20, currentYieldMcm: 18, rechargeRateMcm: 4, riskLevel: 'low', waterQualityStatus: 'Excellent', areaKm2: 8000, county: 'Isiolo', aquiferType: 'Basement', depth_m: 80, boreholes: 18, lastAssessment: '2025-09-20' },
+  { id: 3, name: 'Neogene Aquifer', safeYieldMcm: 10, currentYieldMcm: 9, rechargeRateMcm: 2, riskLevel: 'high', waterQualityStatus: 'Fair', areaKm2: 3000, county: 'Wajir', aquiferType: 'Sedimentary', depth_m: 120, boreholes: 8, lastAssessment: '2025-08-05' },
+  { id: 4, name: 'Chalbi Aquifer', safeYieldMcm: 25, currentYieldMcm: 22, rechargeRateMcm: 5, riskLevel: 'medium', waterQualityStatus: 'Good', areaKm2: 12000, county: 'Marsabit', aquiferType: 'Volcanic', depth_m: 95, boreholes: 22, lastAssessment: '2025-11-01' },
+  { id: 5, name: 'Lotikipi Aquifer', safeYieldMcm: 30, currentYieldMcm: 28, rechargeRateMcm: 6, riskLevel: 'critical', waterQualityStatus: 'Poor', areaKm2: 15000, county: 'Turkana', aquiferType: 'Alluvial', depth_m: 60, boreholes: 25, lastAssessment: '2025-07-18' },
+  { id: 6, name: 'Garissa Aquifer', safeYieldMcm: 18, currentYieldMcm: 14, rechargeRateMcm: 4, riskLevel: 'low', waterQualityStatus: 'Excellent', areaKm2: 7500, county: 'Garissa', aquiferType: 'Basement', depth_m: 70, boreholes: 15, lastAssessment: '2025-10-28' },
+  { id: 7, name: 'Tana Delta Aquifer', safeYieldMcm: 35, currentYieldMcm: 30, rechargeRateMcm: 8, riskLevel: 'medium', waterQualityStatus: 'Good', areaKm2: 18000, county: 'Tana River', aquiferType: 'Coastal', depth_m: 35, boreholes: 28, lastAssessment: '2025-11-10' },
 ];
 
-app.get('/api/hydromet/aquifers', (req, res) => {
-  res.json({ data: aquiferStore });
-});
+// Aquifer monitoring data (time series)
+const aquiferMonitoringData: Record<number, any[]> = {
+  1: [
+    { date: '2025-01', waterLevel_m: 42, abstraction_mcm: 1.0, recharge_mcm: 0.25, quality_score: 85 },
+    { date: '2025-02', waterLevel_m: 43, abstraction_mcm: 1.1, recharge_mcm: 0.2, quality_score: 84 },
+    { date: '2025-03', waterLevel_m: 44, abstraction_mcm: 1.2, recharge_mcm: 0.15, quality_score: 83 },
+    { date: '2025-04', waterLevel_m: 43, abstraction_mcm: 1.0, recharge_mcm: 0.3, quality_score: 86 },
+    { date: '2025-05', waterLevel_m: 42, abstraction_mcm: 0.9, recharge_mcm: 0.35, quality_score: 87 },
+    { date: '2025-06', waterLevel_m: 41, abstraction_mcm: 0.85, recharge_mcm: 0.4, quality_score: 88 },
+  ],
+  2: [
+    { date: '2025-01', waterLevel_m: 78, abstraction_mcm: 1.5, recharge_mcm: 0.35, quality_score: 92 },
+    { date: '2025-02', waterLevel_m: 79, abstraction_mcm: 1.6, recharge_mcm: 0.3, quality_score: 91 },
+    { date: '2025-03', waterLevel_m: 80, abstraction_mcm: 1.7, recharge_mcm: 0.25, quality_score: 90 },
+    { date: '2025-04', waterLevel_m: 79, abstraction_mcm: 1.5, recharge_mcm: 0.4, quality_score: 93 },
+    { date: '2025-05', waterLevel_m: 78, abstraction_mcm: 1.4, recharge_mcm: 0.45, quality_score: 94 },
+    { date: '2025-06', waterLevel_m: 77, abstraction_mcm: 1.3, recharge_mcm: 0.5, quality_score: 95 },
+  ],
+};
 
-app.post('/api/hydromet/aquifers', (req, res) => {
+// Support both /api/hydromet/aquifers and /api/v1/hydromet/aquifers
+const aquiferHandler = (req: Request, res: Response) => {
+  res.json({ data: aquiferStore, meta: { total: aquiferStore.length } });
+};
+app.get('/api/hydromet/aquifers', aquiferHandler);
+app.get('/api/v1/hydromet/aquifers', aquiferHandler);
+
+const createAquiferHandler = (req: Request, res: Response) => {
   const { name, safeYieldMcm } = req.body;
   if (!name || safeYieldMcm === undefined) {
     return res.status(400).json({ error: 'Name and safeYieldMcm are required' });
@@ -33,10 +60,51 @@ app.post('/api/hydromet/aquifers', (req, res) => {
     rechargeRateMcm: Math.floor(safeYieldMcm * 0.25),
     riskLevel: 'low',
     waterQualityStatus: 'Good',
-    areaKm2: Math.floor(Math.random() * 10000),
+    areaKm2: Math.floor(Math.random() * 10000) + 1000,
+    county: 'Unknown',
+    aquiferType: 'Alluvial',
+    depth_m: Math.floor(Math.random() * 100) + 30,
+    boreholes: 0,
+    lastAssessment: new Date().toISOString().split('T')[0],
   };
   aquiferStore.push(newAquifer);
   res.json({ data: newAquifer, message: 'Aquifer registered successfully' });
+};
+app.post('/api/hydromet/aquifers', createAquiferHandler);
+app.post('/api/v1/hydromet/aquifers', createAquiferHandler);
+
+// Aquifer detail endpoint
+app.get('/api/v1/hydromet/aquifers/:id', (req, res) => {
+  const aquifer = aquiferStore.find(a => a.id === parseInt(req.params.id));
+  if (!aquifer) return res.status(404).json({ error: 'Aquifer not found' });
+  res.json({ data: aquifer });
+});
+
+// Aquifer monitoring data endpoint
+app.get('/api/v1/hydromet/aquifers/:id/monitoring', (req, res) => {
+  const id = parseInt(req.params.id);
+  const data = aquiferMonitoringData[id] || [
+    { date: '2025-01', waterLevel_m: 50, abstraction_mcm: 1.0, recharge_mcm: 0.3, quality_score: 80 },
+    { date: '2025-02', waterLevel_m: 51, abstraction_mcm: 1.1, recharge_mcm: 0.28, quality_score: 79 },
+    { date: '2025-03', waterLevel_m: 52, abstraction_mcm: 1.15, recharge_mcm: 0.25, quality_score: 78 },
+    { date: '2025-04', waterLevel_m: 51, abstraction_mcm: 1.0, recharge_mcm: 0.35, quality_score: 81 },
+    { date: '2025-05', waterLevel_m: 50, abstraction_mcm: 0.95, recharge_mcm: 0.4, quality_score: 82 },
+    { date: '2025-06', waterLevel_m: 49, abstraction_mcm: 0.9, recharge_mcm: 0.45, quality_score: 83 },
+  ];
+  res.json({ data });
+});
+
+// Groundwater monitoring wells
+app.get('/api/v1/hydromet/monitoring-wells', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, wellId: 'MW-001', aquiferId: 1, name: 'Elwak Monitoring Well 1', latitude: 3.456, longitude: 40.123, depth_m: 48, waterLevel_m: 42, lastReading: '2025-11-28', status: 'active' },
+      { id: 2, wellId: 'MW-002', aquiferId: 1, name: 'Elwak Monitoring Well 2', latitude: 3.478, longitude: 40.145, depth_m: 52, waterLevel_m: 44, lastReading: '2025-11-28', status: 'active' },
+      { id: 3, wellId: 'MW-003', aquiferId: 2, name: 'Merti Observation Well', latitude: 1.234, longitude: 38.567, depth_m: 85, waterLevel_m: 78, lastReading: '2025-11-27', status: 'active' },
+      { id: 4, wellId: 'MW-004', aquiferId: 3, name: 'Neogene Deep Well', latitude: 2.345, longitude: 39.876, depth_m: 125, waterLevel_m: 118, lastReading: '2025-11-25', status: 'maintenance' },
+    ],
+    meta: { total: 4 }
+  });
 });
 app.get('/api/core-ops/droughts', (req, res) => {
   res.json({ data: [
