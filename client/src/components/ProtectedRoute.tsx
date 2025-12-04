@@ -12,7 +12,7 @@ export function ProtectedRoute({
   requiredPermission, 
   requiredRole 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, hasPermission, hasRole, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -29,48 +29,7 @@ export function ProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
-  // Check for admin access using multiple sources
-  const roleNames = user?.role_names || [];
-  const roles = user?.roles || [];
-  
-  // Check if user has Super Admin or Admin role
-  const isAdmin = 
-    roleNames.includes('Super Admin') || 
-    roleNames.includes('Admin') ||
-    roles.some((r: any) => r === 'Super Admin' || r === 'Admin' || r?.name === 'Super Admin' || r?.name === 'Admin') ||
-    hasRole('Super Admin') || 
-    hasRole('Admin');
-
-  // Super Admin and Admin roles have full access to all pages
-  if (isAdmin) {
-    return <>{children}</>;
-  }
-
-  if (requiredPermission && !hasPermission(requiredPermission)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-muted-foreground">
-            You don't have permission to view this page.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (requiredRole && !hasRole(requiredRole)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-muted-foreground">
-            You don't have the required role to view this page.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  // All authenticated users can access all pages
+  // Permission checks are handled by the backend API
   return <>{children}</>;
 }
