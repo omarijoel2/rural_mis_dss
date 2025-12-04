@@ -131,6 +131,58 @@ app.get('/api/training/assessments', (req, res) => {
 });
 app.post('/api/training/assessments', (req, res) => { res.json({ id: 4, status: 'pending', message: 'Assessment recorded', ...req.body }); });
 
+// ============ ADMINISTRATIVE BOUNDARIES (Mock) ============
+const subCountiesStore: Record<string, any[]> = {
+  '1': [ // Mandera County
+    { id: 'sc-1-1', name: 'Mandera East', code: 'ME', population: 125000, area_km2: 1850, headquarters: 'Mandera Town', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.8, 3.5], [41.5, 3.5], [41.5, 4.2], [40.8, 4.2], [40.8, 3.5]]] }, properties: { name: 'Mandera East', type: 'sub_county' } } },
+    { id: 'sc-1-2', name: 'Mandera West', code: 'MW', population: 98000, area_km2: 2100, headquarters: 'Takaba', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.5], [40.8, 3.5], [40.8, 4.2], [40.0, 4.2], [40.0, 3.5]]] }, properties: { name: 'Mandera West', type: 'sub_county' } } },
+    { id: 'sc-1-3', name: 'Mandera North', code: 'MN', population: 78000, area_km2: 2450, headquarters: 'Rhamu', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 4.2], [41.2, 4.2], [41.2, 4.5], [40.4, 4.5], [40.4, 4.2]]] }, properties: { name: 'Mandera North', type: 'sub_county' } } },
+    { id: 'sc-1-4', name: 'Mandera South', code: 'MS', population: 89000, area_km2: 1950, headquarters: 'Elwak', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 3.0], [41.2, 3.0], [41.2, 3.5], [40.4, 3.5], [40.4, 3.0]]] }, properties: { name: 'Mandera South', type: 'sub_county' } } },
+    { id: 'sc-1-5', name: 'Banissa', code: 'BN', population: 65000, area_km2: 1650, headquarters: 'Banissa', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.0], [40.4, 3.0], [40.4, 3.5], [40.0, 3.5], [40.0, 3.0]]] }, properties: { name: 'Banissa', type: 'sub_county' } } },
+    { id: 'sc-1-6', name: 'Lafey', code: 'LF', population: 52000, area_km2: 1400, headquarters: 'Lafey', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[41.2, 3.5], [41.5, 3.5], [41.5, 4.0], [41.2, 4.0], [41.2, 3.5]]] }, properties: { name: 'Lafey', type: 'sub_county' } } },
+  ],
+  '2': [ // Isiolo County
+    { id: 'sc-2-1', name: 'Isiolo Central', code: 'IC', population: 95000, area_km2: 3200, headquarters: 'Isiolo Town', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[37.8, 0.3], [38.4, 0.3], [38.4, 1.0], [37.8, 1.0], [37.8, 0.3]]] }, properties: { name: 'Isiolo Central', type: 'sub_county' } } },
+    { id: 'sc-2-2', name: 'Garbatulla', code: 'GB', population: 72000, area_km2: 4500, headquarters: 'Garbatulla', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[38.4, 0.0], [39.0, 0.0], [39.0, 1.0], [38.4, 1.0], [38.4, 0.0]]] }, properties: { name: 'Garbatulla', type: 'sub_county' } } },
+    { id: 'sc-2-3', name: 'Merti', code: 'MT', population: 48000, area_km2: 5100, headquarters: 'Merti', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[37.5, 1.0], [39.0, 1.0], [39.0, 2.0], [37.5, 2.0], [37.5, 1.0]]] }, properties: { name: 'Merti', type: 'sub_county' } } },
+  ],
+};
+
+const wardsStore: Record<string, any[]> = {
+  'sc-1-1': [ // Mandera East wards
+    { id: 'w-1-1-1', name: 'Neboi', code: 'NB', population: 28000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.8, 3.5], [41.15, 3.5], [41.15, 3.85], [40.8, 3.85], [40.8, 3.5]]] }, properties: { name: 'Neboi', type: 'ward' } } },
+    { id: 'w-1-1-2', name: 'Township', code: 'TW', population: 42000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[41.15, 3.5], [41.5, 3.5], [41.5, 3.85], [41.15, 3.85], [41.15, 3.5]]] }, properties: { name: 'Township', type: 'ward' } } },
+    { id: 'w-1-1-3', name: 'Khalalio', code: 'KH', population: 32000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.8, 3.85], [41.15, 3.85], [41.15, 4.2], [40.8, 4.2], [40.8, 3.85]]] }, properties: { name: 'Khalalio', type: 'ward' } } },
+    { id: 'w-1-1-4', name: 'Arabia', code: 'AR', population: 23000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[41.15, 3.85], [41.5, 3.85], [41.5, 4.2], [41.15, 4.2], [41.15, 3.85]]] }, properties: { name: 'Arabia', type: 'ward' } } },
+  ],
+  'sc-1-2': [ // Mandera West wards
+    { id: 'w-1-2-1', name: 'Takaba', code: 'TK', population: 35000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.5], [40.4, 3.5], [40.4, 3.85], [40.0, 3.85], [40.0, 3.5]]] }, properties: { name: 'Takaba', type: 'ward' } } },
+    { id: 'w-1-2-2', name: 'Takaba South', code: 'TS', population: 28000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 3.5], [40.8, 3.5], [40.8, 3.85], [40.4, 3.85], [40.4, 3.5]]] }, properties: { name: 'Takaba South', type: 'ward' } } },
+    { id: 'w-1-2-3', name: 'Dandu', code: 'DD', population: 18000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.85], [40.4, 3.85], [40.4, 4.2], [40.0, 4.2], [40.0, 3.85]]] }, properties: { name: 'Dandu', type: 'ward' } } },
+    { id: 'w-1-2-4', name: 'Gither', code: 'GT', population: 17000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 3.85], [40.8, 3.85], [40.8, 4.2], [40.4, 4.2], [40.4, 3.85]]] }, properties: { name: 'Gither', type: 'ward' } } },
+  ],
+  'sc-1-3': [ // Mandera North wards
+    { id: 'w-1-3-1', name: 'Rhamu', code: 'RH', population: 28000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 4.2], [40.8, 4.2], [40.8, 4.5], [40.4, 4.5], [40.4, 4.2]]] }, properties: { name: 'Rhamu', type: 'ward' } } },
+    { id: 'w-1-3-2', name: 'Rhamu Dimtu', code: 'RD', population: 25000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.8, 4.2], [41.2, 4.2], [41.2, 4.5], [40.8, 4.5], [40.8, 4.2]]] }, properties: { name: 'Rhamu Dimtu', type: 'ward' } } },
+    { id: 'w-1-3-3', name: 'Ashabito', code: 'AS', population: 25000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 4.35], [40.8, 4.35], [40.8, 4.5], [40.4, 4.5], [40.4, 4.35]]] }, properties: { name: 'Ashabito', type: 'ward' } } },
+  ],
+  'sc-1-4': [ // Mandera South wards
+    { id: 'w-1-4-1', name: 'Elwak South', code: 'ES', population: 32000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 3.0], [40.8, 3.0], [40.8, 3.25], [40.4, 3.25], [40.4, 3.0]]] }, properties: { name: 'Elwak South', type: 'ward' } } },
+    { id: 'w-1-4-2', name: 'Elwak North', code: 'EN', population: 29000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.8, 3.0], [41.2, 3.0], [41.2, 3.25], [40.8, 3.25], [40.8, 3.0]]] }, properties: { name: 'Elwak North', type: 'ward' } } },
+    { id: 'w-1-4-3', name: 'Shimbir Fatuma', code: 'SF', population: 28000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.4, 3.25], [41.2, 3.25], [41.2, 3.5], [40.4, 3.5], [40.4, 3.25]]] }, properties: { name: 'Shimbir Fatuma', type: 'ward' } } },
+  ],
+  'sc-1-5': [ // Banissa wards
+    { id: 'w-1-5-1', name: 'Banissa', code: 'BN', population: 22000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.0], [40.2, 3.0], [40.2, 3.25], [40.0, 3.25], [40.0, 3.0]]] }, properties: { name: 'Banissa', type: 'ward' } } },
+    { id: 'w-1-5-2', name: 'Derkhale', code: 'DK', population: 18000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.2, 3.0], [40.4, 3.0], [40.4, 3.25], [40.2, 3.25], [40.2, 3.0]]] }, properties: { name: 'Derkhale', type: 'ward' } } },
+    { id: 'w-1-5-3', name: 'Guba', code: 'GB', population: 25000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.25], [40.4, 3.25], [40.4, 3.5], [40.0, 3.5], [40.0, 3.25]]] }, properties: { name: 'Guba', type: 'ward' } } },
+  ],
+  'sc-1-6': [ // Lafey wards
+    { id: 'w-1-6-1', name: 'Lafey', code: 'LF', population: 18000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[41.2, 3.5], [41.35, 3.5], [41.35, 3.75], [41.2, 3.75], [41.2, 3.5]]] }, properties: { name: 'Lafey', type: 'ward' } } },
+    { id: 'w-1-6-2', name: 'Sala', code: 'SL', population: 16000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[41.35, 3.5], [41.5, 3.5], [41.5, 3.75], [41.35, 3.75], [41.35, 3.5]]] }, properties: { name: 'Sala', type: 'ward' } } },
+    { id: 'w-1-6-3', name: 'Waranqara', code: 'WQ', population: 18000, boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[41.2, 3.75], [41.5, 3.75], [41.5, 4.0], [41.2, 4.0], [41.2, 3.75]]] }, properties: { name: 'Waranqara', type: 'ward' } } },
+  ],
+};
+
 // ============ AUTHENTICATION (Mock) ============
 const tenantStore = [
   { id: '1', name: 'Mandera County Water Service', county: 'Mandera', region: 'ASAL North', code: 'MCW', boundary_geojson: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[40.0, 3.0], [41.5, 3.0], [41.5, 4.5], [40.0, 4.5], [40.0, 3.0]]] }, properties: { name: 'Mandera County' } } },
@@ -181,6 +233,74 @@ app.get('/api/v1/tenants/current/boundary', (req, res) => {
 // All tenants list
 app.get('/api/v1/tenants', (req, res) => {
   res.json({ data: tenantStore.map(t => ({ id: t.id, name: t.name, county: t.county, region: t.region, code: t.code })), meta: { total: tenantStore.length } });
+});
+
+// Sub-counties for current tenant
+app.get('/api/v1/tenants/current/sub-counties', (req, res) => {
+  const tenantId = req.query.tenant_id as string || '1';
+  const subCounties = subCountiesStore[tenantId] || [];
+  res.json({ data: subCounties, meta: { total: subCounties.length } });
+});
+
+// Sub-counties GeoJSON FeatureCollection
+app.get('/api/v1/tenants/current/sub-counties/geojson', (req, res) => {
+  const tenantId = req.query.tenant_id as string || '1';
+  const subCounties = subCountiesStore[tenantId] || [];
+  const featureCollection = {
+    type: 'FeatureCollection',
+    features: subCounties.map(sc => ({
+      ...sc.boundary_geojson,
+      properties: {
+        ...sc.boundary_geojson.properties,
+        id: sc.id,
+        code: sc.code,
+        population: sc.population,
+        area_km2: sc.area_km2,
+        headquarters: sc.headquarters
+      }
+    }))
+  };
+  res.json({ data: featureCollection });
+});
+
+// Wards for a sub-county
+app.get('/api/v1/sub-counties/:subCountyId/wards', (req, res) => {
+  const subCountyId = req.params.subCountyId;
+  const wards = wardsStore[subCountyId] || [];
+  res.json({ data: wards, meta: { total: wards.length } });
+});
+
+// All wards for current tenant (flattened)
+app.get('/api/v1/tenants/current/wards', (req, res) => {
+  const tenantId = req.query.tenant_id as string || '1';
+  const subCounties = subCountiesStore[tenantId] || [];
+  const allWards = subCounties.flatMap(sc => wardsStore[sc.id] || []);
+  res.json({ data: allWards, meta: { total: allWards.length } });
+});
+
+// Wards GeoJSON FeatureCollection for current tenant
+app.get('/api/v1/tenants/current/wards/geojson', (req, res) => {
+  const tenantId = req.query.tenant_id as string || '1';
+  const subCounties = subCountiesStore[tenantId] || [];
+  const allWards = subCounties.flatMap(sc => {
+    const scWards = wardsStore[sc.id] || [];
+    return scWards.map(w => ({
+      ...w.boundary_geojson,
+      properties: {
+        ...w.boundary_geojson.properties,
+        id: w.id,
+        code: w.code,
+        population: w.population,
+        sub_county_id: sc.id,
+        sub_county_name: sc.name
+      }
+    }));
+  });
+  const featureCollection = {
+    type: 'FeatureCollection',
+    features: allWards
+  };
+  res.json({ data: featureCollection });
 });
 
 // ============ ADMIN USERS MODULE (Mock) ============
