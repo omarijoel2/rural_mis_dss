@@ -9,23 +9,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Enable PostGIS extension if not already enabled
-        DB::statement('CREATE EXTENSION IF NOT EXISTS postgis');
+        // Note: tenants table is created in 0001_01_00_000000_create_tenants_table.php
+        // which runs before this migration to ensure proper FK relationships
         
-        // Tenants - multi-tenancy root
-        Schema::create('tenants', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('short_code', 32)->unique();
-            $table->string('country', 2)->default('KE');
-            $table->string('timezone')->default('Africa/Nairobi');
-            $table->string('currency', 3)->default('KES');
-            $table->string('logo_path')->nullable();
-            $table->enum('status', ['active', 'suspended'])->default('active');
-            $table->jsonb('meta')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Add county column if it doesn't exist (for backward compatibility)
+        if (!Schema::hasColumn('tenants', 'county')) {
+            Schema::table('tenants', function (Blueprint $table) {
+                $table->string('county')->nullable()->after('short_code')->comment('County name for this tenant');
+            });
+        }
 
         // Organizations - utilities, authorities, departments
         Schema::create('organizations', function (Blueprint $table) {
@@ -213,6 +205,6 @@ return new class extends Migration
         Schema::dropIfExists('facilities');
         Schema::dropIfExists('schemes');
         Schema::dropIfExists('organizations');
-        Schema::dropIfExists('tenants');
+        // Note: tenants table is dropped in 0001_01_00_000000_create_tenants_table.php
     }
 };
