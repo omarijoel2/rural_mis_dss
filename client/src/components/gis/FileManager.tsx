@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Trash2, Download, Eye, Plus, CheckCircle2 } from 'lucide-react';
+import { Upload, Trash2, Download, Eye, Plus, CheckCircle2, Map, Layers } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface ShapeFile {
   id: string;
@@ -29,12 +31,138 @@ interface ShapeFile {
   };
 }
 
+interface ShapeFilePreviewProps {
+  shapeFile: ShapeFile;
+  onClose: () => void;
+}
+
+function ShapeFilePreview({ shapeFile, onClose }: ShapeFilePreviewProps) {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    map.current = new maplibregl.Map({
+      container: mapContainer.current,
+      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+      center: [41.0, 4.0],
+      zoom: 6,
+    });
+
+    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+    map.current.on('load', async () => {
+      try {
+        const response = await fetch(`/api/v1/gis/shape-files/${shapeFile.id}/geojson`);
+        if (!response.ok) throw new Error('Failed to load GeoJSON');
+        
+        const geojson = await response.json();
+        
+        if (map.current && geojson.data) {
+          map.current.addSource('shapefile', {
+            type: 'geojson',
+            data: geojson.data,
+          });
+
+          map.current.addLayer({
+            id: 'shapefile-fill',
+            type: 'fill',
+            source: 'shapefile',
+            paint: {
+              'fill-color': '#3b82f6',
+              'fill-opacity': 0.3,
+            },
+            filter: ['==', '$type', 'Polygon'],
+          });
+
+          map.current.addLayer({
+            id: 'shapefile-line',
+            type: 'line',
+            source: 'shapefile',
+            paint: {
+              'line-color': '#1e40af',
+              'line-width': 2,
+            },
+          });
+
+          map.current.addLayer({
+            id: 'shapefile-point',
+            type: 'circle',
+            source: 'shapefile',
+            paint: {
+              'circle-radius': 6,
+              'circle-color': '#3b82f6',
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#1e40af',
+            },
+            filter: ['==', '$type', 'Point'],
+          });
+
+          // Fit to bounds if available
+          if (geojson.bounds) {
+            map.current.fitBounds([
+              [geojson.bounds.minX, geojson.bounds.minY],
+              [geojson.bounds.maxX, geojson.bounds.maxY],
+            ], { padding: 50 });
+          }
+        }
+        setIsLoading(false);
+      } catch (err) {
+        setError((err as Error).message);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      map.current?.remove();
+    };
+  }, [shapeFile.id]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-sm text-gray-600">
+        <Layers className="w-4 h-4" />
+        <span>{shapeFile.feature_count} features</span>
+        <span>•</span>
+        <span>{shapeFile.geom_type}</span>
+        <span>•</span>
+        <span>{shapeFile.projection_crs}</span>
+      </div>
+      
+      <div className="relative h-[400px] rounded-lg overflow-hidden border">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+            <div className="flex items-center gap-2">
+              <span className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent" />
+              <span>Loading map data...</span>
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-red-50 z-10">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+        <div ref={mapContainer} className="w-full h-full" />
+      </div>
+      
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onClose}>Close</Button>
+      </div>
+    </div>
+  );
+}
+
 export function FileManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [previewShapeFile, setPreviewShapeFile] = useState<ShapeFile | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch shape files
@@ -283,11 +411,23 @@ export function FileManager() {
                 <div className="flex gap-2">
                   {file.status === 'processed' && (
                     <>
-                      <Button size="sm" variant="outline" className="gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="gap-2"
+                        onClick={() => setPreviewShapeFile(file)}
+                      >
                         <Eye className="w-4 h-4" />
                         Preview
                       </Button>
-                      <Button size="sm" variant="outline" className="gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="gap-2"
+                        onClick={() => {
+                          window.open(`/api/v1/gis/shape-files/${file.id}/download`, '_blank');
+                        }}
+                      >
                         <Download className="w-4 h-4" />
                         Download
                       </Button>
@@ -308,6 +448,27 @@ export function FileManager() {
           ))}
         </div>
       )}
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewShapeFile} onOpenChange={(open) => !open && setPreviewShapeFile(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Map className="w-5 h-5" />
+              {previewShapeFile?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Preview of the uploaded shapefile boundaries
+            </DialogDescription>
+          </DialogHeader>
+          {previewShapeFile && (
+            <ShapeFilePreview 
+              shapeFile={previewShapeFile} 
+              onClose={() => setPreviewShapeFile(null)} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
