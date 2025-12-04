@@ -539,7 +539,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::prefix('crm')->group(function () {
+    Route::prefix('crm')->middleware(['auth:sanctum'])->group(function () {
         Route::prefix('customers')->group(function () {
             Route::get('/', [CustomerController::class, 'index'])->middleware('permission:view customers');
             Route::post('/', [CustomerController::class, 'store'])->middleware('permission:create customers');
@@ -678,7 +678,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::prefix('hydromet')->group(function () {
+    Route::prefix('hydromet')->middleware(['auth:sanctum'])->group(function () {
         Route::prefix('sources')->group(function () {
             Route::get('/', [SourceController::class, 'index'])->middleware('permission:view sources');
             Route::post('/', [SourceController::class, 'store'])->middleware('permission:create sources');
