@@ -38,7 +38,16 @@ The MIS uses two concurrent servers: an Express server (port 5000) for the React
 
 ## Database Architecture
 
-A dual ORM strategy is employed, using Drizzle ORM for Node.js and Eloquent ORM for Laravel. Multi-tenancy is implemented in Laravel with `tenant_id` scoping. PostGIS supports GeoJSON geometries for spatial data.
+A dual ORM strategy is employed, using Drizzle ORM for Node.js and Eloquent ORM for Laravel. Multi-tenancy is implemented in Laravel with `current_tenant_id` scoping in the users table. PostGIS supports GeoJSON geometries for spatial data.
+
+### Migration Order
+- Tenants table is created first (0001_01_00_000000) before the users table
+- Users table (0001_01_01_000000) references tenants via `current_tenant_id`
+- FK constraints added separately (0001_01_01_000001) after both tables exist
+- Core registry tables check for existing tenants to avoid duplicates
+
+### Tenant Model
+Each tenant includes: name, short_code, county (for Kenya county-based organization), country, timezone, currency, status.
 
 ## Authentication & Authorization
 

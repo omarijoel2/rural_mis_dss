@@ -354,19 +354,25 @@ class OperationsSeeder extends Seeder
         ];
 
         foreach ($events as $eventData) {
-            $event = Event::create($eventData);
+            $uniqueKeys = ['tenant_id' => $eventData['tenant_id'], 'source' => $eventData['source']];
+            if (isset($eventData['external_id'])) {
+                $uniqueKeys['external_id'] = $eventData['external_id'];
+            }
+            $event = Event::firstOrCreate($uniqueKeys, $eventData);
             
-            EventAction::create([
+            EventAction::firstOrCreate([
                 'event_id' => $event->id,
                 'action' => 'created',
+            ], [
                 'actor_id' => $user?->id,
                 'occurred_at' => $event->detected_at,
             ]);
 
             if ($event->acknowledged_at) {
-                EventAction::create([
+                EventAction::firstOrCreate([
                     'event_id' => $event->id,
                     'action' => 'acknowledged',
+                ], [
                     'actor_id' => $user?->id,
                     'payload' => ['note' => 'Investigating issue'],
                     'occurred_at' => $event->acknowledged_at,
@@ -374,9 +380,10 @@ class OperationsSeeder extends Seeder
             }
 
             if ($event->resolved_at) {
-                EventAction::create([
+                EventAction::firstOrCreate([
                     'event_id' => $event->id,
                     'action' => 'resolved',
+                ], [
                     'actor_id' => $user?->id,
                     'payload' => ['resolution' => 'Increased chlorination rate'],
                     'occurred_at' => $event->resolved_at,
