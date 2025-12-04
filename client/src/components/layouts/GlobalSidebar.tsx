@@ -1,31 +1,150 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-import { Calculator, Database, Users, Droplet, Wrench, Shield, Map, Briefcase, CloudRain, LogOut } from 'lucide-react';
+import { Calculator, Database, Users, Droplet, Wrench, Shield, Map, Briefcase, CloudRain, LogOut, BarChart3, Zap, BookOpen, Network } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAbility } from '../../hooks/useAbility';
 
-const globalModules = [
-  { name: 'Core Registry', href: '/core', icon: Database, color: 'text-blue-500' },
-  { name: 'CRM & Revenue', href: '/crm/customers', icon: Users, color: 'text-green-500' },
-  { name: 'Hydro-Met', href: '/hydromet/sources', icon: CloudRain, color: 'text-cyan-500' },
-  { name: 'Projects', href: '/projects', icon: Briefcase, color: 'text-purple-500' },
-  { name: 'Costing', href: '/costing/budgets', icon: Calculator, color: 'text-orange-500' },
-  { name: 'CMMS', href: '/cmms/dashboard', icon: Wrench, color: 'text-yellow-500' },
-  { name: 'Water Quality', href: '/water-quality/samples', icon: Droplet, color: 'text-blue-400' },
-  { name: 'GIS Map', href: '/gis/map', icon: Map, color: 'text-red-500' },
-  { name: 'M&E', href: '/me/kpis', icon: Calculator, color: 'text-teal-500' },
-  { name: 'Customer', href: '/customer/tariffs', icon: Users, color: 'text-pink-500' },
-  { name: 'Community', href: '/community/committees', icon: Users, color: 'text-purple-500' },
-  { name: 'Core Ops', href: '/core-ops/console', icon: Calculator, color: 'text-emerald-500' },
-  { name: 'DSA', href: '/dsa/forecast', icon: Calculator, color: 'text-violet-500' },
-  { name: 'Security', href: '/security/audit', icon: Shield, color: 'text-red-500' },
-  { name: 'Admin', href: '/admin/users', icon: Shield, color: 'text-gray-500' },
-  { name: 'Integration', href: '/integration/api', icon: Shield, color: 'text-indigo-500' },
-  { name: 'Training', href: '/training/courses', icon: Shield, color: 'text-amber-500' },
+interface ModuleConfig {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  permissions?: string[];
+  roles?: string[];
+  requireAllPermissions?: boolean;
+}
+
+const globalModules: ModuleConfig[] = [
+  { 
+    name: 'Core Registry', 
+    href: '/core', 
+    icon: Database, 
+    color: 'text-blue-500',
+    roles: ['Super Admin', 'Admin', 'Operator']
+  },
+  { 
+    name: 'CRM & Revenue', 
+    href: '/crm/customers', 
+    icon: Users, 
+    color: 'text-green-500',
+    permissions: ['view customers', 'view billing', 'view revenue'],
+    roles: ['Super Admin', 'Admin', 'Billing Clerk', 'Customer Service']
+  },
+  { 
+    name: 'Hydro-Met', 
+    href: '/hydromet/sources', 
+    icon: CloudRain, 
+    color: 'text-cyan-500',
+    roles: ['Super Admin', 'Admin', 'Operator']
+  },
+  { 
+    name: 'Projects', 
+    href: '/projects', 
+    icon: Briefcase, 
+    color: 'text-purple-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'Costing', 
+    href: '/costing/budgets', 
+    icon: Calculator, 
+    color: 'text-orange-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'CMMS', 
+    href: '/cmms/dashboard', 
+    icon: Wrench, 
+    color: 'text-yellow-500',
+    permissions: ['view assets', 'view work orders'],
+    roles: ['Super Admin', 'Admin', 'Operator', 'Technician']
+  },
+  { 
+    name: 'Water Quality', 
+    href: '/water-quality/samples', 
+    icon: Droplet, 
+    color: 'text-blue-400',
+    roles: ['Super Admin', 'Admin', 'Operator']
+  },
+  { 
+    name: 'GIS Map', 
+    href: '/gis/map', 
+    icon: Map, 
+    color: 'text-red-500',
+    permissions: ['view gis'],
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'M&E', 
+    href: '/me/kpis', 
+    icon: BarChart3, 
+    color: 'text-teal-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'Customer', 
+    href: '/customer/tariffs', 
+    icon: Users, 
+    color: 'text-pink-500',
+    permissions: ['view customers', 'view meters', 'view service connections'],
+    roles: ['Super Admin', 'Admin', 'Customer Service', 'Meter Reader']
+  },
+  { 
+    name: 'Community', 
+    href: '/community/committees', 
+    icon: Users, 
+    color: 'text-purple-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'Core Ops', 
+    href: '/core-ops/console', 
+    icon: Zap, 
+    color: 'text-emerald-500',
+    permissions: ['view events', 'view shifts'],
+    roles: ['Super Admin', 'Admin', 'Operator']
+  },
+  { 
+    name: 'DSA', 
+    href: '/dsa/forecast', 
+    icon: BarChart3, 
+    color: 'text-violet-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'Security', 
+    href: '/security/audit', 
+    icon: Shield, 
+    color: 'text-red-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'Admin', 
+    href: '/admin/users', 
+    icon: Shield, 
+    color: 'text-gray-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'Integration', 
+    href: '/integration/api', 
+    icon: Network, 
+    color: 'text-indigo-500',
+    roles: ['Super Admin', 'Admin']
+  },
+  { 
+    name: 'Training', 
+    href: '/training/courses', 
+    icon: BookOpen, 
+    color: 'text-amber-500',
+    roles: ['Super Admin', 'Admin', 'Operator', 'Technician']
+  },
 ];
 
 export function GlobalSidebar() {
   const location = useLocation();
   const { logout } = useAuth();
+  const { hasAnyPermission, hasAnyRole } = useAbility();
   
   const handleLogout = async () => {
     await logout();
@@ -37,6 +156,28 @@ export function GlobalSidebar() {
     const moduleBasePath = '/' + href.split('/')[1];
     return basePath === moduleBasePath;
   };
+
+  const canAccessModule = (module: ModuleConfig): boolean => {
+    if (module.roles && module.roles.length > 0) {
+      if (hasAnyRole(module.roles)) {
+        return true;
+      }
+    }
+    
+    if (module.permissions && module.permissions.length > 0) {
+      if (hasAnyPermission(module.permissions)) {
+        return true;
+      }
+    }
+    
+    if (!module.roles && !module.permissions) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  const accessibleModules = globalModules.filter(canAccessModule);
 
   return (
     <aside className="w-20 bg-card border-r flex flex-col items-center py-6 space-y-1">
@@ -51,8 +192,8 @@ export function GlobalSidebar() {
       </div>
 
       {/* Module Navigation */}
-      <nav className="flex-1 flex flex-col space-y-2">
-        {globalModules.map((module) => {
+      <nav className="flex-1 flex flex-col space-y-2 overflow-y-auto">
+        {accessibleModules.map((module) => {
           const active = isActive(module.href);
           return (
             <Link
