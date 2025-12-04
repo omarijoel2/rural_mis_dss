@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import Map, { Source, Layer, NavigationControl, ScaleControl, FullscreenControl, Popup } from 'react-map-gl/maplibre';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import Map, { Source, Layer, NavigationControl, ScaleControl, FullscreenControl, Popup, type MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -9,9 +9,25 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NetworkLayersPanel } from './NetworkLayersPanel';
-import { Layers, MapPin, Building2, ChevronDown, Grid3X3, LayoutGrid } from 'lucide-react';
+import { Layers, MapPin, Building2, ChevronDown, Grid3X3, LayoutGrid, FileUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
+import { useQuery } from '@tanstack/react-query';
+import type { Feature, FeatureCollection, Geometry } from 'geojson';
+
+interface UploadedShapeFile {
+  id: string;
+  name: string;
+  status: 'uploaded' | 'processing' | 'processed' | 'failed';
+  geom_type: string;
+  feature_count: number;
+  projection_crs: string;
+}
+
+interface ShapeFileGeoJSONData {
+  data: FeatureCollection<Geometry>;
+  bounds?: { minX: number; minY: number; maxX: number; maxY: number };
+}
 
 interface MapLayer {
   id: string;
@@ -183,19 +199,8 @@ const MAP_LAYERS: MapLayer[] = [
 ];
 
 
-interface GeoJSONFeature {
-  type: 'Feature';
-  geometry: {
-    type: 'Polygon' | 'MultiPolygon';
-    coordinates: number[][][] | number[][][][];
-  };
-  properties: Record<string, any>;
-}
-
-interface GeoJSONFeatureCollection {
-  type: 'FeatureCollection';
-  features: GeoJSONFeature[];
-}
+type GeoJSONFeature = Feature<Geometry>;
+type GeoJSONFeatureCollection = FeatureCollection<Geometry>;
 
 interface PopupInfo {
   longitude: number;
@@ -218,8 +223,64 @@ export function MapConsole({ className }: MapConsoleProps) {
   const [showSubCounties, setShowSubCounties] = useState(true);
   const [showWards, setShowWards] = useState(false);
   const [adminLayersOpen, setAdminLayersOpen] = useState(true);
+  const [shapeFilesOpen, setShapeFilesOpen] = useState(true);
+  const [enabledShapeFiles, setEnabledShapeFiles] = useState<Set<string>>(new Set());
+  const [shapeFileData, setShapeFileData] = useState<Record<string, ShapeFileGeoJSONData | null>>({});
+  const mapRef = useRef<MapRef>(null);
   
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
+  
+  // Fetch uploaded shapefiles
+  const { data: uploadedShapeFiles = [] } = useQuery({
+    queryKey: ['shape-files'],
+    queryFn: async () => {
+      const response = await fetch('/api/v1/gis/shape-files');
+      const data = await response.json();
+      return (data.data || []) as UploadedShapeFile[];
+    },
+    refetchInterval: 10000,
+  });
+  
+  // Toggle shapefile visibility
+  const toggleShapeFile = useCallback(async (shapeFileId: string) => {
+    setEnabledShapeFiles(prev => {
+      const next = new Set(prev);
+      if (next.has(shapeFileId)) {
+        next.delete(shapeFileId);
+      } else {
+        next.add(shapeFileId);
+        // Load GeoJSON if not already loaded
+        if (!shapeFileData[shapeFileId]) {
+          fetch(`/api/v1/gis/shape-files/${shapeFileId}/geojson`)
+            .then(res => res.json())
+            .then((response: { data: FeatureCollection<Geometry>; bounds?: ShapeFileGeoJSONData['bounds'] }) => {
+              if (response.data) {
+                setShapeFileData(prev => ({ 
+                  ...prev, 
+                  [shapeFileId]: { data: response.data, bounds: response.bounds } 
+                }));
+                // Fit map to bounds if available
+                if (response.bounds && mapRef.current) {
+                  mapRef.current.fitBounds(
+                    [[response.bounds.minX, response.bounds.minY], [response.bounds.maxX, response.bounds.maxY]],
+                    { padding: 50, duration: 1000 }
+                  );
+                }
+              }
+            })
+            .catch(console.error);
+        } else if (shapeFileData[shapeFileId]?.bounds && mapRef.current) {
+          // If already loaded, just fit to bounds
+          const bounds = shapeFileData[shapeFileId]!.bounds!;
+          mapRef.current.fitBounds(
+            [[bounds.minX, bounds.minY], [bounds.maxX, bounds.maxY]],
+            { padding: 50, duration: 1000 }
+          );
+        }
+      }
+      return next;
+    });
+  }, [shapeFileData]);
   
   const [viewState, setViewState] = useState({
     longitude: 36.8219,
@@ -247,18 +308,23 @@ export function MapConsole({ className }: MapConsoleProps) {
         
         if (boundaryRes.data) {
           setTenantBoundary(boundaryRes.data);
-          const coords = boundaryRes.data.geometry.coordinates[0] as number[][];
-          if (coords && coords.length > 0) {
-            const lngs = coords.map(c => c[0]);
-            const lats = coords.map(c => c[1]);
-            const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
-            const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-            setViewState(prev => ({
-              ...prev,
-              longitude: centerLng,
-              latitude: centerLat,
-              zoom: 8
-            }));
+          const geom = boundaryRes.data.geometry;
+          if (geom && 'coordinates' in geom && (geom.type === 'Polygon' || geom.type === 'MultiPolygon')) {
+            const coords = geom.type === 'Polygon' 
+              ? geom.coordinates[0] as number[][]
+              : geom.coordinates[0]?.[0] as number[][];
+            if (coords && coords.length > 0) {
+              const lngs = coords.map(c => c[0]);
+              const lats = coords.map(c => c[1]);
+              const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+              const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+              setViewState(prev => ({
+                ...prev,
+                longitude: centerLng,
+                latitude: centerLat,
+                zoom: 8
+              }));
+            }
           }
         }
         
@@ -277,7 +343,20 @@ export function MapConsole({ className }: MapConsoleProps) {
   }, [tenant?.id]);
 
   const getPolygonCenter = (feature: GeoJSONFeature): [number, number] => {
-    const coords = feature.geometry.coordinates[0] as number[][];
+    if (!feature.geometry || !('coordinates' in feature.geometry)) return [0, 0];
+    const geom = feature.geometry;
+    let coords: number[][] = [];
+    
+    if (geom.type === 'Polygon' && geom.coordinates[0]) {
+      coords = geom.coordinates[0] as number[][];
+    } else if (geom.type === 'MultiPolygon' && geom.coordinates[0]?.[0]) {
+      coords = geom.coordinates[0][0] as number[][];
+    } else if (geom.type === 'Point') {
+      return geom.coordinates as [number, number];
+    } else if (geom.type === 'LineString' && geom.coordinates.length > 0) {
+      coords = geom.coordinates as number[][];
+    }
+    
     if (!coords || coords.length === 0) return [0, 0];
     const lngs = coords.map(c => c[0]);
     const lats = coords.map(c => c[1]);
@@ -345,6 +424,7 @@ export function MapConsole({ className }: MapConsoleProps) {
   return (
     <div className={`relative w-full h-full ${className || ''}`}>
       <Map
+        ref={mapRef}
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
         onClick={handleMapClick}
@@ -487,18 +567,18 @@ export function MapConsole({ className }: MapConsoleProps) {
             closeOnClick={false}
           >
             <div className="p-2 min-w-[180px]">
-              <h4 className="font-semibold text-sm mb-1">{popupInfo.feature.properties.name}</h4>
+              <h4 className="font-semibold text-sm mb-1">{popupInfo.feature.properties?.name}</h4>
               {popupInfo.layerType === 'sub_county' && (
                 <div className="text-xs text-gray-600 space-y-0.5">
-                  <p>Population: {popupInfo.feature.properties.population?.toLocaleString()}</p>
-                  <p>Area: {popupInfo.feature.properties.area_km2?.toLocaleString()} km²</p>
-                  <p>HQ: {popupInfo.feature.properties.headquarters}</p>
+                  <p>Population: {popupInfo.feature.properties?.population?.toLocaleString()}</p>
+                  <p>Area: {popupInfo.feature.properties?.area_km2?.toLocaleString()} km²</p>
+                  <p>HQ: {popupInfo.feature.properties?.headquarters}</p>
                 </div>
               )}
               {popupInfo.layerType === 'ward' && (
                 <div className="text-xs text-gray-600 space-y-0.5">
-                  <p>Sub-county: {popupInfo.feature.properties.sub_county_name}</p>
-                  <p>Population: {popupInfo.feature.properties.population?.toLocaleString()}</p>
+                  <p>Sub-county: {popupInfo.feature.properties?.sub_county_name}</p>
+                  <p>Population: {popupInfo.feature.properties?.population?.toLocaleString()}</p>
                 </div>
               )}
             </div>
@@ -538,6 +618,64 @@ export function MapConsole({ className }: MapConsoleProps) {
             </Source>
           );
         })}
+
+        {/* Uploaded Shapefile Layers */}
+        {uploadedShapeFiles
+          .filter(sf => sf.status === 'processed' && enabledShapeFiles.has(sf.id) && shapeFileData[sf.id]?.data)
+          .map((sf, index) => {
+            const sfData = shapeFileData[sf.id];
+            if (!sfData?.data) return null;
+            
+            const colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+            const color = colors[index % colors.length];
+            
+            return (
+              <Source key={sf.id} id={`shapefile-${sf.id}`} type="geojson" data={sfData.data}>
+                {/* Polygon fill layer - $type Polygon matches both Polygon and MultiPolygon */}
+                <Layer
+                  id={`shapefile-${sf.id}-fill`}
+                  type="fill"
+                  filter={['==', '$type', 'Polygon']}
+                  paint={{
+                    'fill-color': color,
+                    'fill-opacity': 0.3,
+                  }}
+                />
+                {/* Polygon outline layer - matches Polygon and MultiPolygon */}
+                <Layer
+                  id={`shapefile-${sf.id}-outline`}
+                  type="line"
+                  filter={['==', '$type', 'Polygon']}
+                  paint={{
+                    'line-color': color,
+                    'line-width': 2,
+                  }}
+                />
+                {/* Line layer - $type LineString matches both LineString and MultiLineString */}
+                <Layer
+                  id={`shapefile-${sf.id}-line`}
+                  type="line"
+                  filter={['==', '$type', 'LineString']}
+                  paint={{
+                    'line-color': color,
+                    'line-width': 2,
+                  }}
+                />
+                {/* Point layer - $type Point matches both Point and MultiPoint */}
+                <Layer
+                  id={`shapefile-${sf.id}-point`}
+                  type="circle"
+                  filter={['==', '$type', 'Point']}
+                  paint={{
+                    'circle-radius': 6,
+                    'circle-color': color,
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff',
+                  }}
+                />
+              </Source>
+            );
+          })}
       </Map>
 
       <Card className="absolute top-4 left-4 w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur">
@@ -649,6 +787,48 @@ export function MapConsole({ className }: MapConsoleProps) {
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Uploaded Shapefiles Section */}
+          {uploadedShapeFiles.filter(sf => sf.status === 'processed').length > 0 && (
+            <Collapsible open={shapeFilesOpen} onOpenChange={setShapeFilesOpen} className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <CollapsibleTrigger className="flex items-center justify-between w-full mb-2">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400">Uploaded Layers</h4>
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                    {uploadedShapeFiles.filter(sf => sf.status === 'processed').length}
+                  </Badge>
+                </div>
+                <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform ${shapeFilesOpen ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-2">
+                  {uploadedShapeFiles
+                    .filter(sf => sf.status === 'processed')
+                    .map((sf, index) => {
+                      const colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+                      const color = colors[index % colors.length];
+                      return (
+                        <div key={sf.id} className="flex items-center justify-between">
+                          <Label
+                            htmlFor={`shapefile-${sf.id}`}
+                            className="text-xs cursor-pointer text-gray-700 dark:text-gray-300 flex items-center gap-1.5 truncate"
+                          >
+                            <FileUp className="w-3 h-3 flex-shrink-0" style={{ color }} />
+                            <span className="truncate" title={sf.name}>{sf.name}</span>
+                            <span className="text-[10px] text-gray-400 flex-shrink-0">({sf.feature_count})</span>
+                          </Label>
+                          <Switch
+                            id={`shapefile-${sf.id}`}
+                            checked={enabledShapeFiles.has(sf.id)}
+                            onCheckedChange={() => toggleShapeFile(sf.id)}
+                          />
+                        </div>
+                      );
+                    })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-2">
