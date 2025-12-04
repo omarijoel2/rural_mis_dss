@@ -35,20 +35,6 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
             </p>
           </div>
           
-          <div className="mt-12 grid grid-cols-3 gap-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-3xl font-bold">500K+</div>
-              <div className="text-blue-200 text-sm">Customers Served</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-3xl font-bold">1,200+</div>
-              <div className="text-blue-200 text-sm">Water Schemes</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-3xl font-bold">98%</div>
-              <div className="text-blue-200 text-sm">Uptime</div>
-            </div>
-          </div>
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-900/50 to-transparent"></div>
