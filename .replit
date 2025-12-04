@@ -78,3 +78,6 @@ waitForPort = 5000
 [userenv.development]
 QUEUE_CONNECTION = "redis"
 HORIZON_PREFIX = "horizon:"
+
+[agent]
+integrations = ["github:1.0.0"]
