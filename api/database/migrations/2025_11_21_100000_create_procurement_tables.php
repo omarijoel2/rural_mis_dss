@@ -11,23 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Vendors/Suppliers Registry
-        Schema::create('vendors', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->string('vendor_code')->unique();
-            $table->string('name');
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->text('address')->nullable();
-            $table->enum('category', ['goods', 'services', 'works', 'consultancy'])->default('goods');
-            $table->enum('status', ['active', 'suspended', 'blacklisted'])->default('active');
-            $table->decimal('performance_score', 5, 2)->default(0)->comment('0-100 score');
-            $table->jsonb('meta')->nullable();
-            $table->timestamps();
-            
-            $table->index(['tenant_id', 'status']);
-        });
+        // Vendors/Suppliers Registry - skip if already exists (created by community_stakeholder migration)
+        if (!Schema::hasTable('vendors')) {
+            Schema::create('vendors', function (Blueprint $table) {
+                $table->uuid('id')->primary();
+                $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
+                $table->string('vendor_code')->unique();
+                $table->string('name');
+                $table->string('email')->nullable();
+                $table->string('phone')->nullable();
+                $table->text('address')->nullable();
+                $table->enum('category', ['goods', 'services', 'works', 'consultancy'])->default('goods');
+                $table->enum('status', ['active', 'suspended', 'blacklisted'])->default('active');
+                $table->decimal('performance_score', 5, 2)->default(0)->comment('0-100 score');
+                $table->jsonb('meta')->nullable();
+                $table->timestamps();
+                
+                $table->index(['tenant_id', 'status']);
+            });
+        }
 
         // Purchase Requisitions
         Schema::create('requisitions', function (Blueprint $table) {

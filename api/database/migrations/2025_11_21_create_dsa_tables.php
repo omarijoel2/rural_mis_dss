@@ -97,7 +97,8 @@ return new class extends Migration
             $table->enum('status', ['new', 'acknowledged', 'investigating', 'resolved', 'false_positive'])->default('new');
             $table->foreignUuid('acknowledged_by')->nullable()->constrained('users');
             $table->timestamp('acknowledged_at')->nullable();
-            $table->foreignUuid('work_order_id')->nullable()->constrained('work_orders')->nullOnDelete();
+            $table->unsignedBigInteger('work_order_id')->nullable();
+            $table->foreign('work_order_id')->references('id')->on('work_orders')->nullOnDelete();
             $table->timestamps();
             
             $table->index(['tenant_id', 'status']);

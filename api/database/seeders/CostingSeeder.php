@@ -22,7 +22,7 @@ class CostingSeeder extends Seeder
             return;
         }
 
-        $user = User::where('tenant_id', $tenant->id)->first();
+        $user = User::where('current_tenant_id', $tenant->id)->first();
         if (!$user) {
             $this->command->warn('No user found for tenant. Skipping costing seeder.');
             return;
