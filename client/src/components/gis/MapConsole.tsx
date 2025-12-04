@@ -1,15 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
-import Map, { Source, Layer, NavigationControl, ScaleControl, FullscreenControl } from 'react-map-gl/maplibre';
+import Map, { Source, Layer, NavigationControl, ScaleControl, FullscreenControl, Popup } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NetworkLayersPanel } from './NetworkLayersPanel';
-import { Layers, MapPin, Building2 } from 'lucide-react';
-import { useAuth, Tenant } from '@/contexts/AuthContext';
+import { Layers, MapPin, Building2, ChevronDown, Grid3X3, LayoutGrid } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
 
 interface MapLayer {
@@ -182,15 +183,25 @@ const MAP_LAYERS: MapLayer[] = [
 ];
 
 
-interface TenantBoundary {
-  type: string;
+interface GeoJSONFeature {
+  type: 'Feature';
   geometry: {
-    type: string;
-    coordinates: number[][][];
+    type: 'Polygon' | 'MultiPolygon';
+    coordinates: number[][][] | number[][][][];
   };
-  properties: {
-    name: string;
-  };
+  properties: Record<string, any>;
+}
+
+interface GeoJSONFeatureCollection {
+  type: 'FeatureCollection';
+  features: GeoJSONFeature[];
+}
+
+interface PopupInfo {
+  longitude: number;
+  latitude: number;
+  feature: GeoJSONFeature;
+  layerType: 'county' | 'sub_county' | 'ward';
 }
 
 interface MapConsoleProps {
@@ -199,8 +210,16 @@ interface MapConsoleProps {
 
 export function MapConsole({ className }: MapConsoleProps) {
   const { tenant } = useAuth();
-  const [tenantBoundary, setTenantBoundary] = useState<TenantBoundary | null>(null);
-  const [showTenantBoundary, setShowTenantBoundary] = useState(true);
+  const [tenantBoundary, setTenantBoundary] = useState<GeoJSONFeature | null>(null);
+  const [subCountiesData, setSubCountiesData] = useState<GeoJSONFeatureCollection | null>(null);
+  const [wardsData, setWardsData] = useState<GeoJSONFeatureCollection | null>(null);
+  
+  const [showCountyBoundary, setShowCountyBoundary] = useState(true);
+  const [showSubCounties, setShowSubCounties] = useState(true);
+  const [showWards, setShowWards] = useState(false);
+  const [adminLayersOpen, setAdminLayersOpen] = useState(true);
+  
+  const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
   
   const [viewState, setViewState] = useState({
     longitude: 36.8219,
@@ -218,12 +237,17 @@ export function MapConsole({ className }: MapConsoleProps) {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   useEffect(() => {
-    const fetchTenantBoundary = async () => {
+    const fetchAdminBoundaries = async () => {
       try {
-        const response = await apiClient.get<{ data: TenantBoundary }>('/tenants/current/boundary');
-        if (response.data) {
-          setTenantBoundary(response.data);
-          const coords = response.data.geometry.coordinates[0];
+        const [boundaryRes, subCountiesRes, wardsRes] = await Promise.all([
+          apiClient.get<{ data: GeoJSONFeature }>('/tenants/current/boundary'),
+          apiClient.get<{ data: GeoJSONFeatureCollection }>('/tenants/current/sub-counties/geojson'),
+          apiClient.get<{ data: GeoJSONFeatureCollection }>('/tenants/current/wards/geojson'),
+        ]);
+        
+        if (boundaryRes.data) {
+          setTenantBoundary(boundaryRes.data);
+          const coords = boundaryRes.data.geometry.coordinates[0] as number[][];
           if (coords && coords.length > 0) {
             const lngs = coords.map(c => c[0]);
             const lats = coords.map(c => c[1]);
@@ -233,16 +257,32 @@ export function MapConsole({ className }: MapConsoleProps) {
               ...prev,
               longitude: centerLng,
               latitude: centerLat,
-              zoom: 7
+              zoom: 8
             }));
           }
         }
+        
+        if (subCountiesRes.data) {
+          setSubCountiesData(subCountiesRes.data);
+        }
+        
+        if (wardsRes.data) {
+          setWardsData(wardsRes.data);
+        }
       } catch (error) {
-        console.error('Failed to fetch tenant boundary:', error);
+        console.error('Failed to fetch admin boundaries:', error);
       }
     };
-    fetchTenantBoundary();
+    fetchAdminBoundaries();
   }, [tenant?.id]);
+
+  const getPolygonCenter = (feature: GeoJSONFeature): [number, number] => {
+    const coords = feature.geometry.coordinates[0] as number[][];
+    if (!coords || coords.length === 0) return [0, 0];
+    const lngs = coords.map(c => c[0]);
+    const lats = coords.map(c => c[1]);
+    return [(Math.min(...lngs) + Math.max(...lngs)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
+  };
 
   const toggleLayer = useCallback((layerId: string) => {
     setEnabledLayers((prev) => {
@@ -270,19 +310,135 @@ export function MapConsole({ className }: MapConsoleProps) {
 
   const selectedBasemap = BASEMAP_STYLES.find((style) => style.id === basemapId) || BASEMAP_STYLES[0];
 
+  const handleMapClick = useCallback((event: any) => {
+    const features = event.features;
+    if (!features || features.length === 0) {
+      setPopupInfo(null);
+      return;
+    }
+    
+    const feature = features[0];
+    const layerId = feature.layer?.id;
+    
+    let layerType: 'county' | 'sub_county' | 'ward' = 'county';
+    if (layerId?.includes('ward')) {
+      layerType = 'ward';
+    } else if (layerId?.includes('sub-count')) {
+      layerType = 'sub_county';
+    }
+    
+    const center = getPolygonCenter(feature as GeoJSONFeature);
+    setPopupInfo({
+      longitude: center[0],
+      latitude: center[1],
+      feature: feature as GeoJSONFeature,
+      layerType,
+    });
+  }, []);
+
+  const interactiveLayerIds = [
+    ...(showCountyBoundary && tenantBoundary ? ['tenant-boundary-fill'] : []),
+    ...(showSubCounties && subCountiesData ? ['sub-counties-fill'] : []),
+    ...(showWards && wardsData ? ['wards-fill'] : []),
+  ];
+
   return (
     <div className={`relative w-full h-full ${className || ''}`}>
       <Map
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
+        onClick={handleMapClick}
+        interactiveLayerIds={interactiveLayerIds}
         mapStyle={selectedBasemap.url}
         style={{ width: '100%', height: '100%' }}
+        cursor={interactiveLayerIds.length > 0 ? 'pointer' : 'grab'}
       >
         <NavigationControl position="top-right" />
         <ScaleControl position="bottom-left" />
         <FullscreenControl position="top-right" />
 
-        {tenantBoundary && showTenantBoundary && (
+        {wardsData && showWards && (
+          <Source
+            id="wards"
+            type="geojson"
+            data={wardsData}
+          >
+            <Layer
+              id="wards-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#f97316',
+                'fill-opacity': 0.15
+              }}
+            />
+            <Layer
+              id="wards-line"
+              type="line"
+              paint={{
+                'line-color': '#ea580c',
+                'line-width': 1.5,
+                'line-dasharray': [1, 1]
+              }}
+            />
+            <Layer
+              id="wards-label"
+              type="symbol"
+              layout={{
+                'text-field': ['get', 'name'],
+                'text-size': 10,
+                'text-anchor': 'center',
+                'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular']
+              }}
+              paint={{
+                'text-color': '#c2410c',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 1.5
+              }}
+            />
+          </Source>
+        )}
+
+        {subCountiesData && showSubCounties && (
+          <Source
+            id="sub-counties"
+            type="geojson"
+            data={subCountiesData}
+          >
+            <Layer
+              id="sub-counties-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#8b5cf6',
+                'fill-opacity': 0.1
+              }}
+            />
+            <Layer
+              id="sub-counties-line"
+              type="line"
+              paint={{
+                'line-color': '#7c3aed',
+                'line-width': 2
+              }}
+            />
+            <Layer
+              id="sub-counties-label"
+              type="symbol"
+              layout={{
+                'text-field': ['get', 'name'],
+                'text-size': 12,
+                'text-anchor': 'center',
+                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold']
+              }}
+              paint={{
+                'text-color': '#6d28d9',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 2
+              }}
+            />
+          </Source>
+        )}
+
+        {tenantBoundary && showCountyBoundary && (
           <Source
             id="tenant-boundary"
             type="geojson"
@@ -293,7 +449,7 @@ export function MapConsole({ className }: MapConsoleProps) {
               type="fill"
               paint={{
                 'fill-color': '#3b82f6',
-                'fill-opacity': 0.1
+                'fill-opacity': 0.05
               }}
             />
             <Layer
@@ -301,8 +457,7 @@ export function MapConsole({ className }: MapConsoleProps) {
               type="line"
               paint={{
                 'line-color': '#1d4ed8',
-                'line-width': 3,
-                'line-dasharray': [2, 2]
+                'line-width': 3
               }}
             />
             <Layer
@@ -310,17 +465,44 @@ export function MapConsole({ className }: MapConsoleProps) {
               type="symbol"
               layout={{
                 'text-field': ['get', 'name'],
-                'text-size': 14,
+                'text-size': 16,
                 'text-anchor': 'center',
                 'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold']
               }}
               paint={{
-                'text-color': '#1d4ed8',
+                'text-color': '#1e40af',
                 'text-halo-color': '#ffffff',
                 'text-halo-width': 2
               }}
             />
           </Source>
+        )}
+
+        {popupInfo && (
+          <Popup
+            longitude={popupInfo.longitude}
+            latitude={popupInfo.latitude}
+            onClose={() => setPopupInfo(null)}
+            closeButton={true}
+            closeOnClick={false}
+          >
+            <div className="p-2 min-w-[180px]">
+              <h4 className="font-semibold text-sm mb-1">{popupInfo.feature.properties.name}</h4>
+              {popupInfo.layerType === 'sub_county' && (
+                <div className="text-xs text-gray-600 space-y-0.5">
+                  <p>Population: {popupInfo.feature.properties.population?.toLocaleString()}</p>
+                  <p>Area: {popupInfo.feature.properties.area_km2?.toLocaleString()} km²</p>
+                  <p>HQ: {popupInfo.feature.properties.headquarters}</p>
+                </div>
+              )}
+              {popupInfo.layerType === 'ward' && (
+                <div className="text-xs text-gray-600 space-y-0.5">
+                  <p>Sub-county: {popupInfo.feature.properties.sub_county_name}</p>
+                  <p>Population: {popupInfo.feature.properties.population?.toLocaleString()}</p>
+                </div>
+              )}
+            </div>
+          </Popup>
         )}
 
         {MAP_LAYERS.map((layer) => {
@@ -397,28 +579,76 @@ export function MapConsole({ className }: MapConsoleProps) {
             {showLayersPanel ? 'Hide' : 'Show'} Network Layers
           </Button>
 
-          <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400">Base Layers</h4>
-              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">Tenant</Badge>
-            </div>
-            <div className="space-y-2 mb-3">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="tenant-boundary"
-                  className="text-xs cursor-pointer text-gray-700 dark:text-gray-300 flex items-center gap-1.5"
-                >
-                  <MapPin className="w-3 h-3 text-blue-600" />
-                  County Boundary
-                </Label>
-                <Switch
-                  id="tenant-boundary"
-                  checked={showTenantBoundary}
-                  onCheckedChange={setShowTenantBoundary}
-                />
+          <Collapsible open={adminLayersOpen} onOpenChange={setAdminLayersOpen} className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <CollapsibleTrigger className="flex items-center justify-between w-full mb-2">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400">Administrative Boundaries</h4>
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">{tenant?.county}</Badge>
               </div>
-            </div>
-          </div>
+              <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform ${adminLayersOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="county-boundary"
+                    className="text-xs cursor-pointer text-gray-700 dark:text-gray-300 flex items-center gap-1.5"
+                  >
+                    <MapPin className="w-3 h-3 text-blue-600" />
+                    County Outline
+                  </Label>
+                  <Switch
+                    id="county-boundary"
+                    checked={showCountyBoundary}
+                    onCheckedChange={setShowCountyBoundary}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="sub-counties"
+                    className="text-xs cursor-pointer text-gray-700 dark:text-gray-300 flex items-center gap-1.5"
+                  >
+                    <Grid3X3 className="w-3 h-3 text-purple-600" />
+                    Sub-Counties
+                    {subCountiesData && <span className="text-[10px] text-gray-400">({subCountiesData.features.length})</span>}
+                  </Label>
+                  <Switch
+                    id="sub-counties"
+                    checked={showSubCounties}
+                    onCheckedChange={setShowSubCounties}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="wards"
+                    className="text-xs cursor-pointer text-gray-700 dark:text-gray-300 flex items-center gap-1.5"
+                  >
+                    <LayoutGrid className="w-3 h-3 text-orange-600" />
+                    Wards
+                    {wardsData && <span className="text-[10px] text-gray-400">({wardsData.features.length})</span>}
+                  </Label>
+                  <Switch
+                    id="wards"
+                    checked={showWards}
+                    onCheckedChange={setShowWards}
+                  />
+                </div>
+              </div>
+              <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex gap-1 flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-[10px] text-gray-500">
+                    <span className="w-2 h-2 rounded-sm bg-blue-600"></span>County
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-gray-500">
+                    <span className="w-2 h-2 rounded-sm bg-purple-600"></span>Sub-County
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-gray-500">
+                    <span className="w-2 h-2 rounded-sm bg-orange-500"></span>Ward
+                  </span>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-2">
