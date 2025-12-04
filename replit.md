@@ -47,7 +47,7 @@ A dual ORM strategy is employed, using Drizzle ORM for Node.js and Eloquent ORM 
 - Core registry tables check for existing tenants to avoid duplicates
 
 ### Tenant Model
-Each tenant includes: name, short_code, county (for Kenya county-based organization), country, timezone, currency, status.
+Each tenant represents one of the 5 ASAL (Arid and Semi-Arid Lands) counties: Turkana, Wajir, Marsabit, Mandera, and Garissa. Each tenant includes: name, short_code, county, country, timezone, currency, status.
 
 ## Authentication & Authorization
 
