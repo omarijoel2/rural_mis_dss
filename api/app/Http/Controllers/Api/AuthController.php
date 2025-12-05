@@ -121,7 +121,15 @@ class AuthController extends Controller
         $accessibleTenants = $user->getAccessibleTenants();
         $currentTenant = $user->currentTenant;
         
-        $requiresTenantSelection = $isSuperAdmin && !$currentTenant && $accessibleTenants->count() > 0;
+        // Super Admin: Auto-select first tenant if none selected (county selection disabled temporarily)
+        if ($isSuperAdmin && !$currentTenant && $accessibleTenants->count() > 0) {
+            $user->switchTenant($accessibleTenants->first()->id);
+            $user->refresh();
+            $currentTenant = $user->load('currentTenant')->currentTenant;
+        }
+        
+        // Tenant selection is disabled for Super Admin users temporarily
+        $requiresTenantSelection = !$isSuperAdmin && !$currentTenant && $accessibleTenants->count() > 0;
         
         return response()->json([
             'user' => array_merge($user->toArray(), [
