@@ -32,6 +32,7 @@ const WO_STATUS_COLORS = {
 export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
   const assetId = Number(id);
+  const backLink = '/core/assets';
 
   const { data: asset, isLoading, error } = useQuery({
     queryKey: ['asset', assetId],
@@ -49,7 +50,7 @@ export function AssetDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/cmms/assets">
+          <Link to={backLink}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Assets
