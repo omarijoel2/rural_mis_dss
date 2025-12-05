@@ -210,6 +210,11 @@ export function AppMIS() {
                     <AssetsPageWithForm />
                   </ProtectedRoute>
                 } />
+                <Route path="assets/:id" element={
+                  <ProtectedRoute requiredPermission="view assets">
+                    <AssetDetailPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="asset-classes" element={
                   <ProtectedRoute requiredPermission="view assets">
                     <AssetClassesPage />
@@ -270,16 +275,8 @@ export function AppMIS() {
                     <CmmsDashboard />
                   </ProtectedRoute>
                 } />
-                <Route path="assets" element={
-                  <ProtectedRoute requiredPermission="view assets">
-                    <AssetsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="assets/:id" element={
-                  <ProtectedRoute requiredPermission="view assets">
-                    <AssetDetailPage />
-                  </ProtectedRoute>
-                } />
+                <Route path="assets" element={<Navigate to="/core/assets" replace />} />
+                <Route path="assets/:id" element={<Navigate to="/core/assets" replace />} />
                 <Route path="work-orders" element={
                   <ProtectedRoute requiredPermission="view work orders">
                     <WorkOrdersPage />
