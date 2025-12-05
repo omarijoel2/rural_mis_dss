@@ -120,8 +120,12 @@ class AuthService
             // Tenant was specified and user has access
             $user->switchTenant($tenantId);
             $selectedTenant = $user->load('currentTenant')->currentTenant;
-        } elseif ($accessibleTenants->count() === 1 && !$isSuperAdmin) {
-            // County admin with single tenant - auto-select
+        } elseif ($isSuperAdmin && $accessibleTenants->count() > 0) {
+            // Super Admin: Auto-select first tenant (county selection disabled temporarily)
+            $user->switchTenant($accessibleTenants->first()->id);
+            $selectedTenant = $accessibleTenants->first();
+        } elseif ($accessibleTenants->count() === 1) {
+            // Single tenant available - auto-select
             $user->switchTenant($accessibleTenants->first()->id);
             $selectedTenant = $accessibleTenants->first();
         } elseif ($accessibleTenants->count() > 0) {
