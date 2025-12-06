@@ -92,7 +92,6 @@ const moduleNavigation = [
     category: 'Operations & Customer',
     subPages: [
       { name: 'Dashboard', href: '/cmms/dashboard', icon: BarChart3 },
-      { name: 'Asset Registry', href: '/core/assets', icon: Database },
       { name: 'Work Orders', href: '/cmms/work-orders', icon: ClipboardList },
       { name: 'Job Plans', href: '/cmms/job-plans', icon: FileText },
       { name: 'Preventive Maintenance', href: '/cmms/pm', icon: Calendar },
