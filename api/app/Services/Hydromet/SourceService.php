@@ -140,7 +140,7 @@ class SourceService
         return $query->sum('volume_m3');
     }
 
-    public function batchImport(array $sourcesData): array
+    public function bulkImport(array $sourcesData): array
     {
         $imported = 0;
         $errors = [];

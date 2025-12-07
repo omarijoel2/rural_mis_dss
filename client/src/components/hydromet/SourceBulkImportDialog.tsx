@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Upload, FileText, Download, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface SourceBatchImportDialogProps {
+interface SourceBulkImportDialogProps {
   open: boolean;
   onClose: () => void;
 }
@@ -27,7 +27,7 @@ SRC002,River Intake,2,1,Lower Catchment,1000,3.2345,36.6789`;
 
 const CSV_HEADERS = ['code', 'name', 'kind_id', 'status_id', 'catchment', 'capacity_m3_per_day', 'latitude', 'longitude', 'elevation_m', 'depth_m', 'static_level_m', 'dynamic_level_m', 'permit_no', 'quality_risk_id'];
 
-export function SourceBatchImportDialog({ open, onClose }: SourceBatchImportDialogProps) {
+export function SourceBulkImportDialog({ open, onClose }: SourceBulkImportDialogProps) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvData, setCsvData] = useState('');
@@ -35,7 +35,7 @@ export function SourceBatchImportDialog({ open, onClose }: SourceBatchImportDial
   const [importResult, setImportResult] = useState<{ imported: number; errors: string[] } | null>(null);
 
   const importMutation = useMutation({
-    mutationFn: (sources: Partial<CreateSourceData>[]) => hydrometService.batchImportSources(sources),
+    mutationFn: (sources: Partial<CreateSourceData>[]) => hydrometService.bulkImportSources(sources),
     onSuccess: (data) => {
       setImportResult({ imported: data.imported, errors: data.errors });
       if (data.imported > 0) {
@@ -189,7 +189,7 @@ export function SourceBatchImportDialog({ open, onClose }: SourceBatchImportDial
     <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Batch Import Sources</DialogTitle>
+          <DialogTitle>Bulk Import Sources</DialogTitle>
           <DialogDescription>
             Upload a CSV file or paste CSV data to import multiple water sources at once.
           </DialogDescription>

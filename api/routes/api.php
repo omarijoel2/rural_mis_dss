@@ -705,7 +705,7 @@ Route::prefix('v1')->group(function () {
         Route::prefix('sources')->group(function () {
             Route::get('/', [SourceController::class, 'index'])->middleware('permission:view sources');
             Route::post('/', [SourceController::class, 'store'])->middleware('permission:create sources');
-            Route::post('/batch-import', [SourceController::class, 'batchImport'])->middleware('permission:create sources');
+            Route::post('/bulk-import', [SourceController::class, 'bulkImport'])->middleware('permission:create sources');
             Route::get('/nearby', [SourceController::class, 'nearby'])->middleware('permission:view sources');
             Route::get('/in-bounds', [SourceController::class, 'inBounds'])->middleware('permission:view sources');
             Route::get('/{id}', [SourceController::class, 'show'])->middleware('permission:view sources');

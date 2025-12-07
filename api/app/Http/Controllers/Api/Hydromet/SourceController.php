@@ -127,7 +127,7 @@ class SourceController extends Controller
         return response()->json(['total_m3' => $total]);
     }
 
-    public function batchImport(Request $request)
+    public function bulkImport(Request $request)
     {
         $validated = $request->validate([
             'sources' => 'required|array|min:1|max:100',
@@ -149,7 +149,7 @@ class SourceController extends Controller
             'sources.*.longitude' => 'nullable|numeric|min:-180|max:180',
         ]);
 
-        $result = $this->sourceService->batchImport($validated['sources']);
+        $result = $this->sourceService->bulkImport($validated['sources']);
         
         return response()->json([
             'imported' => $result['imported'],
