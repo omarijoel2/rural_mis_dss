@@ -260,8 +260,8 @@ export function Tariffs() {
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(tariff)}</TableCell>
-                    <TableCell>{tariff.blocks.length} blocks</TableCell>
-                    <TableCell>{tariff.currency} {tariff.fixed_charge.toFixed(2)}</TableCell>
+                    <TableCell>{tariff.blocks?.length || 0} blocks</TableCell>
+                    <TableCell>{tariff.currency} {(tariff.fixed_charge || 0).toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(tariff)}>
