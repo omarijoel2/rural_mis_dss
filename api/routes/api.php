@@ -693,10 +693,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [CrmTicketController::class, 'index'])->middleware('permission:view tickets');
             Route::post('/', [CrmTicketController::class, 'store'])->middleware('permission:create tickets');
             Route::get('/categories', [CrmTicketController::class, 'categories'])->middleware('permission:view tickets');
-            Route::get('/{ticket}', [CrmTicketController::class, 'show'])->middleware('permission:view tickets');
-            Route::patch('/{ticket}', [CrmTicketController::class, 'update'])->middleware('permission:edit tickets');
-            Route::put('/{ticket}', [CrmTicketController::class, 'update'])->middleware('permission:edit tickets');
-            Route::delete('/{ticket}', [CrmTicketController::class, 'destroy'])->middleware('permission:delete tickets');
+            Route::get('/{ticketId}', [CrmTicketController::class, 'show'])->middleware('permission:view tickets');
+            Route::patch('/{ticketId}', [CrmTicketController::class, 'update'])->middleware('permission:edit tickets');
+            Route::put('/{ticketId}', [CrmTicketController::class, 'update'])->middleware('permission:edit tickets');
+            Route::delete('/{ticketId}', [CrmTicketController::class, 'destroy'])->middleware('permission:delete tickets');
+            Route::post('/{ticketId}/threads', [CrmTicketController::class, 'addThread'])->middleware('permission:edit tickets');
         });
     });
 

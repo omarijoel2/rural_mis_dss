@@ -73,6 +73,10 @@ class CountyDataSeeder extends Seeder
             if (\Schema::hasTable('kiosks')) {
                 $this->seedKiosks($countyName, $county);
             }
+            
+            if (\Schema::hasTable('ticket_categories')) {
+                $this->seedTicketCategories($countyName, $county);
+            }
         }
 
         $this->command->info('County data seeded successfully for all 5 ASAL counties!');
@@ -366,5 +370,39 @@ class CountyDataSeeder extends Seeder
             'industrial' => "{$town} " . ['Slaughterhouse', 'Processing Plant', 'Factory', 'Workshop'][rand(0, 3)],
             default => "{$town} Enterprise",
         };
+    }
+
+    protected function seedTicketCategories(string $countyName, array $county): void
+    {
+        $categories = [
+            ['code' => 'BILLING', 'name' => 'Billing & Payments', 'priority' => 'normal', 'sla_response' => 4, 'sla_resolution' => 24],
+            ['code' => 'SUPPLY', 'name' => 'Water Supply Issues', 'priority' => 'high', 'sla_response' => 2, 'sla_resolution' => 8],
+            ['code' => 'QUALITY', 'name' => 'Water Quality', 'priority' => 'urgent', 'sla_response' => 1, 'sla_resolution' => 4],
+            ['code' => 'METER', 'name' => 'Meter Problems', 'priority' => 'normal', 'sla_response' => 4, 'sla_resolution' => 48],
+            ['code' => 'LEAK', 'name' => 'Leak Reports', 'priority' => 'high', 'sla_response' => 2, 'sla_resolution' => 12],
+            ['code' => 'CONNECTION', 'name' => 'New Connections', 'priority' => 'low', 'sla_response' => 8, 'sla_resolution' => 72],
+            ['code' => 'DISCONNECT', 'name' => 'Disconnection/Reconnection', 'priority' => 'normal', 'sla_response' => 4, 'sla_resolution' => 24],
+            ['code' => 'COMPLAINT', 'name' => 'General Complaints', 'priority' => 'normal', 'sla_response' => 8, 'sla_resolution' => 48],
+        ];
+
+        foreach ($categories as $cat) {
+            $exists = DB::table('ticket_categories')
+                ->where('code', $cat['code'])
+                ->exists();
+
+            if (!$exists) {
+                DB::table('ticket_categories')->insert([
+                    'id' => Str::uuid()->toString(),
+                    'tenant_id' => null,
+                    'code' => $cat['code'],
+                    'name' => $cat['name'],
+                    'priority' => $cat['priority'],
+                    'sla_response_hours' => $cat['sla_response'],
+                    'sla_resolution_hours' => $cat['sla_resolution'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
     }
 }
