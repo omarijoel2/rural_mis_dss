@@ -181,7 +181,7 @@ export function EventsPage() {
                     <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {format(new Date(event.detected_at), 'Pp')}
+                        {event.detected_at ? format(new Date(event.detected_at), 'Pp') : 'N/A'}
                       </div>
                       {event.facility && (
                         <div>{event.facility.name}</div>
