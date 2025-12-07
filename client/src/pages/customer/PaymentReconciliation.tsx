@@ -76,23 +76,23 @@ export function PaymentReconciliation() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <div className="text-2xl font-bold">{agingData.summary.total_accounts.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{(agingData.summary?.total_accounts || 0).toLocaleString()}</div>
                   <p className="text-xs text-muted-foreground">Total Accounts</p>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">
-                    {new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(agingData.summary.total_balance)}
+                    {new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(agingData.summary?.total_balance || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">Total Balance</p>
                 </div>
                 <div>
-                  <div className="text-xl font-semibold">{agingData.dso} days</div>
+                  <div className="text-xl font-semibold">{agingData.dso || 0} days</div>
                   <p className="text-xs text-muted-foreground">DSO (Days Sales Outstanding)</p>
                 </div>
               </div>
 
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={agingData.aging_buckets}>
+                <BarChart data={agingData.aging_buckets || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="bucket" />
                   <YAxis />
@@ -109,7 +109,7 @@ export function PaymentReconciliation() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {agingData.top_debtors.slice(0, 5).map((debtor: any, idx: number) => (
+                {(agingData.top_debtors || []).slice(0, 5).map((debtor: any, idx: number) => (
                   <div key={idx} className="flex justify-between items-center p-2 border rounded">
                     <div>
                       <div className="font-medium">{debtor.customer_name}</div>
