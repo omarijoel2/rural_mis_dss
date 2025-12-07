@@ -129,6 +129,7 @@ export function SourcesPage() {
                 const source = sources.find(s => s.id === id);
                 if (source) setSelectedSource(source);
               }}
+              onEdit={handleEdit}
               height="400px"
             />
           </CardContent>
