@@ -1747,6 +1747,42 @@ app.post('/api/v1/operations/events/:id/resolve', (req, res) => {
   res.json({ data: { id: req.params.id, status: 'resolved', resolved_at: new Date().toISOString() }, message: 'Event resolved' });
 });
 
+// ============ CMMS PARTS CATALOG ============
+app.get('/api/v1/parts', (req, res) => {
+  res.json({
+    data: [
+      { id: 1, code: 'PRT-001', name: 'PVC Pipe 2"', description: '2 inch PVC pipe, 6m length', category: 'Pipes', unit: 'piece', unit_cost: 450, quantity_in_stock: 120, reorder_level: 20, supplier: 'Kenya Plastics Ltd', location: 'Warehouse A', status: 'in_stock' },
+      { id: 2, code: 'PRT-002', name: 'Gate Valve 2"', description: '2 inch brass gate valve', category: 'Valves', unit: 'piece', unit_cost: 2500, quantity_in_stock: 35, reorder_level: 10, supplier: 'Valve Masters', location: 'Warehouse A', status: 'in_stock' },
+      { id: 3, code: 'PRT-003', name: 'Water Meter 1/2"', description: 'Domestic water meter, Class C', category: 'Meters', unit: 'piece', unit_cost: 3200, quantity_in_stock: 50, reorder_level: 15, supplier: 'Meter Solutions', location: 'Warehouse B', status: 'in_stock' },
+      { id: 4, code: 'PRT-004', name: 'Pump Seal Kit', description: 'Mechanical seal kit for centrifugal pumps', category: 'Pump Parts', unit: 'kit', unit_cost: 8500, quantity_in_stock: 8, reorder_level: 5, supplier: 'Pump Spares Kenya', location: 'Warehouse A', status: 'low_stock' },
+      { id: 5, code: 'PRT-005', name: 'Chlorine Tablets 45kg', description: 'Calcium hypochlorite tablets for disinfection', category: 'Chemicals', unit: 'drum', unit_cost: 12000, quantity_in_stock: 25, reorder_level: 10, supplier: 'ChemSupply EA', location: 'Chemical Store', status: 'in_stock' },
+      { id: 6, code: 'PRT-006', name: 'Pressure Gauge 0-10 Bar', description: 'Analog pressure gauge with glycerin fill', category: 'Instrumentation', unit: 'piece', unit_cost: 1800, quantity_in_stock: 15, reorder_level: 5, supplier: 'Instrument House', location: 'Warehouse B', status: 'in_stock' },
+      { id: 7, code: 'PRT-007', name: 'HDPE Pipe 110mm', description: 'High density polyethylene pipe, PN10', category: 'Pipes', unit: 'meter', unit_cost: 280, quantity_in_stock: 500, reorder_level: 100, supplier: 'Plastcon Kenya', location: 'Yard Storage', status: 'in_stock' },
+      { id: 8, code: 'PRT-008', name: 'Air Release Valve 2"', description: 'Automatic air release valve', category: 'Valves', unit: 'piece', unit_cost: 15000, quantity_in_stock: 4, reorder_level: 3, supplier: 'Valve Masters', location: 'Warehouse A', status: 'low_stock' }
+    ],
+    meta: { total: 8, per_page: 50, current_page: 1 }
+  });
+});
+
+app.get('/api/v1/parts/:id', (req, res) => {
+  const partId = parseInt(req.params.id);
+  res.json({
+    data: { id: partId, code: `PRT-00${partId}`, name: 'PVC Pipe 2"', description: '2 inch PVC pipe, 6m length', category: 'Pipes', unit: 'piece', unit_cost: 450, quantity_in_stock: 120, reorder_level: 20, supplier: 'Kenya Plastics Ltd', location: 'Warehouse A', status: 'in_stock' }
+  });
+});
+
+app.post('/api/v1/parts', (req, res) => {
+  res.json({ data: { id: 9, ...req.body, created_at: new Date().toISOString() }, message: 'Part created successfully' });
+});
+
+app.put('/api/v1/parts/:id', (req, res) => {
+  res.json({ data: { id: parseInt(req.params.id), ...req.body, updated_at: new Date().toISOString() }, message: 'Part updated successfully' });
+});
+
+app.delete('/api/v1/parts/:id', (req, res) => {
+  res.json({ message: 'Part deleted successfully' });
+});
+
 // ============ PHASE 1-2: CORE REGISTRY & OPERATIONS ROUTES ============
 registerCoreRegistryRoutes(app);
 
