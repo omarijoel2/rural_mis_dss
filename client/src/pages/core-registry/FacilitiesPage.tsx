@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { facilityService } from '../../services/facility.service';
 import { Button } from '../../components/ui/button';
@@ -8,11 +8,27 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Download, Plus } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../components/ui/command';
+import { Download, Plus, Check, ChevronsUpDown, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
+
+interface Scheme {
+  id: string;
+  code: string;
+  name: string;
+  type?: string;
+  status?: string;
+}
 
 export function FacilitiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [schemePopoverOpen, setSchemePopoverOpen] = useState(false);
+  const [schemeSearch, setSchemeSearch] = useState('');
+  const [createSchemeDialogOpen, setCreateSchemeDialogOpen] = useState(false);
+  const [newSchemeName, setNewSchemeName] = useState('');
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -20,6 +36,7 @@ export function FacilitiesPage() {
     status: 'active',
     scheme_id: '',
   });
+  const [selectedScheme, setSelectedScheme] = useState<Scheme | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
@@ -27,16 +44,55 @@ export function FacilitiesPage() {
     queryFn: () => facilityService.getAll({ per_page: 50 }),
   });
 
+  const { data: schemesResponse } = useQuery({
+    queryKey: ['schemes-list'],
+    queryFn: async () => {
+      return apiClient.get<{ data: Scheme[] }>('/v1/gis/schemes', { per_page: 100 });
+    },
+  });
+
+  const schemes: Scheme[] = (schemesResponse as any)?.data || [];
+
+  const filteredSchemes = schemes.filter((scheme) =>
+    scheme.name.toLowerCase().includes(schemeSearch.toLowerCase()) ||
+    scheme.code.toLowerCase().includes(schemeSearch.toLowerCase())
+  );
+
+  const schemeExists = filteredSchemes.length > 0 || schemeSearch.trim() === '';
+
   const createMutation = useMutation({
-    mutationFn: (data) => facilityService.create(data),
+    mutationFn: (data: any) => facilityService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['facilities'] });
       setDialogOpen(false);
       setFormData({ code: '', name: '', category: '', status: 'active', scheme_id: '' });
+      setSelectedScheme(null);
       toast.success('Facility created successfully');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to create facility');
+    },
+  });
+
+  const createSchemeMutation = useMutation({
+    mutationFn: async (data: { name: string; code: string }) => {
+      return apiClient.post<Scheme>('/v1/gis/schemes', {
+        name: data.name,
+        code: data.code,
+        type: 'rural',
+        status: 'active',
+      });
+    },
+    onSuccess: (newScheme) => {
+      queryClient.invalidateQueries({ queryKey: ['schemes-list'] });
+      setSelectedScheme(newScheme);
+      setFormData((prev) => ({ ...prev, scheme_id: newScheme.id }));
+      setCreateSchemeDialogOpen(false);
+      setNewSchemeName('');
+      toast.success('Scheme created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create scheme');
     },
   });
 
@@ -46,7 +102,51 @@ export function FacilitiesPage() {
       toast.error('Please fill in all required fields');
       return;
     }
-    createMutation.mutate(formData);
+    const submitData = {
+      ...formData,
+      scheme_id: formData.scheme_id || null,
+    };
+    createMutation.mutate(submitData);
+  };
+
+  const handleSchemeSelect = (scheme: Scheme) => {
+    setSelectedScheme(scheme);
+    setFormData((prev) => ({ ...prev, scheme_id: scheme.id }));
+    setSchemeSearch('');
+    setSchemePopoverOpen(false);
+  };
+
+  const handleClearScheme = () => {
+    setSelectedScheme(null);
+    setFormData((prev) => ({ ...prev, scheme_id: '' }));
+    setSchemeSearch('');
+  };
+
+  const handleCreateNewScheme = () => {
+    setNewSchemeName(schemeSearch);
+    setSchemeSearch('');
+    setSchemePopoverOpen(false);
+    setCreateSchemeDialogOpen(true);
+  };
+
+  const handleSchemePopoverClose = (open: boolean) => {
+    setSchemePopoverOpen(open);
+    if (!open) {
+      setSchemeSearch('');
+    }
+  };
+
+  const handleCreateSchemeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSchemeName.trim()) {
+      toast.error('Please enter a scheme name');
+      return;
+    }
+    const code = newSchemeName
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '-')
+      .substring(0, 10);
+    createSchemeMutation.mutate({ name: newSchemeName, code });
   };
 
   const handleExport = async () => {
@@ -164,13 +264,89 @@ export function FacilitiesPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="scheme_id">Scheme ID</Label>
-                    <Input
-                      id="scheme_id"
-                      placeholder="Optional"
-                      value={formData.scheme_id}
-                      onChange={(e) => setFormData({ ...formData, scheme_id: e.target.value })}
-                    />
+                    <Label htmlFor="scheme_id">Scheme (Optional)</Label>
+                    <Popover open={schemePopoverOpen} onOpenChange={handleSchemePopoverClose}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={schemePopoverOpen}
+                          className="w-full justify-between font-normal"
+                        >
+                          {selectedScheme ? (
+                            <span className="truncate">{selectedScheme.name}</span>
+                          ) : (
+                            <span className="text-muted-foreground">Select or type scheme...</span>
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Search or type new scheme..."
+                            value={schemeSearch}
+                            onValueChange={setSchemeSearch}
+                          />
+                          <CommandList>
+                            {filteredSchemes.length === 0 && schemeSearch.trim() !== '' && (
+                              <CommandEmpty className="py-2">
+                                <div className="px-2 text-sm text-muted-foreground mb-2">
+                                  No scheme found for "{schemeSearch}"
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  className="w-full justify-start text-primary"
+                                  onClick={handleCreateNewScheme}
+                                >
+                                  <PlusCircle className="mr-2 h-4 w-4" />
+                                  Create "{schemeSearch}"
+                                </Button>
+                              </CommandEmpty>
+                            )}
+                            <CommandGroup>
+                              {selectedScheme && (
+                                <CommandItem
+                                  onSelect={handleClearScheme}
+                                  className="text-muted-foreground"
+                                >
+                                  <span className="italic">Clear selection</span>
+                                </CommandItem>
+                              )}
+                              {filteredSchemes.map((scheme) => (
+                                <CommandItem
+                                  key={scheme.id}
+                                  value={scheme.id}
+                                  onSelect={() => handleSchemeSelect(scheme)}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedScheme?.id === scheme.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span>{scheme.name}</span>
+                                    <span className="text-xs text-muted-foreground">{scheme.code}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                            {schemeSearch.trim() !== '' && filteredSchemes.length > 0 && (
+                              <CommandGroup>
+                                <CommandItem
+                                  onSelect={handleCreateNewScheme}
+                                  className="text-primary"
+                                >
+                                  <PlusCircle className="mr-2 h-4 w-4" />
+                                  Create new scheme "{schemeSearch}"
+                                </CommandItem>
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
@@ -187,6 +363,36 @@ export function FacilitiesPage() {
         </div>
       </div>
 
+      <Dialog open={createSchemeDialogOpen} onOpenChange={setCreateSchemeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Scheme</DialogTitle>
+            <DialogDescription>
+              The scheme you entered doesn't exist. Would you like to create it?
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateSchemeSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="newSchemeName">Scheme Name</Label>
+              <Input
+                id="newSchemeName"
+                value={newSchemeName}
+                onChange={(e) => setNewSchemeName(e.target.value)}
+                placeholder="Enter scheme name"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setCreateSchemeDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createSchemeMutation.isPending}>
+                {createSchemeMutation.isPending ? 'Creating...' : 'Create Scheme'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {isLoading && !data ? (
         <div className="flex items-center justify-center min-h-screen">
           <p className="text-lg text-muted-foreground">Loading facilities...</p>
@@ -201,7 +407,7 @@ export function FacilitiesPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.data.map((facility) => (
+            {data?.data.map((facility: any) => (
               <Card key={facility.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -247,7 +453,7 @@ export function FacilitiesPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center p-12">
                 <p className="text-lg text-muted-foreground mb-4">No facilities found</p>
-                <Button>Create Your First Facility</Button>
+                <Button onClick={() => setDialogOpen(true)}>Create Your First Facility</Button>
               </CardContent>
             </Card>
           )}
