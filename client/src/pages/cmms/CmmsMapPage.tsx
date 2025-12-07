@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import maplibregl from 'maplibre-gl';
+import Map, { Marker, Popup, NavigationControl, ScaleControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { assetService } from '../../services/asset.service';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { MapPin, X, Edit, Wrench, Settings } from 'lucide-react';
+import { MapPin, X, Edit, Wrench, Settings, Gauge, Database, Droplets, CircleDot } from 'lucide-react';
 import type { Asset } from '../../types/cmms';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
@@ -25,188 +25,272 @@ const STATUS_LABELS: Record<string, string> = {
   under_maintenance: 'Under Maintenance',
 };
 
-const COUNTY_BOUNDS: Record<string, { center: [number, number]; zoom: number; bounds: [[number, number], [number, number]] }> = {
-  Turkana: {
-    center: [35.5, 3.5],
-    zoom: 7,
-    bounds: [[34.0, 1.5], [36.5, 5.5]],
-  },
-  Wajir: {
-    center: [40.0, 1.5],
-    zoom: 7,
-    bounds: [[39.0, 0.5], [41.5, 3.0]],
-  },
-  Marsabit: {
-    center: [37.5, 2.5],
-    zoom: 7,
-    bounds: [[36.5, 1.5], [39.0, 4.5]],
-  },
-  Mandera: {
-    center: [40.5, 3.5],
-    zoom: 7,
-    bounds: [[39.5, 2.5], [41.5, 4.5]],
-  },
-  Garissa: {
-    center: [39.5, -0.5],
-    zoom: 7,
-    bounds: [[38.5, -2.0], [41.0, 1.5]],
-  },
+const ASSET_CLASS_MARKERS: Record<string, { shape: string; label: string }> = {
+  'Pumps': { shape: 'circle', label: 'P' },
+  'Valves': { shape: 'diamond', label: 'V' },
+  'Pressure Reducing Valves': { shape: 'diamond', label: 'PRV' },
+  'Flow Meters': { shape: 'square', label: 'M' },
+  'Electromagnetic Flow Meter': { shape: 'square', label: 'EM' },
+  'Reservoirs & Tanks': { shape: 'hexagon', label: 'T' },
+  'Chlorinators': { shape: 'triangle', label: 'C' },
+  'Data Logger / RTU': { shape: 'octagon', label: 'DL' },
+  'Borehole / Well': { shape: 'circle-dot', label: 'BH' },
+  'Water Kiosk': { shape: 'house', label: 'K' },
+  'Unknown': { shape: 'circle', label: '?' },
 };
 
-const DEFAULT_BOUNDS = {
-  center: [37.5, 1.0] as [number, number],
-  zoom: 6,
-  bounds: [[34.0, -2.0], [42.0, 5.5]] as [[number, number], [number, number]],
+const COUNTY_BOUNDS: Record<string, { center: [number, number]; zoom: number }> = {
+  Turkana: { center: [35.5, 3.5], zoom: 7 },
+  Wajir: { center: [40.0, 1.5], zoom: 7 },
+  Marsabit: { center: [37.5, 2.5], zoom: 7 },
+  Mandera: { center: [40.5, 3.5], zoom: 7 },
+  Garissa: { center: [39.5, -0.5], zoom: 7 },
 };
+
+const DEFAULT_BOUNDS = { center: [37.5, 1.0] as [number, number], zoom: 6 };
+
+function AssetMarker({ 
+  asset, 
+  isSelected, 
+  onClick, 
+  onHover 
+}: { 
+  asset: Asset; 
+  isSelected: boolean;
+  onClick: () => void;
+  onHover: (hovering: boolean) => void;
+}) {
+  const className = asset.asset_class?.name || 'Unknown';
+  const status = asset.status || 'inactive';
+  const color = STATUS_COLORS[status] || STATUS_COLORS.inactive;
+  const markerInfo = ASSET_CLASS_MARKERS[className] || ASSET_CLASS_MARKERS.Unknown;
+  const size = isSelected ? 32 : 26;
+  
+  const getMarkerShape = () => {
+    switch (markerInfo.shape) {
+      case 'circle':
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: size, 
+              height: size,
+              backgroundColor: color,
+              borderRadius: '50%',
+              border: '3px solid white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span className="text-white text-[10px] font-bold">{markerInfo.label}</span>
+          </div>
+        );
+      case 'diamond':
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: size * 0.85, 
+              height: size * 0.85,
+              backgroundColor: color,
+              borderRadius: '4px',
+              transform: 'rotate(45deg)',
+              border: '3px solid white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span className="text-white text-[9px] font-bold" style={{ transform: 'rotate(-45deg)' }}>{markerInfo.label}</span>
+          </div>
+        );
+      case 'square':
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: size, 
+              height: size,
+              backgroundColor: color,
+              borderRadius: '4px',
+              border: '3px solid white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span className="text-white text-[10px] font-bold">{markerInfo.label}</span>
+          </div>
+        );
+      case 'hexagon':
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: size * 1.1, 
+              height: size,
+              backgroundColor: color,
+              borderRadius: '6px',
+              border: '3px solid white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span className="text-white text-[10px] font-bold">{markerInfo.label}</span>
+          </div>
+        );
+      case 'triangle':
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: 0,
+              height: 0,
+              borderLeft: `${size/2}px solid transparent`,
+              borderRight: `${size/2}px solid transparent`,
+              borderBottom: `${size}px solid ${color}`,
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+            }}
+          />
+        );
+      case 'circle-dot':
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: size, 
+              height: size,
+              backgroundColor: color,
+              borderRadius: '50%',
+              border: '3px solid white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div className="w-2 h-2 bg-white rounded-full" />
+          </div>
+        );
+      case 'house':
+        return (
+          <div 
+            className="flex flex-col items-center"
+            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+          >
+            <div style={{ 
+              width: 0, height: 0, 
+              borderLeft: `${size/2}px solid transparent`, 
+              borderRight: `${size/2}px solid transparent`, 
+              borderBottom: `${size/2}px solid ${color}` 
+            }} />
+            <div 
+              style={{ 
+                width: size * 0.8, 
+                height: size * 0.6,
+                backgroundColor: color,
+                marginTop: '-1px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span className="text-white text-[9px] font-bold">{markerInfo.label}</span>
+            </div>
+          </div>
+        );
+      case 'octagon':
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: size, 
+              height: size,
+              backgroundColor: color,
+              borderRadius: '30%',
+              border: '3px solid white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span className="text-white text-[8px] font-bold">{markerInfo.label}</span>
+          </div>
+        );
+      default:
+        return (
+          <div 
+            className="flex items-center justify-center"
+            style={{ 
+              width: size, 
+              height: size,
+              backgroundColor: color,
+              borderRadius: '50%',
+              border: '3px solid white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            <Settings className="h-3 w-3 text-white" />
+          </div>
+        );
+    }
+  };
+
+  if (!asset.geom) return null;
+
+  return (
+    <Marker
+      longitude={asset.geom.coordinates[0]}
+      latitude={asset.geom.coordinates[1]}
+      anchor="center"
+    >
+      <div 
+        className="cursor-pointer hover:scale-110 transition-transform"
+        onClick={onClick}
+        onMouseEnter={() => onHover(true)}
+        onMouseLeave={() => onHover(false)}
+      >
+        {getMarkerShape()}
+      </div>
+    </Marker>
+  );
+}
 
 export function CmmsMapPage() {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
-  const popupRef = useRef<maplibregl.Popup | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [hoveredAsset, setHoveredAsset] = useState<Asset | null>(null);
   const { tenant } = useAuth();
 
   const countyName = tenant?.name || tenant?.county || '';
   const countyConfig = COUNTY_BOUNDS[countyName] || DEFAULT_BOUNDS;
+
+  const [viewState, setViewState] = useState({
+    longitude: countyConfig.center[0],
+    latitude: countyConfig.center[1],
+    zoom: countyConfig.zoom,
+  });
 
   const { data: assets, isLoading } = useQuery({
     queryKey: ['assets-with-geom'],
     queryFn: () => assetService.getAssets({ per_page: 1000 }),
   });
 
-  const createPopupContent = useCallback((asset: Asset) => {
-    return `
-      <div style="min-width: 180px; font-family: system-ui, sans-serif;">
-        <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${asset.name}</div>
-        <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">${asset.code}</div>
-        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
-          <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${STATUS_COLORS[asset.status] || '#9ca3af'};"></span>
-          <span>${STATUS_LABELS[asset.status] || asset.status}</span>
-        </div>
-        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-          ${asset.asset_class?.name || 'Unknown class'}
-        </div>
-      </div>
-    `;
-  }, []);
+  const assetsWithGeom = useMemo(() => {
+    return assets?.data?.filter((a: Asset) => a.geom) || [];
+  }, [assets]);
+
+  const assetClasses = useMemo(() => {
+    const classes = new Set<string>();
+    assetsWithGeom.forEach((a: Asset) => {
+      classes.add(a.asset_class?.name || 'Unknown');
+    });
+    return Array.from(classes).sort();
+  }, [assetsWithGeom]);
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
-
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          'osm-tiles': {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '&copy; OpenStreetMap contributors',
-          },
-        },
-        layers: [
-          {
-            id: 'osm-tiles',
-            type: 'raster',
-            source: 'osm-tiles',
-            minzoom: 0,
-            maxzoom: 19,
-          },
-        ],
-      },
-      center: countyConfig.center,
-      zoom: countyConfig.zoom,
-    });
-
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
-    map.current.addControl(new maplibregl.ScaleControl(), 'bottom-left');
-
-    return () => {
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
-      popupRef.current?.remove();
-      map.current?.remove();
-      map.current = null;
-    };
-  }, [countyConfig]);
-
-  useEffect(() => {
-    if (!map.current || !assets?.data) return;
-
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
-
-    const assetsWithGeom = assets.data.filter((a: Asset) => a.geom);
-
-    if (assetsWithGeom.length === 0) return;
-
-    assetsWithGeom.forEach((asset: Asset) => {
-      if (!asset.geom) return;
-
-      const el = document.createElement('div');
-      el.className = 'asset-marker';
-      el.style.width = '28px';
-      el.style.height = '28px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = STATUS_COLORS[asset.status] || '#9ca3af';
-      el.style.border = '3px solid white';
-      el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-      el.style.cursor = 'pointer';
-      el.style.transition = 'transform 0.15s ease';
-
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat(asset.geom.coordinates as [number, number])
-        .addTo(map.current!);
-
-      markersRef.current.push(marker);
-
-      el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.2)';
-        
-        popupRef.current?.remove();
-        popupRef.current = new maplibregl.Popup({
-          closeButton: false,
-          closeOnClick: false,
-          offset: 15,
-        })
-          .setLngLat(asset.geom!.coordinates as [number, number])
-          .setHTML(createPopupContent(asset))
-          .addTo(map.current!);
-      });
-
-      el.addEventListener('mouseleave', () => {
-        el.style.transform = 'scale(1)';
-        popupRef.current?.remove();
-      });
-
-      el.addEventListener('click', () => {
-        setSelectedAsset(asset);
-        map.current?.flyTo({
-          center: asset.geom!.coordinates as [number, number],
-          zoom: 14,
-          duration: 1000,
-        });
-      });
-    });
-
     if (assetsWithGeom.length > 0) {
-      const bounds = new maplibregl.LngLatBounds();
-      assetsWithGeom.forEach((asset: Asset) => {
-        if (asset.geom) {
-          bounds.extend(asset.geom.coordinates as [number, number]);
-        }
-      });
+      const lngs = assetsWithGeom.map((a: Asset) => a.geom!.coordinates[0]);
+      const lats = assetsWithGeom.map((a: Asset) => a.geom!.coordinates[1]);
+      const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+      const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
       
-      if (!bounds.isEmpty()) {
-        map.current.fitBounds(bounds, { 
-          padding: 50,
-          maxZoom: 12,
-        });
-      }
+      setViewState(prev => ({
+        ...prev,
+        longitude: centerLng,
+        latitude: centerLat,
+        zoom: 10,
+      }));
     }
-  }, [assets, createPopupContent]);
+  }, [assetsWithGeom]);
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -220,41 +304,90 @@ export function CmmsMapPage() {
 
   return (
     <div className="relative h-[calc(100vh-8rem)]">
-      <div className="absolute top-4 left-4 z-10 space-y-2">
-        <Card className="bg-white/95 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <h2 className="text-lg font-bold mb-1 flex items-center gap-2">
-              <Settings className="h-5 w-5" />
+      <div className="absolute top-4 left-4 z-10">
+        <Card className="bg-white/95 backdrop-blur-sm max-w-[220px]">
+          <CardContent className="p-3">
+            <h2 className="text-sm font-bold mb-1 flex items-center gap-2">
+              <Settings className="h-4 w-4" />
               Assets Map
             </h2>
             {countyName && (
-              <p className="text-sm text-muted-foreground mb-3">{countyName} County</p>
+              <p className="text-xs text-muted-foreground mb-2">{countyName} County</p>
             )}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Asset Status</p>
+            
+            <p className="text-xs font-semibold text-muted-foreground mb-1.5 border-b pb-1">Asset Types</p>
+            <div className="space-y-1 mb-3 max-h-[140px] overflow-y-auto">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.active }} />
-                <span className="text-sm">Active</span>
+                <div className="w-4 h-4 rounded-full bg-gray-400 flex items-center justify-center">
+                  <span className="text-white text-[7px] font-bold">P</span>
+                </div>
+                <span className="text-xs">Pumps</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.inactive }} />
-                <span className="text-sm">Inactive</span>
+                <div className="w-3.5 h-3.5 rounded bg-gray-400 flex items-center justify-center" style={{ transform: 'rotate(45deg)' }}>
+                  <span className="text-white text-[6px] font-bold" style={{ transform: 'rotate(-45deg)' }}>V</span>
+                </div>
+                <span className="text-xs">Valves</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.under_maintenance }} />
-                <span className="text-sm">Under Maintenance</span>
+                <div className="w-4 h-4 rounded bg-gray-400 flex items-center justify-center">
+                  <span className="text-white text-[7px] font-bold">M</span>
+                </div>
+                <span className="text-xs">Flow Meters</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.retired }} />
-                <span className="text-sm">Retired</span>
+                <div className="w-5 h-4 rounded-md bg-gray-400 flex items-center justify-center">
+                  <span className="text-white text-[7px] font-bold">T</span>
+                </div>
+                <span className="text-xs">Reservoirs & Tanks</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div style={{ width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderBottom: '12px solid #9ca3af' }} />
+                <span className="text-xs">Chlorinators</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-gray-400 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+                <span className="text-xs">Borehole / Well</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center">
+                  <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '6px solid #9ca3af' }} />
+                  <div className="w-3 h-2 bg-gray-400 -mt-px flex items-center justify-center">
+                    <span className="text-white text-[5px] font-bold">K</span>
+                  </div>
+                </div>
+                <span className="text-xs">Water Kiosk</span>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t">
-              <p className="text-sm font-medium">
-                {assets?.data.filter((a: Asset) => a.geom).length || 0} assets with location
+            
+            <p className="text-xs font-semibold text-muted-foreground mb-1.5 border-b pb-1">Status Colors</p>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_COLORS.active }} />
+                <span className="text-xs">Active</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_COLORS.inactive }} />
+                <span className="text-xs">Inactive</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_COLORS.under_maintenance }} />
+                <span className="text-xs">Under Maintenance</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: STATUS_COLORS.retired }} />
+                <span className="text-xs">Retired</span>
+              </div>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t">
+              <p className="text-xs font-medium">
+                {assetsWithGeom.length} assets on map
               </p>
-              <p className="text-xs text-muted-foreground">
-                {(assets?.data.length || 0) - (assets?.data.filter((a: Asset) => a.geom).length || 0)} without location
+              <p className="text-[10px] text-muted-foreground">
+                {(assets?.data?.length || 0) - assetsWithGeom.length} without location
               </p>
             </div>
           </CardContent>
@@ -348,7 +481,49 @@ export function CmmsMapPage() {
         </div>
       )}
 
-      <div ref={mapContainer} className="w-full h-full" />
+      <Map
+        {...viewState}
+        onMove={(evt) => setViewState(evt.viewState)}
+        mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+        style={{ width: '100%', height: '100%' }}
+      >
+        <NavigationControl position="top-right" />
+        <ScaleControl position="bottom-left" />
+
+        {assetsWithGeom.map((asset: Asset) => (
+          <AssetMarker
+            key={asset.id}
+            asset={asset}
+            isSelected={selectedAsset?.id === asset.id}
+            onClick={() => setSelectedAsset(asset)}
+            onHover={(hovering) => setHoveredAsset(hovering ? asset : null)}
+          />
+        ))}
+
+        {hoveredAsset && !selectedAsset && hoveredAsset.geom && (
+          <Popup
+            longitude={hoveredAsset.geom.coordinates[0]}
+            latitude={hoveredAsset.geom.coordinates[1]}
+            closeButton={false}
+            closeOnClick={false}
+            anchor="bottom"
+            offset={15}
+          >
+            <div className="p-1 min-w-[150px]">
+              <p className="font-semibold text-sm">{hoveredAsset.name}</p>
+              <p className="text-xs text-muted-foreground">{hoveredAsset.code}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs">{hoveredAsset.asset_class?.name || 'Unknown'}</span>
+                <span 
+                  className="w-2 h-2 rounded-full" 
+                  style={{ backgroundColor: STATUS_COLORS[hoveredAsset.status] || STATUS_COLORS.inactive }}
+                />
+                <span className="text-xs">{STATUS_LABELS[hoveredAsset.status] || hoveredAsset.status}</span>
+              </div>
+            </div>
+          </Popup>
+        )}
+      </Map>
     </div>
   );
 }
