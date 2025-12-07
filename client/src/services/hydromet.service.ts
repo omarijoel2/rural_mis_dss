@@ -221,6 +221,12 @@ export const hydrometService = {
   deleteSource: (id: number) =>
     apiClient.delete(`${BASE_URL}/sources/${id}`),
 
+  batchImportSources: (sources: Partial<CreateSourceData>[]) =>
+    apiClient.post<{ imported: number; errors: string[]; sources: Source[] }>(
+      `${BASE_URL}/sources/batch-import`,
+      { sources }
+    ),
+
   getSourcesNearby: (query: SpatialQuery) => {
     const params: Record<string, string> = {
       lat: query.lat.toString(),

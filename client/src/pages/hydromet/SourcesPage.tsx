@@ -18,9 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
-import { Search, Plus, MoreVertical, MapPin, Droplets, Edit, Trash2, Map as MapIcon } from 'lucide-react';
+import { Search, Plus, MoreVertical, MapPin, Droplets, Edit, Trash2, Map as MapIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { SourceFormDialog } from '../../components/hydromet/SourceFormDialog';
+import { SourceBatchImportDialog } from '../../components/hydromet/SourceBatchImportDialog';
 import { HydrometMap } from '../../components/hydromet/HydrometMap';
 import type { Source } from '../../services/hydromet.service';
 
@@ -30,6 +31,7 @@ export function SourcesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showMap, setShowMap] = useState(true);
+  const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
 
   const { data: sourcesData, isLoading } = useHydrometSources({ search, per_page: 100 });
   const deleteMutation = useDeleteSource();
@@ -102,10 +104,16 @@ export function SourcesPage() {
           <h1 className="text-3xl font-bold">Water Sources Registry</h1>
           <p className="text-muted-foreground">Manage water sources and abstraction points</p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Source
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsBatchImportOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Batch Import
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Source
+          </Button>
+        </div>
       </div>
 
       {showMap && sources.length > 0 && (
@@ -251,6 +259,11 @@ export function SourcesPage() {
         onClose={handleFormClose}
         source={selectedSource}
         isCreating={isCreating}
+      />
+
+      <SourceBatchImportDialog
+        open={isBatchImportOpen}
+        onClose={() => setIsBatchImportOpen(false)}
       />
     </div>
   );
