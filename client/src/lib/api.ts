@@ -1,14 +1,18 @@
-// Laravel API Integration Layer - Updated for real backend
-const LARAVEL_API = import.meta.env.VITE_LARAVEL_API || 'http://127.0.0.1:8001/api/v1';
+// Laravel API Integration Layer - Updated to use Express proxy with authentication
+const API_BASE = '/api/v1';
 
 export async function apiCall(endpoint: string, options?: RequestInit) {
   try {
-    const response = await fetch(`${LARAVEL_API}${endpoint}`, {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...options?.headers,
       },
+      credentials: 'include',
       ...options,
     });
     if (!response.ok) throw new Error(`API error: ${response.status}`);

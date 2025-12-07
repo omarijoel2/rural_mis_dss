@@ -12,10 +12,11 @@ const schemeSchema = z.object({
   type: z.enum(['piped', 'handpump', 'borehole', 'spring']),
   ownership: z.enum(['public', 'private', 'community']),
   county: z.string().optional(),
-  populationServed: z.string().optional().transform(v => v ? parseInt(v) : undefined),
+  populationServed: z.coerce.number().optional(),
 });
 
-type SchemeFormData = z.infer<typeof schemeSchema>;
+type SchemeFormData = z.input<typeof schemeSchema>;
+type SchemeFormOutput = z.output<typeof schemeSchema>;
 
 interface SchemeFormProps {
   onSubmit: (data: SchemeFormData) => Promise<void>;
