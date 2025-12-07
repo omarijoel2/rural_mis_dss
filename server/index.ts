@@ -727,8 +727,8 @@ app.get('/api/v1/crm/tariffs', (req, res) => {
 
 app.get('/api/v1/crm/billing/runs', (req, res) => {
   res.json({ data: [
-    { id: 1, period: '2024-11', status: 'completed', total_invoices: 450, total_amount: 2500000, created_at: '2024-11-01' },
-    { id: 2, period: '2024-10', status: 'completed', total_invoices: 445, total_amount: 2350000, created_at: '2024-10-01' },
+    { id: 1, period: '2024-11', period_start: '2024-11-01', period_end: '2024-11-30', status: 'completed', invoice_count: 450, total_amount: 2500000, created_at: '2024-11-01' },
+    { id: 2, period: '2024-10', period_start: '2024-10-01', period_end: '2024-10-31', status: 'completed', invoice_count: 445, total_amount: 2350000, created_at: '2024-10-01' },
   ] });
 });
 
