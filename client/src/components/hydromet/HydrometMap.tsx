@@ -92,11 +92,14 @@ export function HydrometMap({ sources, stations, selectedId, onSelect, height = 
   const sourcesGeoJSON = useMemo(() => {
     if (!sources) return null;
     
-    return {
+    const sourcesWithLocation = sources.filter(s => s.location);
+    console.log('[HydrometMap] Sources with location:', sourcesWithLocation.length, 'of', sources.length);
+    
+    if (sourcesWithLocation.length === 0) return null;
+    
+    const geojson = {
       type: 'FeatureCollection' as const,
-      features: sources
-        .filter(s => s.location)
-        .map(source => ({
+      features: sourcesWithLocation.map(source => ({
           type: 'Feature' as const,
           id: source.id,
           geometry: source.location!,
@@ -109,6 +112,9 @@ export function HydrometMap({ sources, stations, selectedId, onSelect, height = 
           },
         })),
     };
+    
+    console.log('[HydrometMap] GeoJSON features:', geojson.features.length);
+    return geojson;
   }, [sources]);
 
   const stationsGeoJSON = useMemo(() => {
@@ -159,38 +165,46 @@ export function HydrometMap({ sources, stations, selectedId, onSelect, height = 
         <NavigationControl position="top-right" />
         <ScaleControl position="bottom-left" />
 
-        {sourcesGeoJSON && (
-          <Source id="sources" type="geojson" data={sourcesGeoJSON}>
+        {sourcesGeoJSON && sourcesGeoJSON.features.length > 0 && (
+          <Source id="sources" type="geojson" data={sourcesGeoJSON as any}>
             <Layer
               id="sources-layer"
               type="circle"
               paint={{
-                'circle-radius': ['case', ['==', ['get', 'id'], selectedId], 10, 6],
+                'circle-radius': selectedId != null 
+                  ? ['case', ['==', ['get', 'id'], selectedId], 10, 8]
+                  : 8,
                 'circle-color': [
                   'match',
                   ['get', 'status'],
                   'Active', '#22c55e',
                   'Inactive', '#94a3b8',
                   'Abandoned', '#ef4444',
-                  '#6b7280'
+                  '#3b82f6'
                 ],
                 'circle-stroke-width': 2,
-                'circle-stroke-color': ['case', ['==', ['get', 'id'], selectedId], '#000000', '#ffffff'],
+                'circle-stroke-color': selectedId != null
+                  ? ['case', ['==', ['get', 'id'], selectedId], '#000000', '#ffffff']
+                  : '#ffffff',
               }}
             />
           </Source>
         )}
 
-        {stationsGeoJSON && (
-          <Source id="stations" type="geojson" data={stationsGeoJSON}>
+        {stationsGeoJSON && stationsGeoJSON.features.length > 0 && (
+          <Source id="stations" type="geojson" data={stationsGeoJSON as any}>
             <Layer
               id="stations-layer"
               type="circle"
               paint={{
-                'circle-radius': ['case', ['==', ['get', 'id'], selectedId], 10, 6],
+                'circle-radius': selectedId != null
+                  ? ['case', ['==', ['get', 'id'], selectedId], 10, 8]
+                  : 8,
                 'circle-color': ['case', ['get', 'active'], '#3b82f6', '#94a3b8'],
                 'circle-stroke-width': 2,
-                'circle-stroke-color': ['case', ['==', ['get', 'id'], selectedId], '#000000', '#ffffff'],
+                'circle-stroke-color': selectedId != null
+                  ? ['case', ['==', ['get', 'id'], selectedId], '#000000', '#ffffff']
+                  : '#ffffff',
               }}
             />
           </Source>
