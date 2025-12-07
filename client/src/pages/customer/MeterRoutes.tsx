@@ -201,7 +201,7 @@ export function MeterRoutes() {
                     <TableCell>
                       {route.last_read_date ? new Date(route.last_read_date).toLocaleDateString() : 'Never'}
                     </TableCell>
-                    <TableCell className="text-right">{route.completion_rate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-right">{(route.completion_rate || 0).toFixed(1)}%</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-1 justify-end">
                         <Button
