@@ -22,10 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
-import { Plus, Search, Settings, MapPin, Edit, Wrench, Droplet, Home, Trash2 } from 'lucide-react';
+import { Plus, Search, Settings, MapPin, Edit, Wrench, Droplet, Home, Trash2, Clock } from 'lucide-react';
 import type { Asset, AssetFilters } from '../../types/cmms';
 import { AssetFormDialog } from '../../components/cmms/AssetFormDialog';
 import { PredictionsConnector } from '../../components/core-ops/PredictionsConnector';
+import { PreventiveMaintenanceTab } from '../../components/cmms/PreventiveMaintenanceTab';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -130,6 +131,7 @@ export function AssetsPageWithForm() {
       <Tabs defaultValue="inventory" className="w-full">
         <TabsList>
           <TabsTrigger value="inventory">Asset Registry</TabsTrigger>
+          <TabsTrigger value="pm">Preventive Maintenance</TabsTrigger>
           <TabsTrigger value="predictions">Predictive Maintenance</TabsTrigger>
         </TabsList>
 
@@ -333,6 +335,10 @@ export function AssetsPageWithForm() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="pm">
+          <PreventiveMaintenanceTab />
         </TabsContent>
 
         <TabsContent value="predictions">

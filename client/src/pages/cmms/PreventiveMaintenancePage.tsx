@@ -177,7 +177,7 @@ export function PreventiveMaintenancePage() {
 
   const handleGenerateAll = () => {
     setGeneratingAll(true);
-    generateMutation.mutate();
+    generateMutation.mutate(undefined);
   };
 
   const activeTemplates = templates?.filter(t => t.is_active).length || 0;
