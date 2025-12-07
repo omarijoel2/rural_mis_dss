@@ -142,6 +142,47 @@ export interface Note {
   };
 }
 
+export interface TicketCategory {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  sla_response_hours: number;
+  sla_resolution_hours: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CrmTicket {
+  id: string;
+  tenant_id: string;
+  ticket_no: string;
+  customer_id: string | null;
+  category_id: string;
+  channel: 'sms' | 'ussd' | 'whatsapp' | 'email' | 'phone' | 'app' | 'walk_in';
+  subject: string;
+  description: string | null;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  status: 'new' | 'assigned' | 'in_progress' | 'resolved' | 'closed';
+  assigned_to: string | null;
+  sla_response_due: string | null;
+  sla_resolution_due: string | null;
+  responded_at: string | null;
+  resolved_at: string | null;
+  closed_at: string | null;
+  csat_score: number | null;
+  created_at: string;
+  updated_at: string;
+  category?: TicketCategory;
+  customer?: Customer;
+  assigned_to_user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export const crmService = {
   getCustomers: (filters?: { search?: string; per_page?: number }) => {
     const params: Record<string, string> = {};
@@ -269,4 +310,28 @@ export const crmService = {
 
   deleteNote: (id: number) =>
     apiClient.delete(`${BASE_URL}/notes/${id}`),
+
+  getTickets: (filters?: { status?: string; priority?: string; assigned_to?: string; per_page?: number }) => {
+    const params: Record<string, string> = {};
+    if (filters?.status) params.status = filters.status;
+    if (filters?.priority) params.priority = filters.priority;
+    if (filters?.assigned_to) params.assigned_to = filters.assigned_to;
+    if (filters?.per_page) params.per_page = filters.per_page.toString();
+    return apiClient.get<{ data: CrmTicket[]; meta: { current_page: number; last_page: number; per_page: number; total: number } }>(`${BASE_URL}/tickets`, params);
+  },
+
+  getTicket: (id: string) =>
+    apiClient.get<{ data: CrmTicket }>(`${BASE_URL}/tickets/${id}`),
+
+  createTicket: (data: { category_id: string; channel: string; subject: string; description?: string; priority?: string; customer_id?: string }) =>
+    apiClient.post<{ data: CrmTicket }>(`${BASE_URL}/tickets`, data),
+
+  updateTicket: (id: string, data: { status?: string; priority?: string; assigned_to?: string }) =>
+    apiClient.patch<{ data: CrmTicket }>(`${BASE_URL}/tickets/${id}`, data),
+
+  deleteTicket: (id: string) =>
+    apiClient.delete(`${BASE_URL}/tickets/${id}`),
+
+  getTicketCategories: () =>
+    apiClient.get<{ data: TicketCategory[] }>(`${BASE_URL}/tickets/categories`),
 };
