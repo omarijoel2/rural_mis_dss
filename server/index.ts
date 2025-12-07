@@ -1,6 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import http from "http";
 import multer from "multer";
+
+const keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 10 });
 import path from "path";
 import fs from "fs";
 import shp from "shpjs";
@@ -1750,6 +1753,7 @@ registerCoreRegistryRoutes(app);
 app.use('/api', createProxyMiddleware({
   target: 'http://127.0.0.1:8000',
   changeOrigin: true,
+  agent: keepAliveAgent,
   pathRewrite: {
     '^/': '/api/'
   },
