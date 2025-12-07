@@ -121,7 +121,8 @@ export function PressureLeakPage() {
           },
         ];
       }
-      return response.json();
+      const result = await response.json();
+      return Array.isArray(result) ? result : (result.data || []);
     },
   });
 
@@ -198,7 +199,7 @@ export function PressureLeakPage() {
 
   const leakHeatmapData = {
     type: 'FeatureCollection' as const,
-    features: (leakSuspicions || []).map(suspicion => ({
+    features: (Array.isArray(leakSuspicions) ? leakSuspicions : []).map(suspicion => ({
       type: 'Feature' as const,
       geometry: {
         type: 'Point' as const,
