@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import Map, { Source, Layer, Marker, NavigationControl, ScaleControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin } from 'lucide-react';
@@ -12,12 +12,82 @@ interface HydrometMapProps {
   height?: string;
 }
 
-export function HydrometMap({ sources, stations, selectedId, onSelect, height = '400px' }: HydrometMapProps) {
-  const [viewState, setViewState] = useState({
-    longitude: 36.8219,
-    latitude: -1.2921,
-    zoom: 8,
+const COUNTY_CENTERS: Record<string, { longitude: number; latitude: number; zoom: number }> = {
+  turkana: { longitude: 35.5, latitude: 3.5, zoom: 7 },
+  wajir: { longitude: 40.0, latitude: 1.75, zoom: 7 },
+  marsabit: { longitude: 37.98, latitude: 2.33, zoom: 7 },
+  mandera: { longitude: 40.95, latitude: 3.93, zoom: 7 },
+  garissa: { longitude: 39.63, latitude: -0.45, zoom: 7 },
+  default: { longitude: 38.0, latitude: 1.5, zoom: 6 },
+};
+
+function calculateBounds(sources?: WaterSource[], stations?: HydrometStation[]) {
+  const points: [number, number][] = [];
+  
+  sources?.forEach(s => {
+    if (s.location?.coordinates) {
+      points.push([s.location.coordinates[0], s.location.coordinates[1]]);
+    }
   });
+  
+  stations?.forEach(s => {
+    if (s.location?.coordinates) {
+      points.push([s.location.coordinates[0], s.location.coordinates[1]]);
+    }
+  });
+  
+  if (points.length === 0) {
+    return COUNTY_CENTERS.turkana;
+  }
+  
+  if (points.length === 1) {
+    return { longitude: points[0][0], latitude: points[0][1], zoom: 10 };
+  }
+  
+  const lngs = points.map(p => p[0]);
+  const lats = points.map(p => p[1]);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  
+  const centerLng = (minLng + maxLng) / 2;
+  const centerLat = (minLat + maxLat) / 2;
+  
+  const latDiff = maxLat - minLat;
+  const lngDiff = maxLng - minLng;
+  const maxDiff = Math.max(latDiff, lngDiff);
+  
+  let zoom = 10;
+  if (maxDiff > 2) zoom = 6;
+  else if (maxDiff > 1) zoom = 7;
+  else if (maxDiff > 0.5) zoom = 8;
+  else if (maxDiff > 0.1) zoom = 9;
+  
+  return { longitude: centerLng, latitude: centerLat, zoom };
+}
+
+export function HydrometMap({ sources, stations, selectedId, onSelect, height = '400px' }: HydrometMapProps) {
+  const calculatedBounds = useMemo(() => calculateBounds(sources, stations), [sources, stations]);
+  
+  const [viewState, setViewState] = useState({
+    longitude: calculatedBounds.longitude,
+    latitude: calculatedBounds.latitude,
+    zoom: calculatedBounds.zoom,
+  });
+
+  const [hasInitialized, setHasInitialized] = useState(false);
+  
+  useEffect(() => {
+    if (!hasInitialized && (sources?.length || stations?.length)) {
+      setViewState({
+        longitude: calculatedBounds.longitude,
+        latitude: calculatedBounds.latitude,
+        zoom: calculatedBounds.zoom,
+      });
+      setHasInitialized(true);
+    }
+  }, [calculatedBounds, sources, stations, hasInitialized]);
 
   const sourcesGeoJSON = useMemo(() => {
     if (!sources) return null;
