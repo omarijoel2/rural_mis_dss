@@ -82,7 +82,7 @@ export function MeterRoutes() {
     const data = {
       route_code: formData.get('route_code') as string,
       area: formData.get('area') as string,
-      assigned_to: formData.get('assigned_to') as string || null,
+      assigned_to: formData.get('assigned_to') as string || undefined,
       meters_count: parseInt(formData.get('meters_count') as string),
     };
 
