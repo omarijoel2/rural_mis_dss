@@ -676,6 +676,17 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}/sales', [\App\Http\Controllers\Api\Crm\KioskController::class, 'sales'])->middleware('permission:view kiosks');
             Route::get('/trucks', [\App\Http\Controllers\Api\Crm\KioskController::class, 'trucks'])->middleware('permission:view kiosks');
         });
+
+        Route::prefix('water-trucks')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'index'])->middleware('permission:view kiosks');
+            Route::post('/', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'store'])->middleware('permission:create kiosks');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'update'])->middleware('permission:edit kiosks');
+            Route::put('/{id}', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'update'])->middleware('permission:edit kiosks');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'destroy'])->middleware('permission:delete kiosks');
+            Route::get('/trips', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'trips'])->middleware('permission:view kiosks');
+            Route::post('/trips', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'storeTrip'])->middleware('permission:create kiosks');
+            Route::patch('/trips/{tripId}', [\App\Http\Controllers\Api\Crm\WaterTruckController::class, 'updateTripStatus'])->middleware('permission:edit kiosks');
+        });
     });
 
     Route::prefix('hydromet')->middleware(['auth:sanctum'])->group(function () {
