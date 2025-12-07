@@ -717,59 +717,7 @@ app.get('/api/v1/crm/dunning/aging', (req, res) => {
   res.json({ summary: { total_accounts: 5, total_balance: 125000, current: 25000, days_30: 35000, days_60: 30000, days_90: 20000, over_90: 15000 }, by_category: { residential: 45000, commercial: 35000, industrial: 30000, public: 15000 } });
 });
 
-app.get('/api/v1/crm/tariffs', (req, res) => {
-  res.json({ data: [
-    { id: 1, name: 'Residential Standard', category: 'residential', base_rate: 50, per_unit_rate: 85, effective_from: '2024-01-01' },
-    { id: 2, name: 'Commercial Standard', category: 'commercial', base_rate: 150, per_unit_rate: 120, effective_from: '2024-01-01' },
-    { id: 3, name: 'Industrial Standard', category: 'industrial', base_rate: 500, per_unit_rate: 95, effective_from: '2024-01-01' },
-  ] });
-});
-
-app.get('/api/v1/crm/billing/runs', (req, res) => {
-  res.json({ data: [
-    { id: 1, period: '2024-11', period_start: '2024-11-01', period_end: '2024-11-30', status: 'completed', invoice_count: 450, total_amount: 2500000, created_at: '2024-11-01' },
-    { id: 2, period: '2024-10', period_start: '2024-10-01', period_end: '2024-10-31', status: 'completed', invoice_count: 445, total_amount: 2350000, created_at: '2024-10-01' },
-  ] });
-});
-
-app.get('/api/v1/crm/reconciliation/aging', (req, res) => {
-  res.json({ summary: { total_accounts: 450, total_outstanding: 3500000, current: 1200000, days_30: 950000, days_60: 650000, days_90: 400000, over_90: 300000 } });
-});
-
-app.get('/api/v1/crm/reconciliation/payments', (req, res) => {
-  res.json({ data: [
-    { id: 1, account_no: 'ACC-001', amount: 5000, payment_date: '2024-11-20', method: 'mpesa', reference: 'MPE123456' },
-    { id: 2, account_no: 'ACC-002', amount: 12000, payment_date: '2024-11-19', method: 'bank', reference: 'BNK789012' },
-  ] });
-});
-
-app.get('/api/v1/crm/meter-routes', (req, res) => {
-  res.json({ data: [
-    { id: 1, name: 'Route A - Central', zone_id: 1, meter_count: 120, status: 'active' },
-    { id: 2, name: 'Route B - Industrial', zone_id: 2, meter_count: 45, status: 'active' },
-  ] });
-});
-
-app.get('/api/v1/crm/kiosks', (req, res) => {
-  res.json({ data: [
-    { id: 1, name: 'Kibera Kiosk 1', location: 'Kibera Silanga', status: 'operational', daily_sales: 5000, water_price: 5 },
-    { id: 2, name: 'Mathare Kiosk', location: 'Mathare 4A', status: 'operational', daily_sales: 3500, water_price: 5 },
-  ] });
-});
-
-app.get('/api/v1/crm/kiosks/trucks', (req, res) => {
-  res.json({ data: [
-    { id: 1, registration: 'KBZ 123A', capacity: 10000, status: 'active', trips_today: 5 },
-    { id: 2, registration: 'KCA 456B', capacity: 15000, status: 'maintenance', trips_today: 0 },
-  ] });
-});
-
-app.get('/api/v1/crm/connections/applications', (req, res) => {
-  res.json({ data: [
-    { id: 1, applicant_name: 'James Kamau', phone: '+254711222333', address: '123 Westlands', status: 'pending', applied_at: '2024-11-18' },
-    { id: 2, applicant_name: 'Sarah Njeri', phone: '+254722333444', address: '456 Kilimani', status: 'approved', applied_at: '2024-11-15' },
-  ] });
-});
+// CRM endpoints removed - now served by Laravel API at /api/v1/crm/*
 
 // ============ COSTING MODULE (Mock) ============
 app.get('/api/v1/costing/budgets', (req, res) => {
