@@ -21,7 +21,7 @@ import {
 import { Search, Plus, MoreVertical, MapPin, Droplets, Edit, Trash2, Map as MapIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { SourceFormDialog } from '../../components/hydromet/SourceFormDialog';
-import { SourceBatchImportDialog } from '../../components/hydromet/SourceBatchImportDialog';
+import { SourceBulkImportDialog } from '../../components/hydromet/SourceBulkImportDialog';
 import { HydrometMap } from '../../components/hydromet/HydrometMap';
 import type { Source } from '../../services/hydromet.service';
 
@@ -31,7 +31,7 @@ export function SourcesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showMap, setShowMap] = useState(true);
-  const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
 
   const { data: sourcesData, isLoading } = useHydrometSources({ search, per_page: 100 });
   const deleteMutation = useDeleteSource();
@@ -105,9 +105,9 @@ export function SourcesPage() {
           <p className="text-muted-foreground">Manage water sources and abstraction points</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsBatchImportOpen(true)}>
+          <Button variant="outline" onClick={() => setIsBulkImportOpen(true)}>
             <Upload className="mr-2 h-4 w-4" />
-            Batch Import
+            Bulk Import
           </Button>
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
@@ -262,9 +262,9 @@ export function SourcesPage() {
         isCreating={isCreating}
       />
 
-      <SourceBatchImportDialog
-        open={isBatchImportOpen}
-        onClose={() => setIsBatchImportOpen(false)}
+      <SourceBulkImportDialog
+        open={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
       />
     </div>
   );
