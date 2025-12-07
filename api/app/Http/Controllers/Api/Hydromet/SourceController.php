@@ -126,4 +126,35 @@ class SourceController extends Controller
         $total = $this->sourceService->getTotalAbstraction($id, $startDate, $endDate);
         return response()->json(['total_m3' => $total]);
     }
+
+    public function batchImport(Request $request)
+    {
+        $validated = $request->validate([
+            'sources' => 'required|array|min:1|max:100',
+            'sources.*.code' => 'required|string|max:50',
+            'sources.*.name' => 'required|string|max:255',
+            'sources.*.kind_id' => 'required|exists:source_kinds,id',
+            'sources.*.status_id' => 'required|exists:source_statuses,id',
+            'sources.*.scheme_id' => 'nullable|uuid|exists:schemes,id',
+            'sources.*.catchment' => 'nullable|string|max:255',
+            'sources.*.elevation_m' => 'nullable|numeric',
+            'sources.*.depth_m' => 'nullable|numeric',
+            'sources.*.static_level_m' => 'nullable|numeric',
+            'sources.*.dynamic_level_m' => 'nullable|numeric',
+            'sources.*.capacity_m3_per_day' => 'nullable|numeric',
+            'sources.*.permit_no' => 'nullable|string|max:100',
+            'sources.*.permit_expiry' => 'nullable|date',
+            'sources.*.quality_risk_id' => 'nullable|exists:quality_risk_levels,id',
+            'sources.*.latitude' => 'nullable|numeric|min:-90|max:90',
+            'sources.*.longitude' => 'nullable|numeric|min:-180|max:180',
+        ]);
+
+        $result = $this->sourceService->batchImport($validated['sources']);
+        
+        return response()->json([
+            'imported' => $result['imported'],
+            'errors' => $result['errors'],
+            'sources' => $result['sources'],
+        ], $result['imported'] > 0 ? 201 : 422);
+    }
 }

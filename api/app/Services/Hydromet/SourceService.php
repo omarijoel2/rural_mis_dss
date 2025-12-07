@@ -139,4 +139,32 @@ class SourceService
 
         return $query->sum('volume_m3');
     }
+
+    public function batchImport(array $sourcesData): array
+    {
+        $imported = 0;
+        $errors = [];
+        $sources = [];
+
+        foreach ($sourcesData as $index => $data) {
+            try {
+                if (Source::where('code', $data['code'])->exists()) {
+                    $errors[] = "Row " . ($index + 1) . ": Source with code '{$data['code']}' already exists";
+                    continue;
+                }
+
+                $source = $this->create($data);
+                $sources[] = $source;
+                $imported++;
+            } catch (\Exception $e) {
+                $errors[] = "Row " . ($index + 1) . ": " . $e->getMessage();
+            }
+        }
+
+        return [
+            'imported' => $imported,
+            'errors' => $errors,
+            'sources' => $sources,
+        ];
+    }
 }
