@@ -8,18 +8,58 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { MapPin, X } from 'lucide-react';
 import type { Asset } from '../../types/cmms';
+import { useAuth } from '@/contexts/AuthContext';
 
-const STATUS_COLORS = {
+const STATUS_COLORS: Record<string, string> = {
   active: '#22c55e',
   inactive: '#9ca3af',
   retired: '#ef4444',
   under_maintenance: '#eab308',
 };
 
+const COUNTY_BOUNDS: Record<string, { center: [number, number]; zoom: number; bounds: [[number, number], [number, number]] }> = {
+  Turkana: {
+    center: [35.5, 3.5],
+    zoom: 7,
+    bounds: [[34.0, 1.5], [36.5, 5.5]],
+  },
+  Wajir: {
+    center: [40.0, 1.5],
+    zoom: 7,
+    bounds: [[39.0, 0.5], [41.5, 3.0]],
+  },
+  Marsabit: {
+    center: [37.5, 2.5],
+    zoom: 7,
+    bounds: [[36.5, 1.5], [39.0, 4.5]],
+  },
+  Mandera: {
+    center: [40.5, 3.5],
+    zoom: 7,
+    bounds: [[39.5, 2.5], [41.5, 4.5]],
+  },
+  Garissa: {
+    center: [39.5, -0.5],
+    zoom: 7,
+    bounds: [[38.5, -2.0], [41.0, 1.5]],
+  },
+};
+
+const DEFAULT_BOUNDS = {
+  center: [37.5, 1.0] as [number, number],
+  zoom: 6,
+  bounds: [[34.0, -2.0], [42.0, 5.5]] as [[number, number], [number, number]],
+};
+
 export function CmmsMapPage() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const { tenant } = useAuth();
+
+  const countyName = tenant?.name || tenant?.county || '';
+  const countyConfig = COUNTY_BOUNDS[countyName] || DEFAULT_BOUNDS;
 
   const { data: assets } = useQuery({
     queryKey: ['assets-with-geom'],
@@ -51,27 +91,33 @@ export function CmmsMapPage() {
           },
         ],
       },
-      center: [0, 0],
-      zoom: 2,
+      center: countyConfig.center,
+      zoom: countyConfig.zoom,
+      maxBounds: countyConfig.bounds,
     });
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
     map.current.addControl(new maplibregl.ScaleControl(), 'bottom-left');
 
     return () => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [countyConfig]);
 
   useEffect(() => {
     if (!map.current || !assets?.data) return;
 
-    const assetsWithGeom = assets.data.filter((a) => a.geom);
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+
+    const assetsWithGeom = assets.data.filter((a: Asset) => a.geom);
 
     if (assetsWithGeom.length === 0) return;
 
-    assetsWithGeom.forEach((asset) => {
+    assetsWithGeom.forEach((asset: Asset) => {
       if (!asset.geom) return;
 
       const el = document.createElement('div');
@@ -79,7 +125,7 @@ export function CmmsMapPage() {
       el.style.width = '24px';
       el.style.height = '24px';
       el.style.borderRadius = '50%';
-      el.style.backgroundColor = STATUS_COLORS[asset.status];
+      el.style.backgroundColor = STATUS_COLORS[asset.status] || '#9ca3af';
       el.style.border = '2px solid white';
       el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
       el.style.cursor = 'pointer';
@@ -87,6 +133,8 @@ export function CmmsMapPage() {
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat(asset.geom.coordinates as [number, number])
         .addTo(map.current!);
+
+      markersRef.current.push(marker);
 
       el.addEventListener('click', () => {
         setSelectedAsset(asset);
@@ -100,12 +148,18 @@ export function CmmsMapPage() {
 
     if (assetsWithGeom.length > 0) {
       const bounds = new maplibregl.LngLatBounds();
-      assetsWithGeom.forEach((asset) => {
+      assetsWithGeom.forEach((asset: Asset) => {
         if (asset.geom) {
           bounds.extend(asset.geom.coordinates as [number, number]);
         }
       });
-      map.current.fitBounds(bounds, { padding: 50 });
+      
+      if (!bounds.isEmpty()) {
+        map.current.fitBounds(bounds, { 
+          padding: 50,
+          maxZoom: 12,
+        });
+      }
     }
   }, [assets]);
 
@@ -114,7 +168,10 @@ export function CmmsMapPage() {
       <div className="absolute top-4 left-4 z-10 space-y-2">
         <Card>
           <CardContent className="p-4">
-            <h2 className="text-lg font-bold mb-2">Assets Map</h2>
+            <h2 className="text-lg font-bold mb-1">Assets Map</h2>
+            {countyName && (
+              <p className="text-sm text-muted-foreground mb-3">{countyName} County</p>
+            )}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: STATUS_COLORS.active }} />
@@ -134,7 +191,7 @@ export function CmmsMapPage() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              {assets?.data.filter((a) => a.geom).length || 0} assets with location data
+              {assets?.data.filter((a: Asset) => a.geom).length || 0} assets with location data
             </p>
           </CardContent>
         </Card>
