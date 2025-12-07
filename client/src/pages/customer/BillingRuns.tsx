@@ -233,9 +233,9 @@ export function BillingRuns() {
                         {new Date(run.period_start).toLocaleDateString()} - {new Date(run.period_end).toLocaleDateString()}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{run.invoice_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{(run.invoice_count || 0).toLocaleString()}</TableCell>
                     <TableCell className="text-right">
-                      {new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(run.total_amount)}
+                      {new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(run.total_amount || 0)}
                     </TableCell>
                     <TableCell>{new Date(run.created_at).toLocaleString()}</TableCell>
                   </TableRow>
