@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -6,15 +6,23 @@ import { assetService } from '../../services/asset.service';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { MapPin, X } from 'lucide-react';
+import { MapPin, X, Edit, Wrench, Settings } from 'lucide-react';
 import type { Asset } from '../../types/cmms';
 import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 const STATUS_COLORS: Record<string, string> = {
   active: '#22c55e',
   inactive: '#9ca3af',
   retired: '#ef4444',
   under_maintenance: '#eab308',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  active: 'Active',
+  inactive: 'Inactive',
+  retired: 'Retired',
+  under_maintenance: 'Under Maintenance',
 };
 
 const COUNTY_BOUNDS: Record<string, { center: [number, number]; zoom: number; bounds: [[number, number], [number, number]] }> = {
@@ -55,16 +63,33 @@ export function CmmsMapPage() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const { tenant } = useAuth();
 
   const countyName = tenant?.name || tenant?.county || '';
   const countyConfig = COUNTY_BOUNDS[countyName] || DEFAULT_BOUNDS;
 
-  const { data: assets } = useQuery({
+  const { data: assets, isLoading } = useQuery({
     queryKey: ['assets-with-geom'],
     queryFn: () => assetService.getAssets({ per_page: 1000 }),
   });
+
+  const createPopupContent = useCallback((asset: Asset) => {
+    return `
+      <div style="min-width: 180px; font-family: system-ui, sans-serif;">
+        <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${asset.name}</div>
+        <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">${asset.code}</div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+          <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${STATUS_COLORS[asset.status] || '#9ca3af'};"></span>
+          <span>${STATUS_LABELS[asset.status] || asset.status}</span>
+        </div>
+        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+          ${asset.asset_class?.name || 'Unknown class'}
+        </div>
+      </div>
+    `;
+  }, []);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -93,7 +118,6 @@ export function CmmsMapPage() {
       },
       center: countyConfig.center,
       zoom: countyConfig.zoom,
-      maxBounds: countyConfig.bounds,
     });
 
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -102,6 +126,7 @@ export function CmmsMapPage() {
     return () => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
+      popupRef.current?.remove();
       map.current?.remove();
       map.current = null;
     };
@@ -122,19 +147,39 @@ export function CmmsMapPage() {
 
       const el = document.createElement('div');
       el.className = 'asset-marker';
-      el.style.width = '24px';
-      el.style.height = '24px';
+      el.style.width = '28px';
+      el.style.height = '28px';
       el.style.borderRadius = '50%';
       el.style.backgroundColor = STATUS_COLORS[asset.status] || '#9ca3af';
-      el.style.border = '2px solid white';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+      el.style.border = '3px solid white';
+      el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
       el.style.cursor = 'pointer';
+      el.style.transition = 'transform 0.15s ease';
 
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat(asset.geom.coordinates as [number, number])
         .addTo(map.current!);
 
       markersRef.current.push(marker);
+
+      el.addEventListener('mouseenter', () => {
+        el.style.transform = 'scale(1.2)';
+        
+        popupRef.current?.remove();
+        popupRef.current = new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          offset: 15,
+        })
+          .setLngLat(asset.geom!.coordinates as [number, number])
+          .setHTML(createPopupContent(asset))
+          .addTo(map.current!);
+      });
+
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = 'scale(1)';
+        popupRef.current?.remove();
+      });
 
       el.addEventListener('click', () => {
         setSelectedAsset(asset);
@@ -161,45 +206,64 @@ export function CmmsMapPage() {
         });
       }
     }
-  }, [assets]);
+  }, [assets, createPopupContent]);
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      case 'retired': return 'bg-red-100 text-red-800';
+      case 'under_maintenance': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className="relative h-[calc(100vh-8rem)]">
       <div className="absolute top-4 left-4 z-10 space-y-2">
-        <Card>
+        <Card className="bg-white/95 backdrop-blur-sm">
           <CardContent className="p-4">
-            <h2 className="text-lg font-bold mb-1">Assets Map</h2>
+            <h2 className="text-lg font-bold mb-1 flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Assets Map
+            </h2>
             {countyName && (
               <p className="text-sm text-muted-foreground mb-3">{countyName} County</p>
             )}
             <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Asset Status</p>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: STATUS_COLORS.active }} />
+                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.active }} />
                 <span className="text-sm">Active</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: STATUS_COLORS.inactive }} />
+                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.inactive }} />
                 <span className="text-sm">Inactive</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: STATUS_COLORS.under_maintenance }} />
+                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.under_maintenance }} />
                 <span className="text-sm">Under Maintenance</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: STATUS_COLORS.retired }} />
+                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: STATUS_COLORS.retired }} />
                 <span className="text-sm">Retired</span>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              {assets?.data.filter((a: Asset) => a.geom).length || 0} assets with location data
-            </p>
+            <div className="mt-3 pt-3 border-t">
+              <p className="text-sm font-medium">
+                {assets?.data.filter((a: Asset) => a.geom).length || 0} assets with location
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {(assets?.data.length || 0) - (assets?.data.filter((a: Asset) => a.geom).length || 0)} without location
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {selectedAsset && (
         <div className="absolute top-4 right-4 z-10 w-80">
-          <Card>
+          <Card className="bg-white/95 backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -210,44 +274,77 @@ export function CmmsMapPage() {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
-                  <Badge className={`bg-${selectedAsset.status === 'active' ? 'green' : selectedAsset.status === 'retired' ? 'red' : 'gray'}-100 text-${selectedAsset.status === 'active' ? 'green' : selectedAsset.status === 'retired' ? 'red' : 'gray'}-800`}>
-                    {selectedAsset.status.replace('_', ' ')}
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Status</span>
+                  <Badge className={getStatusBadgeClass(selectedAsset.status)}>
+                    {STATUS_LABELS[selectedAsset.status] || selectedAsset.status}
                   </Badge>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Asset Class</p>
-                  <p className="text-sm font-medium">{selectedAsset.asset_class?.name || 'Unknown'}</p>
+                
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Asset Class</span>
+                  <span className="text-sm font-medium">{selectedAsset.asset_class?.name || 'Unknown'}</span>
                 </div>
+                
                 {selectedAsset.manufacturer && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Manufacturer</p>
-                    <p className="text-sm">{selectedAsset.manufacturer}</p>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Manufacturer</span>
+                    <span className="text-sm">{selectedAsset.manufacturer}</span>
                   </div>
                 )}
+                
                 {selectedAsset.model && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Model</p>
-                    <p className="text-sm">{selectedAsset.model}</p>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Model</span>
+                    <span className="text-sm">{selectedAsset.model}</span>
                   </div>
                 )}
+                
+                {selectedAsset.install_date && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Install Date</span>
+                    <span className="text-sm">{new Date(selectedAsset.install_date).toLocaleDateString()}</span>
+                  </div>
+                )}
+                
                 {selectedAsset.geom && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Location</p>
-                    <p className="text-sm flex items-center gap-1">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Coordinates</span>
+                    <span className="text-xs flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      {selectedAsset.geom.coordinates[1].toFixed(6)}, {selectedAsset.geom.coordinates[0].toFixed(6)}
-                    </p>
+                      {selectedAsset.geom.coordinates[1].toFixed(4)}, {selectedAsset.geom.coordinates[0].toFixed(4)}
+                    </span>
                   </div>
                 )}
-                <Button className="w-full mt-3" size="sm" asChild>
-                  <a href={`/cmms/assets/${selectedAsset.id}`}>View Details</a>
-                </Button>
+              </div>
+
+              <div className="mt-4 pt-3 border-t space-y-2">
+                <Link to={`/core/assets/${selectedAsset.id}`}>
+                  <Button className="w-full" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    View / Edit Asset
+                  </Button>
+                </Link>
+                <Link to={`/cmms/work-orders?asset_id=${selectedAsset.id}`}>
+                  <Button variant="outline" className="w-full" size="sm">
+                    <Wrench className="h-4 w-4 mr-2" />
+                    View Work Orders
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Loading assets...</p>
+          </div>
         </div>
       )}
 
