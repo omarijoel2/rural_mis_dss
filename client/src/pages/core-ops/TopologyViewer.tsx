@@ -155,14 +155,14 @@ export function TopologyViewer() {
                           <GitBranch className="h-4 w-4" />
                           <div>
                             <CardTitle className="text-base text-foreground">
-                              {edge.code || `Edge ${edge.id.slice(0, 8)}`}
+                              {edge.code || `Edge ${String(edge.id).slice(0, 8)}`}
                             </CardTitle>
                             <CardDescription className="mt-1 capitalize">
-                              {edge.edge_type.replace('_', ' ')}
+                              {(edge.edge_type || 'unknown').replace('_', ' ')}
                             </CardDescription>
                           </div>
                         </div>
-                        <Badge variant="outline">{edge.edge_type}</Badge>
+                        <Badge variant="outline">{edge.edge_type || 'unknown'}</Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
