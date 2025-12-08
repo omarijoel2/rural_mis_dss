@@ -9,6 +9,7 @@ import type {
   Outage,
   DosePlan,
   ChemicalStock,
+  DoseChangeLog,
   PumpSchedule,
   PaginatedResponse,
   OperationsDashboard,
@@ -181,6 +182,9 @@ export const coreOpsService = {
 
     createStock: (data: Partial<ChemicalStock>) =>
       apiClient.post<ChemicalStock>('/core-ops/dosing/stocks', data),
+
+    getChangeLogs: (filters?: { per_page?: number; dose_plan_id?: string }) =>
+      apiClient.get<PaginatedResponse<DoseChangeLog>>('/core-ops/dosing/change-logs', filters),
   },
 
   scheduling: {
