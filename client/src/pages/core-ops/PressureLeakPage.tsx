@@ -437,25 +437,25 @@ export function PressureLeakPage() {
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: getSuspicionColor(suspicion.suspicion_score) }}
+                          style={{ backgroundColor: getSuspicionColor(suspicion.suspicion_score ?? 0) }}
                         />
-                        <span className="font-mono text-sm">{(suspicion.suspicion_score * 100).toFixed(0)}%</span>
+                        <span className="font-mono text-sm">{((suspicion.suspicion_score ?? 0) * 100).toFixed(0)}%</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <TrendingDown className="h-4 w-4 text-red-500" />
-                        <span className="text-sm">{suspicion.pressure_drop_pct.toFixed(1)}%</span>
+                        <span className="text-sm">{(suspicion.pressure_drop_pct ?? 0).toFixed(1)}%</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <TrendingUp className="h-4 w-4 text-orange-500" />
-                        <span className="text-sm">{suspicion.flow_anomaly_pct.toFixed(1)}%</span>
+                        <span className="text-sm">{(suspicion.flow_anomaly_pct ?? 0).toFixed(1)}%</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(suspicion.last_reading).toLocaleString()}
+                      {suspicion.last_reading ? new Date(suspicion.last_reading).toLocaleString() : 'N/A'}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
