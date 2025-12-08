@@ -318,7 +318,9 @@ Route::prefix('v1')->group(function () {
         Route::delete('/{waterQualityTest}', [\App\Http\Controllers\API\V1\WaterQualityTestController::class, 'destroy']);
     });
 
-    Route::prefix('cmms')->group(function () {
+    Route::prefix('cmms')->middleware(['auth:sanctum'])->group(function () {
+        Route::get('/operator-suggestions', [\App\Http\Controllers\Api\OperatorSuggestionController::class, 'getSuggestedOperators']);
+        
         Route::prefix('job-plans')->group(function () {
             Route::get('/', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\API\V1\Cmms\JobPlanController::class, 'store']);
