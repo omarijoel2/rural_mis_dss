@@ -291,7 +291,7 @@ class CmmsSeeder extends Seeder
     protected function seedWorkOrders($tenant, $user): void
     {
         $assets = Asset::inRandomOrder()->take(80)->get();
-        $statuses = ['new', 'assigned', 'in_progress', 'completed', 'completed'];
+        $statuses = ['draft', 'approved', 'assigned', 'in_progress', 'completed', 'completed'];
         $kinds = ['pm', 'cm', 'emergency', 'project'];
         $priorities = ['low', 'medium', 'medium', 'high', 'critical'];
 
