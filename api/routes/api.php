@@ -193,7 +193,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::prefix('security')->group(function () {
+    Route::prefix('security')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/audit', [AuditController::class, 'index']);
         Route::get('/audit/entity/{entityType}/{entityId}', [AuditController::class, 'getEntityAuditTrail']);
         Route::get('/audit/high-severity', [AuditController::class, 'getHighSeverityEvents']);
