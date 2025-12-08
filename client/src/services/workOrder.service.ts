@@ -85,5 +85,39 @@ export const workOrderService = {
     apiClient.get<WorkOrder[]>(`${BASE_URL}/work-orders/overdue`),
 
   getStats: () =>
-    apiClient.get<any>(`${BASE_URL}/work-orders/stats`)
+    apiClient.get<any>(`${BASE_URL}/work-orders/stats`),
+
+  getOperatorSuggestions: (params?: { 
+    asset_id?: number; 
+    scheme_id?: string; 
+    dma_id?: string; 
+    scheduled_for?: string;
+  }) => {
+    const queryParams: Record<string, string> = {};
+    if (params?.asset_id) queryParams.asset_id = params.asset_id.toString();
+    if (params?.scheme_id) queryParams.scheme_id = params.scheme_id;
+    if (params?.dma_id) queryParams.dma_id = params.dma_id;
+    if (params?.scheduled_for) queryParams.scheduled_for = params.scheduled_for;
+    return apiClient.get<{
+      suggested: Array<{
+        id: string;
+        name: string;
+        email: string;
+        source: 'on_shift' | 'route_assigned';
+        shift_name?: string;
+        shift_ends_at?: string;
+        route_name?: string;
+        route_code?: string;
+        priority: number;
+      }>;
+      all_operators: Array<{
+        id: string;
+        name: string;
+        email: string;
+        is_suggested: boolean;
+        suggestion_reason: string | null;
+      }>;
+      has_suggestions: boolean;
+    }>(`/cmms/operator-suggestions`, queryParams);
+  }
 };
