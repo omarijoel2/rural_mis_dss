@@ -9,7 +9,7 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { AlertTriangle, Plus, BookOpen, Zap, Trash2, Loader2 } from 'lucide-react';
+import { AlertTriangle, Plus, BookOpen, Zap, Trash2, Loader2, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PlaybookStep {
@@ -32,6 +32,8 @@ interface Playbook {
 export function PlaybooksPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingPlaybook, setEditingPlaybook] = useState<Playbook | null>(null);
   const [newPlaybookName, setNewPlaybookName] = useState('');
   const [newPlaybookCategory, setNewPlaybookCategory] = useState('');
   const [newPlaybookSeverity, setNewPlaybookSeverity] = useState<string>('medium');
@@ -55,6 +57,20 @@ export function PlaybooksPage() {
     },
   });
 
+  const updatePlaybookMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => coreOpsService.playbooks.update(id, data),
+    onSuccess: () => {
+      toast.success('Playbook updated');
+      setIsEditOpen(false);
+      setEditingPlaybook(null);
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['playbooks'] });
+    },
+    onError: () => {
+      toast.error('Failed to update playbook');
+    },
+  });
+
   const deletePlaybookMutation = useMutation({
     mutationFn: (id: string) => coreOpsService.playbooks.delete(id),
     onSuccess: () => {
@@ -71,6 +87,36 @@ export function PlaybooksPage() {
     setNewPlaybookCategory('');
     setNewPlaybookSeverity('medium');
     setNewPlaybookSteps('');
+  };
+
+  const openEditDialog = (playbook: Playbook) => {
+    setEditingPlaybook(playbook);
+    setNewPlaybookName(playbook.name);
+    setNewPlaybookCategory(playbook.for_category || '');
+    setNewPlaybookSeverity(playbook.for_severity || 'medium');
+    setNewPlaybookSteps(playbook.steps?.map(s => s.action || s.title || '').join('\n') || '');
+    setIsEditOpen(true);
+  };
+
+  const handleUpdatePlaybook = () => {
+    if (!editingPlaybook || !newPlaybookName) {
+      toast.error('Please provide a playbook name');
+      return;
+    }
+    const stepsArray = newPlaybookSteps
+      .split('\n')
+      .filter(line => line.trim())
+      .map((line, idx) => ({ order: idx + 1, action: line.trim() }));
+
+    updatePlaybookMutation.mutate({
+      id: editingPlaybook.id,
+      data: {
+        name: newPlaybookName,
+        for_category: newPlaybookCategory || undefined,
+        for_severity: newPlaybookSeverity || undefined,
+        steps: stepsArray,
+      },
+    });
   };
 
   const handleCreatePlaybook = () => {
@@ -267,7 +313,13 @@ export function PlaybooksPage() {
               </CardContent>
 
               <div className="flex gap-2 border-t pt-3 px-4 pb-4">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => openEditDialog(playbook)}
+                >
+                  <Edit2 className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
                 <Button 
@@ -287,6 +339,74 @@ export function PlaybooksPage() {
           ))}
         </div>
       )}
+
+      <Dialog open={isEditOpen} onOpenChange={(open) => {
+        setIsEditOpen(open);
+        if (!open) {
+          setEditingPlaybook(null);
+          resetForm();
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Playbook</DialogTitle>
+            <DialogDescription>Modify the playbook steps and configuration</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-playbook-name">Playbook Name *</Label>
+              <Input
+                id="edit-playbook-name"
+                placeholder="e.g., High Pressure Response"
+                value={newPlaybookName}
+                onChange={(e) => setNewPlaybookName(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-playbook-category">For Category</Label>
+                <Input
+                  id="edit-playbook-category"
+                  placeholder="e.g., pressure, quality"
+                  value={newPlaybookCategory}
+                  onChange={(e) => setNewPlaybookCategory(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-playbook-severity">For Severity</Label>
+                <select
+                  id="edit-playbook-severity"
+                  value={newPlaybookSeverity}
+                  onChange={(e) => setNewPlaybookSeverity(e.target.value)}
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-playbook-steps">Steps (one per line)</Label>
+              <Textarea
+                id="edit-playbook-steps"
+                placeholder="Verify alarm source&#10;Check upstream status&#10;Dispatch field team if needed"
+                rows={6}
+                value={newPlaybookSteps}
+                onChange={(e) => setNewPlaybookSteps(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdatePlaybook} disabled={updatePlaybookMutation.isPending}>
+              {updatePlaybookMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
