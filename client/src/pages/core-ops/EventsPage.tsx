@@ -5,9 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { AlertTriangle, CheckCircle, Clock, Zap } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { AlertTriangle, CheckCircle, Clock, Zap, Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface Event {
   id: string;
@@ -26,6 +30,11 @@ export function EventsPage() {
   const queryClient = useQueryClient();
   const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'ack' | 'resolved'>('all');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newEventCategory, setNewEventCategory] = useState('');
+  const [newEventSeverity, setNewEventSeverity] = useState<string>('medium');
+  const [newEventDescription, setNewEventDescription] = useState('');
+  const [newEventSource, setNewEventSource] = useState('manual');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['events', severityFilter, statusFilter],
@@ -36,19 +45,58 @@ export function EventsPage() {
     }),
   });
 
+  const createEventMutation = useMutation({
+    mutationFn: (data: any) => coreOpsService.events.create(data),
+    onSuccess: () => {
+      toast.success('Event created');
+      setIsCreateOpen(false);
+      setNewEventCategory('');
+      setNewEventSeverity('medium');
+      setNewEventDescription('');
+      setNewEventSource('manual');
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+    onError: () => {
+      toast.error('Failed to create event');
+    },
+  });
+
   const acknowledgeEventMutation = useMutation({
     mutationFn: (eventId: string) => coreOpsService.events.acknowledge(eventId, { note: 'Acknowledged' }),
     onSuccess: () => {
+      toast.success('Event acknowledged');
       queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+    onError: () => {
+      toast.error('Failed to acknowledge event');
     },
   });
 
   const resolveEventMutation = useMutation({
     mutationFn: (eventId: string) => coreOpsService.events.resolve(eventId, { resolution: 'Resolved' }),
     onSuccess: () => {
+      toast.success('Event resolved');
       queryClient.invalidateQueries({ queryKey: ['events'] });
     },
+    onError: () => {
+      toast.error('Failed to resolve event');
+    },
   });
+
+  const handleCreateEvent = () => {
+    if (!newEventCategory) {
+      toast.error('Please provide a category');
+      return;
+    }
+    createEventMutation.mutate({
+      category: newEventCategory,
+      severity: newEventSeverity,
+      description: newEventDescription || undefined,
+      source: newEventSource,
+      status: 'new',
+      detected_at: new Date().toISOString(),
+    });
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -97,9 +145,91 @@ export function EventsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Events & Alarms</h1>
-        <p className="text-muted-foreground mt-1">Monitor, acknowledge, and resolve system events</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">Events & Alarms</h1>
+          <p className="text-muted-foreground mt-1">Monitor, acknowledge, and resolve system events</p>
+        </div>
+        <Dialog open={isCreateOpen} onOpenChange={(open) => {
+          setIsCreateOpen(open);
+          if (!open) {
+            setNewEventCategory('');
+            setNewEventSeverity('medium');
+            setNewEventDescription('');
+            setNewEventSource('manual');
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Report Event
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Report New Event</DialogTitle>
+              <DialogDescription>Manually report an incident or alarm</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="event-category">Category *</Label>
+                <Input
+                  id="event-category"
+                  placeholder="e.g., pressure_drop, contamination, leak"
+                  value={newEventCategory}
+                  onChange={(e) => setNewEventCategory(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="event-severity">Severity</Label>
+                  <select
+                    id="event-severity"
+                    value={newEventSeverity}
+                    onChange={(e) => setNewEventSeverity(e.target.value)}
+                    className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="event-source">Source</Label>
+                  <select
+                    id="event-source"
+                    value={newEventSource}
+                    onChange={(e) => setNewEventSource(e.target.value)}
+                    className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="manual">Manual Report</option>
+                    <option value="field_staff">Field Staff</option>
+                    <option value="customer">Customer Complaint</option>
+                    <option value="scada">SCADA Alert</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-description">Description</Label>
+                <Textarea
+                  id="event-description"
+                  placeholder="Describe the event or incident..."
+                  rows={3}
+                  value={newEventDescription}
+                  onChange={(e) => setNewEventDescription(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreateEvent} disabled={createEventMutation.isPending}>
+                {createEventMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Report Event
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
@@ -196,8 +326,9 @@ export function EventsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => acknowledgeEventMutation.mutate(event.id)}
-                        disabled={acknowledgeEventMutation.isPending}
+                        disabled={acknowledgeEventMutation.isPending || resolveEventMutation.isPending}
                       >
+                        {acknowledgeEventMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
                         Acknowledge
                       </Button>
                     )}
@@ -205,9 +336,13 @@ export function EventsPage() {
                       <Button
                         size="sm"
                         onClick={() => resolveEventMutation.mutate(event.id)}
-                        disabled={resolveEventMutation.isPending}
+                        disabled={resolveEventMutation.isPending || acknowledgeEventMutation.isPending}
                       >
-                        <CheckCircle className="h-4 w-4 mr-1" />
+                        {resolveEventMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                        )}
                         Resolve
                       </Button>
                     )}

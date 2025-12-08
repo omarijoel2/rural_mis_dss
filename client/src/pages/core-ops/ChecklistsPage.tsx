@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { AlertTriangle, Plus, CheckCircle2, Trash2, PlayCircle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Plus, CheckCircle2, Trash2, PlayCircle, Loader2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ChecklistBuilderForm } from '../../components/core-ops/ChecklistBuilderForm';
 import { toast } from 'sonner';
@@ -27,6 +27,7 @@ interface ChecklistRun {
   completed_at?: string;
   score?: number;
   performed_by?: { name: string };
+  responses?: Record<string, any>;
 }
 
 export function ChecklistsPage() {
@@ -35,6 +36,8 @@ export function ChecklistsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [startRunOpen, setStartRunOpen] = useState(false);
   const [selectedChecklist, setSelectedChecklist] = useState<Checklist | null>(null);
+  const [viewRunOpen, setViewRunOpen] = useState(false);
+  const [selectedRun, setSelectedRun] = useState<ChecklistRun | null>(null);
 
   const { data: checklistsData, isLoading: checklistsLoading } = useQuery({
     queryKey: ['checklists'],
@@ -173,10 +176,14 @@ export function ChecklistsPage() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => deleteChecklist.mutate(checklist.id)}
-                          disabled={deleteChecklist.isPending}
+                          onClick={() => {
+                            if (confirm('Delete this checklist?')) {
+                              deleteChecklist.mutate(checklist.id);
+                            }
+                          }}
+                          disabled={deleteChecklist.isPending || startRunMutation.isPending}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {deleteChecklist.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                         </Button>
                       </div>
                     </div>
@@ -231,7 +238,15 @@ export function ChecklistsPage() {
                           )}
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedRun(run);
+                          setViewRunOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
                         View Details
                       </Button>
                     </div>
@@ -267,6 +282,87 @@ export function ChecklistsPage() {
             >
               {startRunMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Start Run
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={viewRunOpen} onOpenChange={(open) => {
+        setViewRunOpen(open);
+        if (!open) setSelectedRun(null);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Checklist Run Details</DialogTitle>
+            <DialogDescription>
+              {selectedRun?.checklist?.title} - {selectedRun?.started_at && format(new Date(selectedRun.started_at), 'PPP')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Status:</span>{' '}
+                <Badge className={selectedRun?.completed_at ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
+                  {selectedRun?.completed_at ? 'Completed' : 'In Progress'}
+                </Badge>
+              </div>
+              {selectedRun?.score !== undefined && (
+                <div>
+                  <span className="text-muted-foreground">Score:</span>{' '}
+                  <span className="font-semibold">{selectedRun.score}%</span>
+                </div>
+              )}
+              {selectedRun?.performed_by && (
+                <div>
+                  <span className="text-muted-foreground">Performed By:</span>{' '}
+                  <span>{selectedRun.performed_by.name}</span>
+                </div>
+              )}
+              {selectedRun?.completed_at && (
+                <div>
+                  <span className="text-muted-foreground">Completed:</span>{' '}
+                  <span>{format(new Date(selectedRun.completed_at), 'Pp')}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t pt-4">
+              <h4 className="font-semibold mb-3">Questions & Responses</h4>
+              <div className="space-y-3">
+                {selectedRun?.checklist?.schema?.map((question: any, idx: number) => {
+                  const response = selectedRun?.responses?.[question.question] || selectedRun?.responses?.[idx];
+                  return (
+                    <div key={idx} className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{question.question}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Type: {question.type} {question.required && '• Required'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          {response !== undefined ? (
+                            <span className="text-sm font-medium text-green-700">
+                              {typeof response === 'boolean' 
+                                ? (response ? 'Yes' : 'No') 
+                                : typeof response === 'object' 
+                                  ? JSON.stringify(response) 
+                                  : String(response)}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">No response</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewRunOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

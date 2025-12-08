@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Clock, MapPin, Users, AlertTriangle, Plus, Loader2 } from 'lucide-react';
+import { Clock, MapPin, Users, AlertTriangle, Plus, Loader2, Trash2, Play } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -65,6 +65,28 @@ export function ShiftsPage() {
     },
     onError: () => {
       toast.error('Failed to close shift');
+    },
+  });
+
+  const activateShiftMutation = useMutation({
+    mutationFn: (shiftId: string) => coreOpsService.shifts.activate(shiftId),
+    onSuccess: () => {
+      toast.success('Shift activated');
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    },
+    onError: () => {
+      toast.error('Failed to activate shift');
+    },
+  });
+
+  const deleteShiftMutation = useMutation({
+    mutationFn: (shiftId: string) => coreOpsService.shifts.delete(shiftId),
+    onSuccess: () => {
+      toast.success('Shift deleted');
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    },
+    onError: () => {
+      toast.error('Failed to delete shift');
     },
   });
 
@@ -241,17 +263,48 @@ export function ShiftsPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
+                    {shift.status === 'planned' && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => activateShiftMutation.mutate(shift.id)}
+                        disabled={activateShiftMutation.isPending || deleteShiftMutation.isPending}
+                      >
+                        {activateShiftMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4 mr-1" />
+                        )}
+                        Activate
+                      </Button>
+                    )}
                     {shift.status === 'active' && (
                       <Button
                         size="sm"
-                        variant="destructive"
+                        variant="secondary"
                         onClick={() => closeShiftMutation.mutate(shift.id)}
                         disabled={closeShiftMutation.isPending}
                       >
-                        Close
+                        {closeShiftMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                        Close Shift
+                      </Button>
+                    )}
+                    {shift.status !== 'active' && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          if (confirm('Delete this shift?')) {
+                            deleteShiftMutation.mutate(shift.id);
+                          }
+                        }}
+                        disabled={deleteShiftMutation.isPending || activateShiftMutation.isPending}
+                      >
+                        {deleteShiftMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     )}
                   </div>

@@ -216,6 +216,15 @@ export const coreOpsService = {
     get: (id: string) =>
       apiClient.get<any>(`/operations/shifts/${id}`),
 
+    update: (id: string, data: any) =>
+      apiClient.patch<any>(`/operations/shifts/${id}`, data),
+
+    delete: (id: string) =>
+      apiClient.delete<any>(`/operations/shifts/${id}`),
+
+    activate: (id: string) =>
+      apiClient.post<any>(`/operations/shifts/${id}/activate`, {}),
+
     close: (id: string, data: any) =>
       apiClient.post<any>(`/operations/shifts/${id}/close`, data),
 
