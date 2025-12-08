@@ -54,43 +54,61 @@ class OperationsSeeder extends Seeder
         $checklists = [
             [
                 'title' => 'Shift Handover Checklist',
-                'frequency' => 'daily',
+                'frequency' => 'shift_start',
                 'schema' => [
-                    'items' => [
-                        ['text' => 'Review active events and alarms', 'required' => true],
-                        ['text' => 'Check critical asset statuses', 'required' => true],
-                        ['text' => 'Review outstanding work orders', 'required' => true],
-                        ['text' => 'Brief incoming operator on key issues', 'required' => true],
-                        ['text' => 'Sign handover log', 'required' => true],
-                    ]
+                    ['question' => 'Review active events and alarms', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Check critical asset statuses', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Review outstanding work orders', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Brief incoming operator on key issues', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Sign handover log', 'type' => 'boolean', 'required' => true, 'options' => []],
                 ],
             ],
             [
                 'title' => 'Daily System Check',
                 'frequency' => 'daily',
                 'schema' => [
-                    'items' => [
-                        ['text' => 'Verify reservoir levels', 'required' => true],
-                        ['text' => 'Check pump station pressures', 'required' => true],
-                        ['text' => 'Review water quality readings', 'required' => true],
-                        ['text' => 'Inspect chlorine residuals', 'required' => true],
-                        ['text' => 'Check DMA flow rates', 'required' => true],
-                        ['text' => 'Review energy consumption', 'required' => false],
-                    ]
+                    ['question' => 'Verify reservoir levels are within normal range', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Check pump station pressures', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Review water quality readings', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Current chlorine residual (mg/L)', 'type' => 'number', 'required' => true, 'options' => []],
+                    ['question' => 'Check DMA flow rates', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Energy consumption notes', 'type' => 'text', 'required' => false, 'options' => []],
                 ],
             ],
             [
                 'title' => 'Emergency Response Checklist',
-                'frequency' => 'custom',
+                'frequency' => 'on_demand',
                 'schema' => [
-                    'items' => [
-                        ['text' => 'Assess situation severity', 'required' => true],
-                        ['text' => 'Notify shift supervisor', 'required' => true],
-                        ['text' => 'Activate emergency playbook', 'required' => true],
-                        ['text' => 'Isolate affected zone if needed', 'required' => true],
-                        ['text' => 'Document all actions taken', 'required' => true],
-                        ['text' => 'Coordinate with field teams', 'required' => true],
-                    ]
+                    ['question' => 'Situation severity assessment', 'type' => 'choice', 'required' => true, 'options' => ['Low', 'Medium', 'High', 'Critical']],
+                    ['question' => 'Shift supervisor notified', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Emergency playbook activated', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Affected zone isolated if needed', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Actions taken (document all)', 'type' => 'text', 'required' => true, 'options' => []],
+                    ['question' => 'Field teams coordination status', 'type' => 'choice', 'required' => true, 'options' => ['Not Required', 'Coordinating', 'Dispatched', 'On Site']],
+                ],
+            ],
+            [
+                'title' => 'Pump Station Inspection',
+                'frequency' => 'weekly',
+                'schema' => [
+                    ['question' => 'Check all pump operating indicators', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Inspect motor temperature readings', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Verify pressure gauge accuracy', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Check for oil/water leaks', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Overall pump condition rating (1-5)', 'type' => 'rating', 'required' => true, 'options' => []],
+                    ['question' => 'Additional notes or concerns', 'type' => 'text', 'required' => false, 'options' => []],
+                ],
+            ],
+            [
+                'title' => 'Water Treatment Plant Daily Log',
+                'frequency' => 'daily',
+                'schema' => [
+                    ['question' => 'Raw water turbidity (NTU)', 'type' => 'number', 'required' => true, 'options' => []],
+                    ['question' => 'Treated water turbidity (NTU)', 'type' => 'number', 'required' => true, 'options' => []],
+                    ['question' => 'pH level', 'type' => 'number', 'required' => true, 'options' => []],
+                    ['question' => 'Chlorine dosing rate (mg/L)', 'type' => 'number', 'required' => true, 'options' => []],
+                    ['question' => 'Chemical stock levels adequate', 'type' => 'boolean', 'required' => true, 'options' => []],
+                    ['question' => 'Production volume (m³)', 'type' => 'number', 'required' => true, 'options' => []],
                 ],
             ],
         ];

@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { AlertTriangle, Plus, CheckCircle2, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, CheckCircle2, Trash2, PlayCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ChecklistBuilderForm } from '../../components/core-ops/ChecklistBuilderForm';
 import { toast } from 'sonner';
@@ -33,7 +33,8 @@ export function ChecklistsPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('checklists');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingChecklist, setEditingChecklist] = useState<Checklist | null>(null);
+  const [startRunOpen, setStartRunOpen] = useState(false);
+  const [selectedChecklist, setSelectedChecklist] = useState<Checklist | null>(null);
 
   const { data: checklistsData, isLoading: checklistsLoading } = useQuery({
     queryKey: ['checklists'],
@@ -50,6 +51,23 @@ export function ChecklistsPage() {
     onSuccess: () => {
       toast.success('Checklist deleted');
       queryClient.invalidateQueries({ queryKey: ['checklists'] });
+    },
+    onError: () => {
+      toast.error('Failed to delete checklist');
+    },
+  });
+
+  const startRunMutation = useMutation({
+    mutationFn: (checklistId: string) => coreOpsService.checklists.startRun(checklistId, {}),
+    onSuccess: () => {
+      toast.success('Checklist run started');
+      setStartRunOpen(false);
+      setSelectedChecklist(null);
+      setActiveTab('runs');
+      queryClient.invalidateQueries({ queryKey: ['checklist-runs'] });
+    },
+    onError: () => {
+      toast.error('Failed to start checklist run');
     },
   });
 
@@ -142,7 +160,14 @@ export function ChecklistsPage() {
                             />
                           </DialogContent>
                         </Dialog>
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedChecklist(checklist);
+                            setStartRunOpen(true);
+                          }}
+                        >
+                          <PlayCircle className="h-4 w-4 mr-1" />
                           Start Run
                         </Button>
                         <Button
@@ -217,6 +242,35 @@ export function ChecklistsPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={startRunOpen} onOpenChange={setStartRunOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Start Checklist Run</DialogTitle>
+            <DialogDescription>
+              Begin a new run of "{selectedChecklist?.title}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              This checklist has {selectedChecklist?.schema?.length || 0} questions.
+              Once started, you'll need to complete all required questions.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStartRunOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => selectedChecklist && startRunMutation.mutate(selectedChecklist.id)}
+              disabled={startRunMutation.isPending}
+            >
+              {startRunMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Start Run
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
