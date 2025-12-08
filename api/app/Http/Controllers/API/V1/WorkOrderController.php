@@ -77,7 +77,15 @@ class WorkOrderController extends Controller
             }
         }
 
-        $validated['tenant_id'] = auth()->user()->currentTenantId();
+        // Find the organization for the user's current tenant
+        $tenantId = auth()->user()->currentTenantId();
+        $organization = \App\Models\Organization::where('tenant_id', $tenantId)->first();
+        
+        if (!$organization) {
+            return response()->json(['message' => 'No organization found for current tenant'], 422);
+        }
+        
+        $validated['tenant_id'] = $organization->id;
         $validated['created_by'] = auth()->id();
 
         if (isset($validated['geom']) && is_array($validated['geom'])) {
