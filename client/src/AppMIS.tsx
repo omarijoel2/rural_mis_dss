@@ -17,6 +17,10 @@ import { ZonesPage } from './pages/core-registry/ZonesPage';
 import { AddressesPage } from './pages/core-registry/AddressesPage';
 import { MapConsolePage } from './pages/gis/MapConsolePage';
 import { GISPage } from './pages/gis/index';
+import { GISLayout } from './components/layouts/GISLayout';
+import { GISMapPage } from './pages/gis/GISMapPage';
+import { GISFilesPage } from './pages/gis/GISFilesPage';
+import { GISSettingsPage } from './pages/gis/GISSettingsPage';
 import { SecurityLayout } from './components/layouts/SecurityLayout';
 import { AuditPage } from './pages/security/AuditPage';
 import { SecurityAlertsPage } from './pages/security/SecurityAlertsPage';
@@ -254,15 +258,14 @@ export function AppMIS() {
               
               <Route path="/gis" element={
                 <ProtectedRoute requiredPermission="view gis">
-                  <GISPage />
+                  <GISLayout />
                 </ProtectedRoute>
-              } />
-              
-              <Route path="/gis/map" element={
-                <ProtectedRoute requiredPermission="view schemes">
-                  <MapConsolePage />
-                </ProtectedRoute>
-              } />
+              }>
+                <Route index element={<GISMapPage />} />
+                <Route path="map" element={<GISMapPage />} />
+                <Route path="files" element={<GISFilesPage />} />
+                <Route path="settings" element={<GISSettingsPage />} />
+              </Route>
               
               <Route path="/cmms" element={
                 <ProtectedRoute>
