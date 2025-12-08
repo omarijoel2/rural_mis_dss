@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { coreOpsService } from '../../services/core-ops.service';
 import { dmaService } from '../../services/dma.service';
@@ -11,12 +11,24 @@ import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
-import { Droplets, TrendingDown, TrendingUp, Wrench, DollarSign, Plus, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Droplets, TrendingDown, TrendingUp, Wrench, DollarSign, Plus, Loader2, BarChart3 } from 'lucide-react';
+import { format, subMonths } from 'date-fns';
 import { toast } from 'sonner';
+import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
+
+interface DmaRanking {
+  dma_id: string;
+  dma_name: string;
+  current_nrw_pct: number;
+  previous_nrw_pct: number;
+  trend: 'up' | 'down' | 'stable';
+  sparkline_data: { month: string; nrw: number }[];
+  total_loss_m3: number;
+}
 
 export function NRWDashboard() {
-  const [activeTab, setActiveTab] = useState<'snapshots' | 'interventions'>('snapshots');
+  const [activeTab, setActiveTab] = useState<'ranking' | 'snapshots' | 'interventions'>('ranking');
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const [interventionDialogOpen, setInterventionDialogOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -44,8 +56,7 @@ export function NRWDashboard() {
 
   const { data: snapshots, isLoading: snapshotsLoading } = useQuery({
     queryKey: ['nrw-snapshots'],
-    queryFn: () => coreOpsService.nrw.getSnapshots({ per_page: 50 }),
-    enabled: activeTab === 'snapshots',
+    queryFn: () => coreOpsService.nrw.getSnapshots({ per_page: 100 }),
   });
 
   const { data: interventions, isLoading: interventionsLoading } = useQuery({
@@ -58,6 +69,91 @@ export function NRWDashboard() {
     queryKey: ['dmas'],
     queryFn: () => dmaService.getAll({ per_page: 100 }),
   });
+
+  const dmaRankings = useMemo<DmaRanking[]>(() => {
+    if (!snapshots?.data || !dmas?.data) return [];
+
+    const dmaMap = new Map<string, any[]>();
+    
+    snapshots.data.forEach((snapshot: any) => {
+      const dmaId = snapshot.dma_id;
+      if (!dmaMap.has(dmaId)) {
+        dmaMap.set(dmaId, []);
+      }
+      dmaMap.get(dmaId)?.push(snapshot);
+    });
+
+    const rankings: DmaRanking[] = [];
+    
+    dmaMap.forEach((dmaSnapshots, dmaId) => {
+      const sorted = dmaSnapshots.sort((a, b) => 
+        new Date(b.as_of).getTime() - new Date(a.as_of).getTime()
+      );
+
+      const current = sorted[0];
+      const previous = sorted[1];
+      
+      const currentNrw = current?.nrw_pct ?? 0;
+      const previousNrw = previous?.nrw_pct ?? currentNrw;
+      
+      let trend: 'up' | 'down' | 'stable' = 'stable';
+      if (currentNrw > previousNrw + 1) trend = 'up';
+      else if (currentNrw < previousNrw - 1) trend = 'down';
+
+      const last6Months = sorted.slice(0, 6).reverse();
+      const sparklineData = last6Months.map(s => ({
+        month: format(new Date(s.as_of), 'MMM'),
+        nrw: s.nrw_pct,
+      }));
+
+      if (sparklineData.length < 6) {
+        const emptyMonths = 6 - sparklineData.length;
+        for (let i = 0; i < emptyMonths; i++) {
+          const monthDate = subMonths(new Date(), 6 - i);
+          sparklineData.unshift({
+            month: format(monthDate, 'MMM'),
+            nrw: 0,
+          });
+        }
+      }
+
+      rankings.push({
+        dma_id: dmaId,
+        dma_name: current?.dma?.name || dmas?.data.find((d: any) => d.id === dmaId)?.name || 'Unknown DMA',
+        current_nrw_pct: currentNrw,
+        previous_nrw_pct: previousNrw,
+        trend,
+        sparkline_data: sparklineData,
+        total_loss_m3: current?.nrw_m3 ?? 0,
+      });
+    });
+
+    return rankings.sort((a, b) => b.current_nrw_pct - a.current_nrw_pct);
+  }, [snapshots?.data, dmas?.data]);
+
+  const kpis = useMemo(() => {
+    if (!snapshots?.data?.length) {
+      return { avgNrw: 0, totalLoss: 0, worstDma: '-', bestDma: '-' };
+    }
+
+    const latestByDma = new Map<string, any>();
+    snapshots.data.forEach((s: any) => {
+      const existing = latestByDma.get(s.dma_id);
+      if (!existing || new Date(s.as_of) > new Date(existing.as_of)) {
+        latestByDma.set(s.dma_id, s);
+      }
+    });
+
+    const latest = Array.from(latestByDma.values());
+    const avgNrw = latest.reduce((sum, s) => sum + (s.nrw_pct ?? 0), 0) / latest.length;
+    const totalLoss = latest.reduce((sum, s) => sum + (s.nrw_m3 ?? 0), 0);
+    
+    const sorted = latest.sort((a, b) => (b.nrw_pct ?? 0) - (a.nrw_pct ?? 0));
+    const worstDma = sorted[0]?.dma?.name || '-';
+    const bestDma = sorted[sorted.length - 1]?.dma?.name || '-';
+
+    return { avgNrw, totalLoss, worstDma, bestDma };
+  }, [snapshots?.data]);
 
   const createSnapshotMutation = useMutation({
     mutationFn: (data: any) => coreOpsService.nrw.createSnapshot(data),
@@ -153,6 +249,20 @@ export function NRWDashboard() {
     return 'text-red-600';
   };
 
+  const getNRWBgColor = (nrwPct: number) => {
+    if (nrwPct < 15) return 'bg-green-500';
+    if (nrwPct < 25) return 'bg-yellow-500';
+    if (nrwPct < 35) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
+  const getSparklineColor = (nrwPct: number) => {
+    if (nrwPct < 15) return '#22c55e';
+    if (nrwPct < 25) return '#eab308';
+    if (nrwPct < 35) return '#f97316';
+    return '#ef4444';
+  };
+
   const getInterventionIcon = (type: string) => {
     switch (type) {
       case 'leak_repair':
@@ -192,11 +302,170 @@ export function NRWDashboard() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className={`text-2xl font-bold ${getNRWColor(kpis.avgNrw)}`}>
+                  {kpis.avgNrw.toFixed(1)}%
+                </div>
+                <div className="text-sm text-muted-foreground">Avg NRW Rate</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Droplets className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-foreground">
+                  {kpis.totalLoss.toLocaleString()}
+                </div>
+                <div className="text-sm text-muted-foreground">Total Loss (m³)</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-red-500" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-foreground truncate max-w-[120px]" title={kpis.worstDma}>
+                  {kpis.worstDma}
+                </div>
+                <div className="text-sm text-muted-foreground">Highest NRW</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-card">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <TrendingDown className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <div className="text-lg font-bold text-foreground truncate max-w-[120px]" title={kpis.bestDma}>
+                  {kpis.bestDma}
+                </div>
+                <div className="text-sm text-muted-foreground">Lowest NRW</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="bg-muted">
+          <TabsTrigger value="ranking">DMA Ranking</TabsTrigger>
           <TabsTrigger value="snapshots">NRW Snapshots</TabsTrigger>
           <TabsTrigger value="interventions">Interventions</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="ranking" className="mt-6">
+          <Card className="bg-card">
+            <CardHeader>
+              <CardTitle className="text-foreground">DMA Performance Ranking</CardTitle>
+              <CardDescription>DMAs ranked by NRW percentage with 6-month trend sparklines</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {snapshotsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : dmaRankings.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>DMA Name</TableHead>
+                      <TableHead className="text-right">Current NRW</TableHead>
+                      <TableHead className="text-center">Trend</TableHead>
+                      <TableHead className="w-40">6-Month Trend</TableHead>
+                      <TableHead className="text-right">Total Loss (m³)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dmaRankings.map((dma, index) => (
+                      <TableRow key={dma.dma_id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell className="font-medium">{dma.dma_name}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge className={`${getNRWBgColor(dma.current_nrw_pct)} text-white`}>
+                            {dma.current_nrw_pct.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {dma.trend === 'up' && (
+                            <div className="flex items-center justify-center text-red-500">
+                              <TrendingUp className="h-4 w-4" />
+                              <span className="text-xs ml-1">+{(dma.current_nrw_pct - dma.previous_nrw_pct).toFixed(1)}</span>
+                            </div>
+                          )}
+                          {dma.trend === 'down' && (
+                            <div className="flex items-center justify-center text-green-500">
+                              <TrendingDown className="h-4 w-4" />
+                              <span className="text-xs ml-1">{(dma.current_nrw_pct - dma.previous_nrw_pct).toFixed(1)}</span>
+                            </div>
+                          )}
+                          {dma.trend === 'stable' && (
+                            <span className="text-muted-foreground text-xs">Stable</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-8 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={dma.sparkline_data}>
+                                <Tooltip
+                                  contentStyle={{ 
+                                    backgroundColor: 'hsl(var(--card))', 
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: '6px',
+                                    fontSize: '12px'
+                                  }}
+                                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'NRW']}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="nrw"
+                                  stroke={getSparklineColor(dma.current_nrw_pct)}
+                                  strokeWidth={2}
+                                  dot={false}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {dma.total_loss_m3.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg text-muted-foreground mb-4">No NRW data available</p>
+                  <Button onClick={() => setSnapshotDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Record First Snapshot
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="snapshots" className="mt-6">
           {snapshotsLoading ? (
@@ -206,7 +475,7 @@ export function NRWDashboard() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {snapshots?.data.map((snapshot) => (
+                {snapshots?.data.map((snapshot: any) => (
                   <Card key={snapshot.id} className="bg-card text-card-foreground hover:shadow-md transition-shadow">
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -218,8 +487,8 @@ export function NRWDashboard() {
                             {format(new Date(snapshot.as_of), 'PPP')}
                           </CardDescription>
                         </div>
-                        <div className={`text-2xl font-bold ${getNRWColor(snapshot.nrw_pct)}`}>
-                          {snapshot.nrw_pct.toFixed(1)}%
+                        <div className={`text-2xl font-bold ${getNRWColor(snapshot.nrw_pct ?? 0)}`}>
+                          {(snapshot.nrw_pct ?? 0).toFixed(1)}%
                         </div>
                       </div>
                     </CardHeader>
@@ -228,13 +497,13 @@ export function NRWDashboard() {
                         <div>
                           <div className="text-xs text-muted-foreground">System Input</div>
                           <div className="font-medium text-foreground">
-                            {snapshot.system_input_volume_m3.toLocaleString()} m³
+                            {(snapshot.system_input_volume_m3 ?? 0).toLocaleString()} m³
                           </div>
                         </div>
                         <div>
                           <div className="text-xs text-muted-foreground">NRW Volume</div>
                           <div className="font-medium text-foreground">
-                            {snapshot.nrw_m3.toLocaleString()} m³
+                            {(snapshot.nrw_m3 ?? 0).toLocaleString()} m³
                           </div>
                         </div>
                       </div>
@@ -243,7 +512,7 @@ export function NRWDashboard() {
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Billed Authorized:</span>
                           <span className="font-medium text-foreground">
-                            {snapshot.billed_authorized_m3.toLocaleString()} m³
+                            {(snapshot.billed_authorized_m3 ?? 0).toLocaleString()} m³
                           </span>
                         </div>
                         {snapshot.unbilled_authorized_m3 && snapshot.unbilled_authorized_m3 > 0 && (
@@ -276,7 +545,7 @@ export function NRWDashboard() {
                 ))}
               </div>
 
-              {snapshots?.data.length === 0 && (
+              {(!snapshots?.data || snapshots.data.length === 0) && (
                 <Card className="bg-card text-card-foreground">
                   <CardContent className="flex flex-col items-center justify-center p-12">
                     <Droplets className="h-12 w-12 text-muted-foreground mb-4" />
@@ -300,7 +569,7 @@ export function NRWDashboard() {
           ) : (
             <>
               <div className="space-y-4">
-                {interventions?.data.map((intervention) => (
+                {interventions?.data.map((intervention: any) => (
                   <Card key={intervention.id} className="bg-card text-card-foreground hover:shadow-md transition-shadow">
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -361,7 +630,7 @@ export function NRWDashboard() {
                 ))}
               </div>
 
-              {interventions?.data.length === 0 && (
+              {(!interventions?.data || interventions.data.length === 0) && (
                 <Card className="bg-card text-card-foreground">
                   <CardContent className="flex flex-col items-center justify-center p-12">
                     <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
@@ -398,7 +667,7 @@ export function NRWDashboard() {
                     <SelectValue placeholder="Select DMA" />
                   </SelectTrigger>
                   <SelectContent>
-                    {dmas?.data.map((dma) => (
+                    {dmas?.data.map((dma: any) => (
                       <SelectItem key={dma.id} value={dma.id}>
                         {dma.name}
                       </SelectItem>
@@ -566,7 +835,7 @@ export function NRWDashboard() {
                   <SelectValue placeholder="Select DMA (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {dmas?.data.map((dma) => (
+                  {dmas?.data.map((dma: any) => (
                     <SelectItem key={dma.id} value={dma.id}>
                       {dma.name}
                     </SelectItem>
