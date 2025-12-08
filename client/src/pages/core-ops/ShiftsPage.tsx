@@ -5,9 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Clock, MapPin, Users, AlertTriangle, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Clock, MapPin, Users, AlertTriangle, Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface Shift {
   id: string;
@@ -26,6 +29,10 @@ export function ShiftsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'planned' | 'active' | 'closed'>('all');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newShiftName, setNewShiftName] = useState('');
+  const [newShiftStart, setNewShiftStart] = useState('');
+  const [newShiftEnd, setNewShiftEnd] = useState('');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['shifts', statusFilter],
@@ -35,12 +42,44 @@ export function ShiftsPage() {
     }),
   });
 
+  const createShiftMutation = useMutation({
+    mutationFn: (data: any) => coreOpsService.shifts.create(data),
+    onSuccess: () => {
+      toast.success('Shift created successfully');
+      setIsCreateOpen(false);
+      setNewShiftName('');
+      setNewShiftStart('');
+      setNewShiftEnd('');
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    },
+    onError: () => {
+      toast.error('Failed to create shift');
+    },
+  });
+
   const closeShiftMutation = useMutation({
     mutationFn: (shiftId: string) => coreOpsService.shifts.close(shiftId, {}),
     onSuccess: () => {
+      toast.success('Shift closed');
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
     },
+    onError: () => {
+      toast.error('Failed to close shift');
+    },
   });
+
+  const handleCreateShift = () => {
+    if (!newShiftName || !newShiftStart) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+    createShiftMutation.mutate({
+      name: newShiftName,
+      starts_at: newShiftStart,
+      ends_at: newShiftEnd || undefined,
+      status: 'planned',
+    });
+  };
 
   const filteredShifts = data?.data?.filter((shift: Shift) =>
     shift.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,10 +106,56 @@ export function ShiftsPage() {
           <h1 className="text-3xl font-bold">Shifts Management</h1>
           <p className="text-muted-foreground mt-1">24/7 shift scheduling and logbook</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Shift
-        </Button>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Shift
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Shift</DialogTitle>
+              <DialogDescription>Schedule a new shift for operators</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="shift-name">Shift Name *</Label>
+                <Input
+                  id="shift-name"
+                  placeholder="e.g., Morning Shift - Dec 9"
+                  value={newShiftName}
+                  onChange={(e) => setNewShiftName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shift-start">Start Time *</Label>
+                <Input
+                  id="shift-start"
+                  type="datetime-local"
+                  value={newShiftStart}
+                  onChange={(e) => setNewShiftStart(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shift-end">End Time</Label>
+                <Input
+                  id="shift-end"
+                  type="datetime-local"
+                  value={newShiftEnd}
+                  onChange={(e) => setNewShiftEnd(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreateShift} disabled={createShiftMutation.isPending}>
+                {createShiftMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Create Shift
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
