@@ -22,7 +22,7 @@ class WorkOrderService
 {
     public function createWorkOrder(array $data): WorkOrder
     {
-        $data['status'] = $data['status'] ?? 'new';
+        $data['status'] = $data['status'] ?? 'open';
         $data['created_by'] = $data['created_by'] ?? auth()->id();
         
         if (!isset($data['wo_num'])) {
@@ -45,7 +45,7 @@ class WorkOrderService
             'priority' => 'medium',
             'scheduled_for' => $scheduledFor,
             'pm_policy_id' => $pmPolicyId,
-            'status' => 'new'
+            'status' => 'open'
         ]);
     }
 
@@ -169,7 +169,7 @@ class WorkOrderService
 
     public function getOverdueWorkOrders(): Collection
     {
-        return WorkOrder::whereIn('status', ['new', 'assigned', 'in_progress'])
+        return WorkOrder::whereIn('status', ['open', 'assigned', 'in_progress'])
             ->where('scheduled_for', '<', now())
             ->with(['asset', 'assignedTo'])
             ->orderBy('priority')
