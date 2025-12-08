@@ -339,17 +339,32 @@ app.get('/api/v1/tenants/current/wards/geojson', (req, res) => {
 });
 
 // ============ ADMIN USERS MODULE (Mock) ============
-let userCounter = 5;
+let userCounter = 10;
 const userStore = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin', tenant_id: '1' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user', tenant_id: '1' },
-  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', tenant_id: '1' },
-  { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'manager', tenant_id: '1' },
-  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'user', tenant_id: '1' },
+  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin', category: 'admin', tenant_id: '1' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user', category: 'operator', tenant_id: '1' },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', category: 'operator', tenant_id: '1' },
+  { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'manager', category: 'supervisor', tenant_id: '1' },
+  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'user', category: 'operator', tenant_id: '1' },
+  { id: 6, name: 'David Kimani', email: 'david.kimani@rwmis.go.ke', role: 'supervisor', category: 'supervisor', tenant_id: '1' },
+  { id: 7, name: 'Grace Wanjiku', email: 'grace.wanjiku@rwmis.go.ke', role: 'supervisor', category: 'supervisor', tenant_id: '1' },
+  { id: 8, name: 'Peter Ochieng', email: 'peter.ochieng@rwmis.go.ke', role: 'supervisor', category: 'supervisor', tenant_id: '1' },
+  { id: 9, name: 'Faith Muthoni', email: 'faith.muthoni@rwmis.go.ke', role: 'manager', category: 'supervisor', tenant_id: '1' },
+  { id: 10, name: 'James Wafula', email: 'james.wafula@rwmis.go.ke', role: 'supervisor', category: 'supervisor', tenant_id: '1' },
 ];
 
 app.get('/api/v1/admin/users', (req, res) => {
-  res.json({ data: userStore, meta: { total: userStore.length, per_page: 50, current_page: 1 } });
+  const { role, category } = req.query;
+  let filteredUsers = userStore;
+  
+  if (role) {
+    filteredUsers = filteredUsers.filter(u => u.role === role);
+  }
+  if (category) {
+    filteredUsers = filteredUsers.filter(u => u.category === category);
+  }
+  
+  res.json({ data: filteredUsers, meta: { total: filteredUsers.length, per_page: 50, current_page: 1 } });
 });
 
 app.post('/api/v1/admin/users/bulk-import', (req, res) => {

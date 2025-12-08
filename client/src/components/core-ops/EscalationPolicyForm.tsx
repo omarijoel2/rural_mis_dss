@@ -1,13 +1,22 @@
-import { useForm, useFieldArray } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { coreOpsService } from '../../services/core-ops.service';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
 import { Card, CardContent } from '../ui/card';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, X, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  category: string;
+}
 
 interface EscalationRule {
   severity: 'critical' | 'high' | 'medium' | 'low';
@@ -16,6 +25,7 @@ interface EscalationRule {
   recipients: Array<{
     type: 'user' | 'role' | 'email' | 'phone';
     target: string;
+    name?: string;
   }>;
   repeat_every_minutes?: number;
 }
@@ -23,6 +33,12 @@ interface EscalationRule {
 interface EscalationPolicyFormProps {
   initialPolicy?: any;
   onSuccess?: () => void;
+}
+
+async function fetchSupervisors(): Promise<User[]> {
+  const response = await fetch('/api/v1/admin/users?category=supervisor');
+  const data = await response.json();
+  return data.data || [];
 }
 
 export function EscalationPolicyForm({ initialPolicy, onSuccess }: EscalationPolicyFormProps) {
@@ -34,7 +50,7 @@ export function EscalationPolicyForm({ initialPolicy, onSuccess }: EscalationPol
           severity: 'critical',
           escalate_after_minutes: 15,
           notification_channels: ['email'],
-          recipients: [{ type: 'email', target: '' }],
+          recipients: [],
         },
       ],
     },
@@ -62,7 +78,6 @@ export function EscalationPolicyForm({ initialPolicy, onSuccess }: EscalationPol
   });
 
   const onSubmit = (data: any) => {
-    // Validate at least one rule
     if (!data.rules || data.rules.length === 0) {
       toast.error('Add at least one escalation rule');
       return;
@@ -73,7 +88,6 @@ export function EscalationPolicyForm({ initialPolicy, onSuccess }: EscalationPol
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Policy Name */}
       <div className="space-y-2">
         <Label htmlFor="name">Policy Name</Label>
         <Input
@@ -84,7 +98,6 @@ export function EscalationPolicyForm({ initialPolicy, onSuccess }: EscalationPol
         {errors.name && <p className="text-sm text-red-500">{(errors.name as any).message}</p>}
       </div>
 
-      {/* Rules */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-base font-semibold">Escalation Rules</Label>
@@ -97,7 +110,7 @@ export function EscalationPolicyForm({ initialPolicy, onSuccess }: EscalationPol
                 severity: 'high',
                 escalate_after_minutes: 30,
                 notification_channels: ['email'],
-                recipients: [{ type: 'email', target: '' }],
+                recipients: [],
               })
             }
           >
@@ -127,10 +140,39 @@ export function EscalationPolicyForm({ initialPolicy, onSuccess }: EscalationPol
 }
 
 function RuleEditor({ ruleIndex, onRemove, register, control }: any) {
-  const { fields: recipientFields, append: addRecipient, remove: removeRecipient } = useFieldArray({
+  const { fields: recipientFields, append: addRecipient, remove: removeRecipient, replace: replaceRecipients } = useFieldArray({
     control,
     name: `rules.${ruleIndex}.recipients`,
   });
+
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+
+  const { data: supervisors = [], isLoading: loadingSupervisors } = useQuery({
+    queryKey: ['supervisors'],
+    queryFn: fetchSupervisors,
+  });
+
+  const watchedRecipients = useWatch({
+    control,
+    name: `rules.${ruleIndex}.recipients` as any,
+  });
+  const currentRecipients: Array<{ type: string; target: string; name?: string }> = watchedRecipients || [];
+
+  const selectedUserIds = currentRecipients
+    .filter((r: any) => r.type === 'user')
+    .map((r: any) => parseInt(r.target));
+
+  const toggleSupervisor = (user: User) => {
+    const isSelected = selectedUserIds.includes(user.id);
+    if (isSelected) {
+      const newRecipients = currentRecipients.filter(
+        (r: any) => !(r.type === 'user' && parseInt(r.target) === user.id)
+      );
+      replaceRecipients(newRecipients);
+    } else {
+      addRecipient({ type: 'user', target: String(user.id), name: user.name });
+    }
+  };
 
   const severityOptions = ['critical', 'high', 'medium', 'low'];
   const channelOptions = ['email', 'sms', 'webhook', 'push'];
@@ -140,7 +182,6 @@ function RuleEditor({ ruleIndex, onRemove, register, control }: any) {
       <CardContent className="p-4 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 space-y-4">
-            {/* Severity */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label className="text-sm">Severity</Label>
@@ -176,7 +217,6 @@ function RuleEditor({ ruleIndex, onRemove, register, control }: any) {
               </div>
             </div>
 
-            {/* Channels */}
             <div className="space-y-2">
               <Label className="text-sm">Notification Channels</Label>
               <div className="flex flex-wrap gap-2">
@@ -194,49 +234,80 @@ function RuleEditor({ ruleIndex, onRemove, register, control }: any) {
               </div>
             </div>
 
-            {/* Recipients */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Recipients</Label>
+                <Label className="text-sm">Supervisors to Notify</Label>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => addRecipient({ type: 'email', target: '' })}
+                  onClick={() => setIsSelectOpen(!isSelectOpen)}
                 >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add
+                  {isSelectOpen ? 'Done' : 'Select Supervisors'}
                 </Button>
               </div>
 
-              <div className="space-y-2">
-                {recipientFields.map((recipientField, recipIdx) => (
-                  <div key={recipientField.id} className="flex gap-2">
-                    <select
-                      {...register(`rules.${ruleIndex}.recipients.${recipIdx}.type`)}
-                      className="w-24 rounded border border-input bg-background px-2 py-1 text-sm"
-                    >
-                      <option value="email">Email</option>
-                      <option value="phone">Phone</option>
-                      <option value="user">User</option>
-                      <option value="role">Role</option>
-                    </select>
-                    <Input
-                      placeholder="Email, phone, user ID, or role"
-                      {...register(`rules.${ruleIndex}.recipients.${recipIdx}.target`)}
-                      className="flex-1 text-sm"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeRecipient(recipIdx)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              {isSelectOpen && (
+                <div className="border rounded-lg p-3 bg-background max-h-48 overflow-y-auto">
+                  {loadingSupervisors ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading supervisors...
+                    </div>
+                  ) : supervisors.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No supervisors found</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {supervisors.map((user: User) => {
+                        const isSelected = selectedUserIds.includes(user.id);
+                        return (
+                          <div
+                            key={user.id}
+                            onClick={() => toggleSupervisor(user)}
+                            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+                              isSelected ? 'bg-primary/10 border border-primary' : 'hover:bg-muted'
+                            }`}
+                          >
+                            <div>
+                              <p className="text-sm font-medium">{user.name}</p>
+                              <p className="text-xs text-muted-foreground">{user.email}</p>
+                            </div>
+                            {isSelected && <Check className="h-4 w-4 text-primary" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedUserIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {currentRecipients
+                    .filter((r: any) => r.type === 'user')
+                    .map((r: any, idx: number) => (
+                      <Badge key={idx} variant="secondary" className="gap-1 pr-1">
+                        {r.name || `User #${r.target}`}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newRecipients = currentRecipients.filter(
+                              (rec) => !(rec.type === 'user' && rec.target === r.target)
+                            );
+                            replaceRecipients(newRecipients);
+                          }}
+                          className="ml-1 hover:bg-destructive/20 rounded p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                {selectedUserIds.length} supervisor{selectedUserIds.length !== 1 ? 's' : ''} selected
+              </p>
             </div>
           </div>
 
