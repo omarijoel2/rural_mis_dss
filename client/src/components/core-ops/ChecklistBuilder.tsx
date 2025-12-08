@@ -31,7 +31,7 @@ export function ChecklistBuilder({ onSchemaChange }: ChecklistBuilderProps) {
       question: '',
       type: 'boolean' as const,
       required: true,
-      options: [],
+      options: '',
     });
   };
 
@@ -88,7 +88,9 @@ function QuestionEditor({ fieldIndex, onRemove, onMove, register, fieldTypes, wa
   const [showOptions, setShowOptions] = useState(questionData?.type === 'choice');
 
   const optionValue = watch(`schema.${fieldIndex}.options`);
-  const optionsArray = optionValue?.split('\n').filter((o: string) => o.trim()) || [];
+  const optionsArray = Array.isArray(optionValue) 
+    ? optionValue.filter((o: string) => o?.trim()) 
+    : (typeof optionValue === 'string' ? optionValue.split('\n').filter((o: string) => o.trim()) : []);
 
   return (
     <Card className="border bg-muted/30">
