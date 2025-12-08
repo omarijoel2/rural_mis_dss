@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Droplets, Package, AlertTriangle, Plus, History, ArrowRight, FlaskConical } from 'lucide-react';
 import { format } from 'date-fns';
+import type { DoseChangeLog } from '../../types/core-ops';
 
 interface FlowBand {
   min_lps: number;
@@ -41,6 +42,11 @@ export function DosingControl() {
     enabled: activeTab === 'stocks',
   });
 
+  const { data: changeLogs, isLoading: changeLogsLoading } = useQuery({
+    queryKey: ['dose-change-logs'],
+    queryFn: () => coreOpsService.dosing.getChangeLogs({ per_page: 50 }),
+    enabled: activeTab === 'changelog',
+  });
 
   const isLowStock = (stock: any) => {
     return stock.reorder_level_kg && (stock.qty_on_hand_kg ?? 0) <= stock.reorder_level_kg;
@@ -81,11 +87,14 @@ export function DosingControl() {
     );
   };
 
-  const doseChangeLogs = [
-    { id: 1, plan: 'Chlorinator A', changed_by: 'John Operator', changed_at: new Date().toISOString(), field: 'target_mg_l', before: '0.8', after: '1.2', reason: 'Increased turbidity detected' },
-    { id: 2, plan: 'Chlorinator B', changed_by: 'Jane Engineer', changed_at: new Date(Date.now() - 86400000).toISOString(), field: 'flow_band', before: '10-20 L/s', after: '15-25 L/s', reason: 'Pump upgrade' },
-    { id: 3, plan: 'WTP Main Dosing', changed_by: 'Admin User', changed_at: new Date(Date.now() - 172800000).toISOString(), field: 'chemical', before: 'Chlorine Gas', after: 'Sodium Hypochlorite', reason: 'Safety compliance' },
-  ];
+  const formatChangeValue = (log: DoseChangeLog) => {
+    const beforeKeys = Object.keys(log.before || {});
+    const afterKeys = Object.keys(log.after || {});
+    const field = beforeKeys[0] || afterKeys[0] || 'unknown';
+    const beforeVal = log.before?.[field] ?? '-';
+    const afterVal = log.after?.[field] ?? '-';
+    return { field, beforeVal, afterVal };
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6 bg-background">
@@ -210,7 +219,7 @@ export function DosingControl() {
                 <History className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">{doseChangeLogs.length}</div>
+                <div className="text-2xl font-bold text-foreground">{changeLogs?.data?.length ?? 0}</div>
                 <div className="text-sm text-muted-foreground">Recent Changes</div>
               </div>
             </div>
@@ -261,16 +270,16 @@ export function DosingControl() {
                         <div className="mt-3 pt-3 border-t">
                           <div className="text-xs font-medium text-foreground mb-2">Residual Thresholds</div>
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            {plan.thresholds.min_residual && (
+                            {plan.thresholds.low_alarm && (
                               <div className="bg-yellow-500/10 rounded px-2 py-1">
-                                <span className="text-muted-foreground">Min: </span>
-                                <span className="font-medium text-yellow-600">{plan.thresholds.min_residual} mg/L</span>
+                                <span className="text-muted-foreground">Low: </span>
+                                <span className="font-medium text-yellow-600">{plan.thresholds.low_alarm} mg/L</span>
                               </div>
                             )}
-                            {plan.thresholds.max_residual && (
+                            {plan.thresholds.high_alarm && (
                               <div className="bg-red-500/10 rounded px-2 py-1">
-                                <span className="text-muted-foreground">Max: </span>
-                                <span className="font-medium text-red-600">{plan.thresholds.max_residual} mg/L</span>
+                                <span className="text-muted-foreground">High: </span>
+                                <span className="font-medium text-red-600">{plan.thresholds.high_alarm} mg/L</span>
                               </div>
                             )}
                           </div>
@@ -281,7 +290,7 @@ export function DosingControl() {
                 ))}
               </div>
 
-              {plans?.data.length === 0 && (
+              {(!plans?.data || plans.data.length === 0) && (
                 <Card className="bg-card text-card-foreground">
                   <CardContent className="flex flex-col items-center justify-center p-12">
                     <Droplets className="h-12 w-12 text-muted-foreground mb-4" />
@@ -385,7 +394,7 @@ export function DosingControl() {
                 ))}
               </div>
 
-              {stocks?.data.length === 0 && (
+              {(!stocks?.data || stocks.data.length === 0) && (
                 <Card className="bg-card text-card-foreground">
                   <CardContent className="flex flex-col items-center justify-center p-12">
                     <Package className="h-12 w-12 text-muted-foreground mb-4" />
@@ -399,52 +408,72 @@ export function DosingControl() {
         </TabsContent>
 
         <TabsContent value="changelog" className="mt-6">
-          <Card className="bg-card">
-            <CardHeader>
-              <CardTitle className="text-foreground">Dose Change Log</CardTitle>
-              <CardDescription>History of dosing parameter changes with before/after values</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date/Time</TableHead>
-                    <TableHead>Plan</TableHead>
-                    <TableHead>Field Changed</TableHead>
-                    <TableHead>Before → After</TableHead>
-                    <TableHead>Changed By</TableHead>
-                    <TableHead>Reason</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {doseChangeLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-sm">
-                        {format(new Date(log.changed_at), 'PP p')}
-                      </TableCell>
-                      <TableCell className="font-medium">{log.plan}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {log.field.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="text-red-600 line-through">{log.before}</span>
-                          <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-green-600 font-medium">{log.after}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{log.changed_by}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                        {log.reason}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          {changeLogsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-lg text-muted-foreground">Loading change logs...</p>
+            </div>
+          ) : (
+            <Card className="bg-card">
+              <CardHeader>
+                <CardTitle className="text-foreground">Dose Change Log</CardTitle>
+                <CardDescription>History of dosing parameter changes with before/after values</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {changeLogs?.data && changeLogs.data.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date/Time</TableHead>
+                        <TableHead>Plan / Asset</TableHead>
+                        <TableHead>Field Changed</TableHead>
+                        <TableHead>Before → After</TableHead>
+                        <TableHead>Changed By</TableHead>
+                        <TableHead>Reason</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {changeLogs.data.map((log: DoseChangeLog) => {
+                        const { field, beforeVal, afterVal } = formatChangeValue(log);
+                        return (
+                          <TableRow key={log.id}>
+                            <TableCell className="text-sm">
+                              {format(new Date(log.created_at), 'PP p')}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {log.dose_plan?.asset?.name || log.dose_plan?.asset?.code || 'Unknown'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize">
+                                {field.replace(/_/g, ' ')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className="text-red-600 line-through">{String(beforeVal)}</span>
+                                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-green-600 font-medium">{String(afterVal)}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {log.user?.name || log.user?.email || 'System'}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                              {log.reason || '-'}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <History className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-lg text-muted-foreground">No change logs recorded yet</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

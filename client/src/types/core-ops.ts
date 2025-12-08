@@ -160,6 +160,19 @@ export interface ChemicalStock {
   facility?: any;
 }
 
+export interface DoseChangeLog {
+  id: string;
+  dose_plan_id: string;
+  user_id?: string;
+  before: Record<string, any>;
+  after: Record<string, any>;
+  reason?: string;
+  created_at: string;
+  updated_at: string;
+  dose_plan?: DosePlan;
+  user?: any;
+}
+
 export interface PumpSchedule {
   id: string;
   tenant_id: string;

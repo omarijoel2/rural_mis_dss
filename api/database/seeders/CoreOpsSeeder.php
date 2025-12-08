@@ -41,6 +41,7 @@ class CoreOpsSeeder extends Seeder
         $this->seedNrwSnapshots($schemes);
         $this->seedOutages($schemes);
         $this->seedDosingPlans($schemes);
+        $this->seedDoseChangeLogs();
         $this->seedPumpSchedules();
 
         $this->command->info('Core Operations seeder completed!');
@@ -408,6 +409,59 @@ class CoreOpsSeeder extends Seeder
         }
 
         $this->command->info("Created $stocksCreated chemical stocks.");
+    }
+
+    protected function seedDoseChangeLogs(): void
+    {
+        $dosePlans = DB::table('dose_plans')->take(5)->get();
+        $users = DB::table('users')->take(3)->get();
+        $logsCreated = 0;
+
+        if ($dosePlans->isEmpty() || $users->isEmpty()) {
+            $this->command->warn("No dose plans or users found. Skipping dose change logs.");
+            return;
+        }
+
+        $changeTypes = [
+            ['field' => 'target_mg_l', 'before' => '0.5', 'after' => '0.8', 'reason' => 'Increased turbidity detected in source water'],
+            ['field' => 'target_mg_l', 'before' => '1.0', 'after' => '1.2', 'reason' => 'Seasonal adjustment for summer demand'],
+            ['field' => 'flow_band', 'before' => '10-50 L/s', 'after' => '15-60 L/s', 'reason' => 'Pump capacity upgrade completed'],
+            ['field' => 'chemical', 'before' => 'Chlorine Gas', 'after' => 'Sodium Hypochlorite', 'reason' => 'Safety compliance requirement'],
+            ['field' => 'min_residual', 'before' => '0.2', 'after' => '0.3', 'reason' => 'WHO guideline update'],
+            ['field' => 'max_residual', 'before' => '1.5', 'after' => '1.2', 'reason' => 'Customer complaints about taste'],
+            ['field' => 'active', 'before' => 'true', 'after' => 'false', 'reason' => 'Asset under maintenance'],
+            ['field' => 'active', 'before' => 'false', 'after' => 'true', 'reason' => 'Maintenance completed, resuming operation'],
+        ];
+
+        foreach ($dosePlans as $index => $plan) {
+            $numChanges = rand(1, 3);
+            
+            for ($i = 0; $i < $numChanges; $i++) {
+                $change = $changeTypes[array_rand($changeTypes)];
+                $user = $users->random();
+
+                $exists = DB::table('dose_change_logs')
+                    ->where('dose_plan_id', $plan->id)
+                    ->where('reason', $change['reason'])
+                    ->exists();
+
+                if (!$exists) {
+                    DB::table('dose_change_logs')->insert([
+                        'id' => Str::uuid(),
+                        'dose_plan_id' => $plan->id,
+                        'user_id' => $user->id,
+                        'before' => json_encode([$change['field'] => $change['before']]),
+                        'after' => json_encode([$change['field'] => $change['after']]),
+                        'reason' => $change['reason'],
+                        'created_at' => now()->subDays(rand(1, 30))->subHours(rand(0, 23)),
+                        'updated_at' => now(),
+                    ]);
+                    $logsCreated++;
+                }
+            }
+        }
+
+        $this->command->info("Created $logsCreated dose change logs.");
     }
 
     protected function seedPumpSchedules(): void

@@ -967,6 +967,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/dosing/plans', [\App\Http\Controllers\Api\DosingController::class, 'storePlan'])->middleware('permission:manage dosing');
         Route::get('/dosing/stocks', [\App\Http\Controllers\Api\DosingController::class, 'stocks'])->middleware('permission:view dosing');
         Route::post('/dosing/stocks', [\App\Http\Controllers\Api\DosingController::class, 'storeStock'])->middleware('permission:manage dosing');
+        Route::get('/dosing/change-logs', [\App\Http\Controllers\Api\DosingController::class, 'changeLogs'])->middleware('permission:view dosing');
 
         // Pump Scheduling
         Route::get('/schedule', [\App\Http\Controllers\Api\ScheduleController::class, 'index'])->middleware('permission:view pump schedules');

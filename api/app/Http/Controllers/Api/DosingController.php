@@ -85,4 +85,17 @@ class DosingController extends Controller
         $stock = ChemicalStock::create($validated);
         return response()->json($stock, 201);
     }
+
+    public function changeLogs(Request $request)
+    {
+        $query = DoseChangeLog::query()
+            ->with(['dosePlan.scheme', 'dosePlan.asset', 'user']);
+
+        if ($request->has('dose_plan_id')) {
+            $query->where('dose_plan_id', $request->dose_plan_id);
+        }
+
+        $logs = $query->latest()->paginate($request->get('per_page', 30));
+        return response()->json($logs);
+    }
 }
