@@ -134,12 +134,14 @@ export function DosingControl() {
                             </CardDescription>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-xs text-muted-foreground">As of</div>
-                          <div className="text-sm font-medium text-foreground">
-                            {format(new Date(stock.as_of), 'PP')}
+                        {stock.as_of && (
+                          <div className="text-right">
+                            <div className="text-xs text-muted-foreground">As of</div>
+                            <div className="text-sm font-medium text-foreground">
+                              {format(new Date(stock.as_of), 'PP')}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent>
