@@ -489,7 +489,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/instances/{id}/trigger', [\App\Http\Controllers\Api\V1\Workflows\WorkflowInstanceController::class, 'trigger'])->middleware('permission:edit workflow instances');
     });
 
-    Route::prefix('water-quality')->group(function () {
+    Route::prefix('water-quality')->middleware(['auth:sanctum'])->group(function () {
         Route::prefix('parameters')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\WqParameterController::class, 'index'])->middleware('permission:view water quality parameters');
             Route::post('/', [\App\Http\Controllers\Api\WqParameterController::class, 'store'])->middleware('permission:create water quality parameters');
