@@ -13,18 +13,28 @@ interface ChecklistBuilderFormProps {
 }
 
 export function ChecklistBuilderForm({ initialChecklist, onSuccess }: ChecklistBuilderFormProps) {
+  // Convert options arrays to newline-separated strings for textarea display
+  const convertSchemaForEdit = (schema: any[]) => {
+    return schema.map((q: any) => ({
+      ...q,
+      options: Array.isArray(q.options) ? q.options.join('\n') : (q.options || ''),
+    }));
+  };
+
   const methods = useForm({
     defaultValues: {
       title: initialChecklist?.title || '',
       frequency: initialChecklist?.frequency || '',
-      schema: initialChecklist?.schema || [
-        {
-          question: 'Is the facility operational?',
-          type: 'boolean',
-          required: true,
-          options: [],
-        },
-      ],
+      schema: initialChecklist?.schema 
+        ? convertSchemaForEdit(initialChecklist.schema)
+        : [
+          {
+            question: 'Is the facility operational?',
+            type: 'boolean',
+            required: true,
+            options: '',
+          },
+        ],
     },
   });
 
@@ -58,10 +68,15 @@ export function ChecklistBuilderForm({ initialChecklist, onSuccess }: ChecklistB
     }
 
     // Convert options string to array for choice type
-    const processedSchema = data.schema.map((q: any) => ({
-      ...q,
-      options: q.type === 'choice' && q.options ? q.options.split('\n').filter((o: string) => o.trim()) : [],
-    }));
+    const processedSchema = data.schema.map((q: any) => {
+      let options: string[] = [];
+      if (q.type === 'choice' && q.options) {
+        options = Array.isArray(q.options) 
+          ? q.options.filter((o: string) => o?.trim())
+          : q.options.split('\n').filter((o: string) => o.trim());
+      }
+      return { ...q, options };
+    });
 
     mutation.mutate({
       ...data,
