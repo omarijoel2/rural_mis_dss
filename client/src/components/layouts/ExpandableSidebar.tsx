@@ -138,9 +138,9 @@ const moduleNavigation = [
     color: 'text-red-500',
     category: 'Infrastructure & Assets',
     subPages: [
-      { name: 'Map Console', href: '/gis', icon: Map },
-      { name: 'Files & Layers', href: '/gis', icon: Upload },
-      { name: 'Settings', href: '/gis', icon: Settings },
+      { name: 'Map Console', href: '/gis/map', icon: Map },
+      { name: 'Files & Layers', href: '/gis/files', icon: Upload },
+      { name: 'Settings', href: '/gis/settings', icon: Settings },
     ]
   },
 
