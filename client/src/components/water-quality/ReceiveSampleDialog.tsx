@@ -35,7 +35,7 @@ export function ReceiveSampleDialog({ open, onOpenChange, sample }: ReceiveSampl
 
   const receiveMutation = useMutation({
     mutationFn: (data: ReceiveSampleFormData) => 
-      apiClient.post(`/v1/water-quality/samples/${sample.id}/receive-lab`, data),
+      apiClient.post(`/water-quality/samples/${sample.id}/receive-lab`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-samples'] });
       toast.success('Sample received in lab successfully');

@@ -36,7 +36,7 @@ export function CollectSampleDialog({ open, onOpenChange, sample }: CollectSampl
 
   const collectMutation = useMutation({
     mutationFn: (data: CollectSampleFormData) => 
-      apiClient.post(`/v1/water-quality/samples/${sample.id}/collect`, data),
+      apiClient.post(`/water-quality/samples/${sample.id}/collect`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-samples'] });
       toast.success('Sample collected successfully');
