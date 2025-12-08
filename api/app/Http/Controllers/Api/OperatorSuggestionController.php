@@ -119,12 +119,10 @@ class OperatorSuggestionController extends Controller
                     });
             })
             ->where(function($query) {
-                $query->whereHas('roles', function($q) {
-                    $q->whereIn('name', ['Operator', 'Technician', 'Field Staff', 'Maintenance Staff', 'County Admin']);
-                })
-                ->orWhereHas('permissions', function($q) {
-                    $q->where('name', 'receive work orders');
-                });
+                $query->where('email', 'like', 'operator%')
+                    ->orWhere('email', 'like', 'technician%')
+                    ->orWhere('email', 'like', 'supervisor%')
+                    ->orWhere('email', 'like', 'admin%');
             })
             ->select('id', 'name', 'email')
             ->orderBy('name')
