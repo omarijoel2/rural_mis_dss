@@ -17,12 +17,12 @@ export function ParametersPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-parameters', page],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/water-quality/parameters', { page, per_page: 20 });
+      return apiClient.get<any>('/water-quality/parameters', { page, per_page: 20 });
     }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiClient.delete(`/v1/water-quality/parameters/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`/water-quality/parameters/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-parameters'] });
       toast.success('Parameter deleted successfully');

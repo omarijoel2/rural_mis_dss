@@ -32,8 +32,8 @@ export function CsvImportDialog({ open, onOpenChange }: CsvImportDialogProps) {
       const formData = new FormData();
       formData.append('file', file);
       
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-      const response = await fetch(`${API_BASE_URL}/v1/water-quality/results/import-csv`, {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+      const response = await fetch(`${API_BASE_URL}/water-quality/results/import-csv`, {
         method: 'POST',
         body: formData,
         credentials: 'include',

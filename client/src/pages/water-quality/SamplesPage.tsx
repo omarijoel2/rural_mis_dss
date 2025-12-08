@@ -20,7 +20,7 @@ export function SamplesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-samples', page],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/water-quality/samples', { page, per_page: 20 });
+      return apiClient.get<any>('/water-quality/samples', { page, per_page: 20 });
     }
   });
 

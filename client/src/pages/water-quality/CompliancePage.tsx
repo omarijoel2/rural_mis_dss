@@ -10,14 +10,14 @@ export function CompliancePage() {
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ['water-quality-compliance-summary'],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/water-quality/compliance/summary');
+      return apiClient.get<any>('/water-quality/compliance/summary');
     }
   });
 
   const { data: compliance, isLoading: complianceLoading } = useQuery({
     queryKey: ['water-quality-compliance'],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/water-quality/compliance', { per_page: 50 });
+      return apiClient.get<any>('/water-quality/compliance', { per_page: 50 });
     }
   });
 

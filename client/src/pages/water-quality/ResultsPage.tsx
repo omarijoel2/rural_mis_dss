@@ -15,7 +15,7 @@ export function ResultsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-results', page],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/water-quality/results', { page, per_page: 20 });
+      return apiClient.get<any>('/water-quality/results', { page, per_page: 20 });
     }
   });
 

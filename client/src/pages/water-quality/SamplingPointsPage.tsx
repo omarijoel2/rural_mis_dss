@@ -19,7 +19,7 @@ export function SamplingPointsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-sampling-points', page],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/water-quality/sampling-points', { page, per_page: 20 });
+      return apiClient.get<any>('/water-quality/sampling-points', { page, per_page: 20 });
     }
   });
 
@@ -33,7 +33,7 @@ export function SamplingPointsPage() {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiClient.delete(`/v1/water-quality/sampling-points/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`/water-quality/sampling-points/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-sampling-points'] });
       toast.success('Sampling point deleted successfully');

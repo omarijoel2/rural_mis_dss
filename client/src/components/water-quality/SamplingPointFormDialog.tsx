@@ -59,12 +59,12 @@ export function SamplingPointFormDialog({ open, onOpenChange, point }: SamplingP
   const { data: schemes } = useQuery({
     queryKey: ['schemes-for-sampling-point'],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/schemes', { per_page: 200 });
+      return apiClient.get<any>('/schemes', { per_page: 200 });
     }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/v1/water-quality/sampling-points', data),
+    mutationFn: (data: any) => apiClient.post('/water-quality/sampling-points', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-sampling-points'] });
       toast.success('Sampling point created successfully');
@@ -77,7 +77,7 @@ export function SamplingPointFormDialog({ open, onOpenChange, point }: SamplingP
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => apiClient.patch(`/v1/water-quality/sampling-points/${point.id}`, data),
+    mutationFn: (data: any) => apiClient.patch(`/water-quality/sampling-points/${point.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-sampling-points'] });
       toast.success('Sampling point updated successfully');

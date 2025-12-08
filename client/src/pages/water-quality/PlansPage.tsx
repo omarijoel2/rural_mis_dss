@@ -18,12 +18,12 @@ export function PlansPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['water-quality-plans', page],
     queryFn: async () => {
-      return apiClient.get<any>('/v1/water-quality/plans', { page, per_page: 20 });
+      return apiClient.get<any>('/water-quality/plans', { page, per_page: 20 });
     }
   });
 
   const activateMutation = useMutation({
-    mutationFn: (planId: number) => apiClient.post(`/v1/water-quality/plans/${planId}/activate`, {}),
+    mutationFn: (planId: number) => apiClient.post(`/water-quality/plans/${planId}/activate`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-plans'] });
       toast.success('Plan activated successfully');
@@ -34,7 +34,7 @@ export function PlansPage() {
   });
 
   const generateSamplesMutation = useMutation({
-    mutationFn: (planId: number) => apiClient.post(`/v1/water-quality/plans/${planId}/generate-samples`, {}),
+    mutationFn: (planId: number) => apiClient.post(`/water-quality/plans/${planId}/generate-samples`, {}),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-samples'] });
       toast.success(`Generated ${data.generated || 0} samples successfully`);

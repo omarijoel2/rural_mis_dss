@@ -51,7 +51,7 @@ export function ParameterFormDialog({ open, onOpenChange, parameter }: Parameter
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: ParameterFormData) => apiClient.post('/v1/water-quality/parameters', data),
+    mutationFn: (data: ParameterFormData) => apiClient.post('/water-quality/parameters', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-parameters'] });
       toast.success('Parameter created successfully');
@@ -64,7 +64,7 @@ export function ParameterFormDialog({ open, onOpenChange, parameter }: Parameter
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: ParameterFormData) => apiClient.patch(`/v1/water-quality/parameters/${parameter.id}`, data),
+    mutationFn: (data: ParameterFormData) => apiClient.patch(`/water-quality/parameters/${parameter.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-parameters'] });
       toast.success('Parameter updated successfully');

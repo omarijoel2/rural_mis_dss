@@ -50,7 +50,7 @@ export function PlanFormDialog({ open, onOpenChange, plan }: PlanFormDialogProps
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: PlanFormData) => apiClient.post('/v1/water-quality/plans', data),
+    mutationFn: (data: PlanFormData) => apiClient.post('/water-quality/plans', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-plans'] });
       toast.success('Sampling plan created successfully');
@@ -63,7 +63,7 @@ export function PlanFormDialog({ open, onOpenChange, plan }: PlanFormDialogProps
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: PlanFormData) => apiClient.patch(`/v1/water-quality/plans/${plan.id}`, data),
+    mutationFn: (data: PlanFormData) => apiClient.patch(`/water-quality/plans/${plan.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['water-quality-plans'] });
       toast.success('Sampling plan updated successfully');
