@@ -65,12 +65,19 @@ class WorkOrderController extends Controller
             'description' => 'nullable|string',
             'priority' => 'required|in:low,medium,high,critical',
             'scheduled_for' => 'nullable|date',
-            'assigned_to' => 'nullable|uuid|exists:users,id',
+            'assigned_to' => 'nullable|string',
             'pm_policy_id' => 'nullable|integer|exists:pm_policies,id',
             'geom' => 'nullable|array'
         ]);
+        
+        // Clean up assigned_to if it's not a valid UUID
+        if (isset($validated['assigned_to'])) {
+            if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $validated['assigned_to'])) {
+                $validated['assigned_to'] = null;
+            }
+        }
 
-        $validated['tenant_id'] = auth()->user()->tenant_id;
+        $validated['tenant_id'] = auth()->user()->currentTenantId();
         $validated['created_by'] = auth()->id();
 
         if (isset($validated['geom']) && is_array($validated['geom'])) {
