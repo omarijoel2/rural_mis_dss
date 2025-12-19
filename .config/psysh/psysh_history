@@ -1,0 +1,11 @@
+// Check current schema
+$columns = DB::getSchemaBuilder()->getColumnListing('personal_access_tokens');
+echo "Current columns: " . json_encode($columns) . "\n";
+// Check column type for tokenable_id
+$table = DB::getSchemaBuilder()->getColumns('personal_access_tokens');
+foreach ($table as $col) {
+  if ($col['name'] === 'tokenable_id') {
+    echo "Current tokenable_id type: " . $col['type_name'] . " (" . $col['type'] . ")\n";
+  }
+}
+exit;
