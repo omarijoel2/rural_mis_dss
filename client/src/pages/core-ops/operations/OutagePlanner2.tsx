@@ -6,7 +6,7 @@ export function OutagePlanner2() {
   const { data: outages, isLoading } = useQuery({
     queryKey: ['outages'],
     queryFn: async () => {
-      const res = await fetch('/api/core/outages');
+      const res = await fetch('/api/core-ops/outages');
       return res.json();
     },
   });

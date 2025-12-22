@@ -267,7 +267,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // If a consumer uses the hook outside of the provider (e.g. during tests or
+    // accidental imports), return a lightweight safe fallback instead of
+    // throwing to avoid the Vite overlay crashing the app during HMR.
+    // This lets components handle "not authenticated" state gracefully.
+    console.warn('useAuth called outside AuthProvider — returning fallback auth context');
+    const fallback: AuthContextType = {
+      user: null,
+      tenant: null,
+      setUser: () => {},
+      isAuthenticated: false,
+      isLoading: false,
+      login: async () => { throw new Error('No AuthProvider available'); },
+      selectTenant: async () => { throw new Error('No AuthProvider available'); },
+      logout: async () => { throw new Error('No AuthProvider available'); },
+      refreshUser: async () => {},
+      hasPermission: () => false,
+      hasRole: () => false,
+      pendingTenantSelection: false,
+      accessibleTenants: [],
+      isSuperAdmin: false,
+    };
+    return fallback;
   }
   return context;
 }

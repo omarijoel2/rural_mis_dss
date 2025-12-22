@@ -351,6 +351,18 @@ const moduleNavigation = [
 
   // INTEGRATION & ENABLEMENT
   {
+    name: 'Mobile Integration',
+    href: '/integration/mobile',
+    icon: Phone,
+    color: 'text-cyan-500',
+    category: 'Integration & Enablement',
+    subPages: [
+      { name: 'Sync Monitor', href: '/integration/mobile/sync', icon: Globe },
+      { name: 'Device Registry', href: '/integration/devices', icon: Users },
+      { name: 'Conflicts', href: '/integration/conflicts', icon: Bell },
+    ]
+  },
+  {
     name: 'Integration',
     href: '/integration',
     icon: Settings,
@@ -363,6 +375,7 @@ const moduleNavigation = [
       { name: 'ETL Jobs', href: '/integration/etl', icon: Settings },
       { name: 'Data Warehouse', href: '/integration/dw', icon: Database },
       { name: 'Communication Templates', href: '/integration/comms', icon: Settings },
+      { name: 'Sync Conflicts', href: '/integration/conflicts', icon: Bell },
     ]
   },
   {

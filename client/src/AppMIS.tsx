@@ -104,6 +104,9 @@ import { WebhookManager } from './pages/integration/WebhookManager';
 import { ETLJobs } from './pages/integration/ETLJobs';
 import { DataWarehouse } from './pages/integration/DataWarehouse';
 import { CommunicationTemplates } from './pages/integration/CommunicationTemplates';
+import { ConflictsPage } from './pages/integration/ConflictsPage';
+import { ConflictDetailPage } from './pages/integration/ConflictDetailPage';
+import SyncMonitor from './pages/integration/SyncMonitor';
 import { KPIDashboard } from './pages/me/KPIDashboard';
 import { CoverageAnalytics } from './pages/me/CoverageAnalytics';
 import { NRWTracker } from './pages/me/NRWTracker';
@@ -1024,6 +1027,22 @@ export function AppMIS() {
                 <Route path="notifications" element={
                   <ProtectedRoute requiredPermission="integration.notifications.view">
                     <NotificationsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="conflicts" element={
+                  <ProtectedRoute requiredPermission="integration.conflicts.view">
+                    <ConflictsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="conflicts/:id" element={
+                  <ProtectedRoute requiredPermission="integration.conflicts.view">
+                    <ConflictDetailPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="mobile" element={<Navigate to="/integration/mobile/sync" replace />} />
+                <Route path="mobile/sync" element={
+                  <ProtectedRoute requiredPermission="integration.mobile.view">
+                    <SyncMonitor />
                   </ProtectedRoute>
                 } />
                 <Route path="devices" element={

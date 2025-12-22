@@ -4,61 +4,66 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
 import { Smartphone, Wifi, WifiOff, MapPin, Plus, Trash2, Settings } from 'lucide-react';
-import { listDevices } from '@/services/integrationApi';
+import { listDevices, registerDevice } from '@/services/integrationApi';
+
+// Simple modal/dialog for device registration
+function RegisterDeviceDialog({ open, onClose, onRegister }: { open: boolean, onClose: () => void, onRegister: (device: any) => void }) {
+  const [form, setForm] = useState({ name: '', os: '', location: '', appVersion: '' });
+  const [loading, setLoading] = useState(false);
+  const handleChange = (e: any) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    await onRegister(form);
+    setLoading(false);
+    onClose();
+  };
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <form className="bg-white rounded-lg shadow-lg p-6 w-80 space-y-4" onSubmit={handleSubmit}>
+        <h3 className="text-lg font-semibold">Register Device</h3>
+        <input name="name" placeholder="Device Name" className="w-full border p-2 rounded" value={form.name} onChange={handleChange} required />
+        <input name="os" placeholder="OS" className="w-full border p-2 rounded" value={form.os} onChange={handleChange} required />
+        <input name="location" placeholder="Location" className="w-full border p-2 rounded" value={form.location} onChange={handleChange} required />
+        <input name="appVersion" placeholder="App Version" className="w-full border p-2 rounded" value={form.appVersion} onChange={handleChange} required />
+        <div className="flex gap-2 justify-end">
+          <button type="button" className="px-3 py-1 rounded bg-gray-200" onClick={onClose}>Cancel</button>
+          <button type="submit" className="px-3 py-1 rounded bg-blue-600 text-white" disabled={loading}>{loading ? 'Registering...' : 'Register'}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 export function DeviceRegistryPage() {
-  const [devices, setDevices] = useState([
-    { 
-      id: 1, 
-      name: 'Field Device-001', 
-      type: 'mobile', 
-      os: 'Android 12', 
-      status: 'active', 
-      lastSync: '2025-11-24T10:30:00Z',
-      location: 'Turkana County',
-      appVersion: '1.2.3'
-    },
-    { 
-      id: 2, 
-      name: 'IoT Sensor-042', 
-      type: 'iot', 
-      os: 'Linux ARM', 
-      status: 'active', 
-      lastSync: '2025-11-24T15:20:00Z',
-      location: 'Borehole-05',
-      appVersion: '2.1.0'
-    },
-    { 
-      id: 3, 
-      name: 'Tablet-Ops', 
-      type: 'tablet', 
-      os: 'iPadOS 17', 
-      status: 'offline', 
-      lastSync: '2025-11-20T08:00:00Z',
-      location: 'Control Center',
-      appVersion: '1.1.5'
-    },
-  ]);
-
+  const [devices, setDevices] = useState<any[]>([]);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const [syncQueue] = useState([
     { id: 1, device: 'Field Device-001', operation: 'create', entity: 'customer', status: 'synced' },
     { id: 2, device: 'IoT Sensor-042', operation: 'update', entity: 'reading', status: 'pending' },
     { id: 3, device: 'Tablet-Ops', operation: 'delete', entity: 'ticket', status: 'conflict' },
   ]);
 
-  useEffect(() => {
-    const loadDevices = async () => {
-      try {
-        const result = await listDevices();
-        if (result.success && result.devices) {
-          setDevices(result.devices);
-        }
-      } catch (error) {
-        console.error('Failed to load devices:', error);
-      }
-    };
-    loadDevices();
-  }, []);
+  const loadDevices = async () => {
+    try {
+      const result = await listDevices();
+      if (Array.isArray(result)) setDevices(result);
+      else if (result.devices) setDevices(result.devices);
+      else if (result.data) setDevices(result.data);
+      else setDevices([]);
+    } catch (error) {
+      setDevices([]);
+      console.error('Failed to load devices:', error);
+    }
+  };
+
+  useEffect(() => { loadDevices(); }, []);
+
+  const handleRegister = async (device: any) => {
+    await registerDevice(device);
+    await loadDevices();
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -75,6 +80,7 @@ export function DeviceRegistryPage() {
 
   return (
     <div className="space-y-6">
+      <RegisterDeviceDialog open={registerOpen} onClose={() => setRegisterOpen(false)} onRegister={handleRegister} />
       <div>
         <h1 className="text-3xl font-bold">Device Registry & Offline Sync</h1>
         <p className="text-muted-foreground">Manage field devices and synchronization queues</p>
@@ -92,7 +98,7 @@ export function DeviceRegistryPage() {
               <h2 className="text-lg font-semibold">Registered Devices</h2>
               <p className="text-sm text-muted-foreground">{devices.length} devices registered</p>
             </div>
-            <Button>
+            <Button onClick={() => setRegisterOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Register Device
             </Button>

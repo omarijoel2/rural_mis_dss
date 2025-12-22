@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { workOrderService } from '../../services/workOrder.service';
+import { applyServerErrors } from '@/lib/formErrors';
 import { assetService } from '../../services/asset.service';
 import { WorkOrder, CreateWorkOrderDto } from '../../types/cmms';
 import {
@@ -52,7 +53,7 @@ export function WorkOrderFormDialog({ open, onOpenChange, workOrder }: WorkOrder
   const [pendingOperator, setPendingOperator] = useState<string | null>(null);
   const [showOverrideConfirm, setShowOverrideConfirm] = useState(false);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateWorkOrderDto>({
+  const { register, handleSubmit, reset, setValue, setError, formState: { errors } } = useForm<CreateWorkOrderDto>({
     defaultValues: workOrder ? {
       kind: workOrder.kind,
       asset_id: workOrder.asset_id || undefined,
@@ -91,7 +92,20 @@ export function WorkOrderFormDialog({ open, onOpenChange, workOrder }: WorkOrder
       reset();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create work order');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create work order');
+      }
     },
   });
 
@@ -104,7 +118,20 @@ export function WorkOrderFormDialog({ open, onOpenChange, workOrder }: WorkOrder
       onOpenChange(false);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update work order');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to update work order');
+      }
     },
   });
 

@@ -8,17 +8,23 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { RequirePerm } from '../../components/RequirePerm';
-import { Download, Plus } from 'lucide-react';
+import { Download, Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '../../components/ui/alert-dialog';
 import type { Dma } from '../../types/core-registry';
 
 export function DmasPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [formData, setFormData] = useState<{ code: string; name: string; status: Dma['status'] }>({
     code: '',
     name: '',
     status: 'active',
   });
+  const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
+  const [editingDma, setEditingDma] = useState<null | any>(null);
+  const [deletingDma, setDeletingDma] = useState<null | any>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
@@ -32,10 +38,43 @@ export function DmasPage() {
       queryClient.invalidateQueries({ queryKey: ['dmas'] });
       setDialogOpen(false);
       setFormData({ code: '', name: '', status: 'active' });
-      toast.success('DMA created successfully');
+      setServerErrors({});
+      toast.success('Record created successfully');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create DMA');
+      // Map server validation errors if present
+      if (error?.payload?.errors) {
+        setServerErrors(error.payload.errors);
+      }
+      toast.error(error.response?.data?.message || error.message || 'Failed to create DMA');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Dma> }) => dmaService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dmas'] });
+      setEditDialogOpen(false);
+      setEditingDma(null);
+      setServerErrors({});
+      toast.success('Record updated successfully');
+    },
+    onError: (error: any) => {
+      if (error?.payload?.errors) setServerErrors(error.payload.errors);
+      toast.error(error.response?.data?.message || error.message || 'Failed to update DMA');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => dmaService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dmas'] });
+      setDeleteDialogOpen(false);
+      setDeletingDma(null);
+      toast.success('Record deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete DMA');
     },
   });
 
@@ -74,6 +113,29 @@ export function DmasPage() {
     } catch (error) {
       console.error('Export failed:', error);
     }
+  };
+
+  const startEdit = (dma: any) => {
+    setEditingDma(dma);
+    setFormData({ code: dma.code || '', name: dma.name || '', status: dma.status || 'active' });
+    setServerErrors({});
+    setEditDialogOpen(true);
+  };
+
+  const confirmDelete = (dma: any) => {
+    setDeletingDma(dma);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDma) return;
+    updateMutation.mutate({ id: String(editingDma.id), data: { code: formData.code, name: formData.name, status: formData.status } });
+  };
+
+  const handleDelete = () => {
+    if (!deletingDma) return;
+    deleteMutation.mutate(String(deletingDma.id));
   };
 
   return (
@@ -124,14 +186,14 @@ export function DmasPage() {
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
-                    <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                    <Select value={formData.status} onValueChange={(v: Dma['status']) => setFormData({ ...formData, status: v })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="planned">Planned</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="retired">Retired</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -167,8 +229,20 @@ export function DmasPage() {
         {data?.data.map((dma) => (
           <Card key={dma.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
-              <CardTitle>{dma.name}</CardTitle>
-              <CardDescription>Code: {dma.code}</CardDescription>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>{dma.name}</CardTitle>
+                  <CardDescription>Code: {dma.code}</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => startEdit(dma)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => confirmDelete(dma)}>
+                    <Trash2 className="h-4 w-4 text-rose-600" />
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
@@ -215,6 +289,77 @@ export function DmasPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Edit DMA Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit DMA</DialogTitle>
+            <DialogDescription>Update DMA details</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="code">Code*</Label>
+              <Input
+                id="code"
+                placeholder="e.g. DMA-001"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                required
+              />
+              {serverErrors.code && <p className="text-rose-600 text-sm">{serverErrors.code.join(' ')}</p>}
+            </div>
+            <div>
+              <Label htmlFor="name">Name*</Label>
+              <Input
+                id="name"
+                placeholder="DMA name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+              {serverErrors.name && <p className="text-rose-600 text-sm">{serverErrors.name.join(' ')}</p>}
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(v: Dma['status']) => setFormData({ ...formData, status: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="planned">Planned</SelectItem>
+                  <SelectItem value="retired">Retired</SelectItem>
+                </SelectContent>
+              </Select>
+              {serverErrors.status && <p className="text-rose-600 text-sm">{serverErrors.status.join(' ')}</p>}
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete DMA</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete {deletingDma?.name}? This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-rose-600">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
         </>
       )}
     </div>

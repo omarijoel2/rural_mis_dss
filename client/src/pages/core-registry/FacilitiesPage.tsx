@@ -67,7 +67,7 @@ export function FacilitiesPage() {
       setDialogOpen(false);
       setFormData({ code: '', name: '', category: '', status: 'active', scheme_id: '' });
       setSelectedScheme(null);
-      toast.success('Facility created successfully');
+      toast.success('Record created successfully');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to create facility');
@@ -89,7 +89,7 @@ export function FacilitiesPage() {
       setFormData((prev) => ({ ...prev, scheme_id: newScheme.id }));
       setCreateSchemeDialogOpen(false);
       setNewSchemeName('');
-      toast.success('Scheme created successfully');
+      toast.success('Record created successfully');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to create scheme');

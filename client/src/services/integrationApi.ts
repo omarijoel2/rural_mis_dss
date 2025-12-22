@@ -1,3 +1,11 @@
+// ============ DEVICE DELETE ============
+export async function deleteDevice(id: string) {
+  const response = await fetch(`/api/v1/integration/devices/${id}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return response.json();
+}
 // API client for Integration Module endpoints
 
 const API_BASE = '/api/v1/integration';
@@ -142,6 +150,20 @@ export async function registerDevice(deviceInfo: any) {
 
 export async function listDevices() {
   const response = await fetch(`${API_BASE}/devices`);
+  return response.json();
+}
+
+// ============ SYNC MONITOR & CONFLICTS ============
+export async function getSyncConflicts() {
+  // This should call the new integration endpoint for conflicts (if available)
+  // For now, fallback to mobile if not yet migrated
+  const response = await fetch('/api/v1/integration/conflicts');
+  return response.json();
+}
+
+export async function getSyncBatches() {
+  // Placeholder for sync monitor batches endpoint
+  const response = await fetch('/api/v1/integration/sync-batches');
   return response.json();
 }
 

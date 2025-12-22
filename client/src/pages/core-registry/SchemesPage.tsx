@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { schemesAPI } from '@/lib/api';
 
 export function SchemesPage() {
   const { data: schemes, isLoading } = useQuery({
     queryKey: ['schemes'],
     queryFn: async () => {
-      const res = await fetch('/api/core/schemes');
-      return res.json();
+      return await schemesAPI.list();
     },
   });
 

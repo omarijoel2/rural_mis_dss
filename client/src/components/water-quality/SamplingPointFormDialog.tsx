@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { applyServerErrors } from '@/lib/formErrors'; // ✅ Moved to its own line
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,7 @@ export function SamplingPointFormDialog({ open, onOpenChange, point }: SamplingP
   const queryClient = useQueryClient();
   const isEdit = !!point;
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<SamplingPointFormData>({
+  const { register, handleSubmit, reset, setValue, watch, setError, formState: { errors } } = useForm<SamplingPointFormData>({
     defaultValues: point ? {
       ...point,
       latitude: point.location?.coordinates?.[1],
@@ -72,7 +73,20 @@ export function SamplingPointFormDialog({ open, onOpenChange, point }: SamplingP
       reset();
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to create sampling point');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.message || 'Failed to create sampling point');
+      }
     },
   });
 
@@ -84,7 +98,20 @@ export function SamplingPointFormDialog({ open, onOpenChange, point }: SamplingP
       onOpenChange(false);
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update sampling point');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.message || 'Failed to update sampling point');
+      }
     },
   });
 

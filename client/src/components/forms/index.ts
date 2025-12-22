@@ -2,3 +2,8 @@ export { SchemeForm } from './SchemeForm';
 export { AssetForm } from './AssetForm';
 export { TelemetryTagForm } from './TelemetryTagForm';
 export { OutageForm } from './OutageForm';
+export { CoreFacilityForm } from './CoreFacilityForm';
+export { CoreAddressForm } from './CoreAddressForm';
+export { CoreDmaForm } from './CoreDmaForm';
+export { CoreMeterForm } from './CoreMeterForm';
+export { CoreZoneForm } from './CoreZoneForm';

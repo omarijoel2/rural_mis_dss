@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { assetService } from '../../services/asset.service';
+import { applyServerErrors } from '@/lib/formErrors';
 import { Asset, CreateAssetDto } from '../../types/cmms';
 import { apiClient } from '../../lib/api-client';
 import {
@@ -37,7 +38,7 @@ export function AssetFormDialog({ open, onOpenChange, asset }: AssetFormDialogPr
   const queryClient = useQueryClient();
   const isEdit = !!asset;
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<CreateAssetDto>({
+  const { register, handleSubmit, reset, setValue, watch, setError, formState: { errors } } = useForm<CreateAssetDto>({
     defaultValues: asset ? {
       class_id: asset.class_id,
       parent_id: asset.parent_id || undefined,
@@ -105,7 +106,20 @@ export function AssetFormDialog({ open, onOpenChange, asset }: AssetFormDialogPr
       reset();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create asset');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create asset');
+      }
     },
   });
 
@@ -118,7 +132,20 @@ export function AssetFormDialog({ open, onOpenChange, asset }: AssetFormDialogPr
       onOpenChange(false);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update asset');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to update asset');
+      }
     },
   });
 

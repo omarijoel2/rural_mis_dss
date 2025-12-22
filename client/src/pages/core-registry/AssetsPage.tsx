@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { assetService } from '../../services/asset.service';
 
 export function AssetsPage() {
   const { data: assets, isLoading } = useQuery({
     queryKey: ['assets'],
-    queryFn: async () => {
-      const res = await fetch('/api/core/assets');
-      return res.json();
-    },
+    queryFn: () => assetService.getAssets({ per_page: 12 }),
   });
 
   return (

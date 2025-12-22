@@ -29,7 +29,7 @@ export function GRMConsole() {
   const [stats, setStats] = useState<Stats>({ new: 12, assigned: 8, inProgress: 28, resolved: 156, overdueSla: 3 });
 
   useEffect(() => {
-    fetch('/api/grm/tickets')
+    fetch('/api/crm/tickets')
       .then(r => r.json())
       .then(d => {
         setTickets(d.data || []);

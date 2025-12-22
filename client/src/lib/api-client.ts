@@ -17,8 +17,18 @@ export class ApiClient {
     endpoint: string,
     options?: RequestInit
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    
+    // Allow passing full server paths (e.g. '/api/grm/tickets') or absolute URLs
+    let ep = endpoint;
+    // Normalize legacy '/api/..' endpoints to be resolved against configured base (e.g., '/api/v1')
+    if (ep.startsWith('/api/') && !ep.startsWith('/api/v1')) {
+      ep = ep.replace(/^\/api/, '');
+    }
+
+    let url = ep;
+    if (!ep.startsWith('http') && !ep.startsWith('/api/v1')) {
+      url = `${this.baseUrl}${ep}`;
+    }
+
     const token = localStorage.getItem('auth_token');
     
     // Debug: Log token status for API calls

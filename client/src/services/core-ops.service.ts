@@ -196,6 +196,16 @@ export const coreOpsService = {
 
     update: (id: string, data: Partial<PumpSchedule>) =>
       apiClient.patch<PumpSchedule>(`/core-ops/schedule/${id}`, data),
+
+    optimize: (period: { start_date: string; end_date: string }) =>
+      apiClient.post<{
+        schedules: PumpSchedule[];
+        estimated_savings: number;
+        peak_hours_avoided: number;
+      }>('/core-ops/schedule/optimize', period),
+
+    applyBatch: (schedules: PumpSchedule[]) =>
+      apiClient.post('/core-ops/schedule/batch', { schedules }),
   },
 
   operations: {

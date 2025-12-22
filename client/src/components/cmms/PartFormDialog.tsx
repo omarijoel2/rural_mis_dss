@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { partService } from '../../services/part.service';
+import { applyServerErrors } from '@/lib/formErrors';
 import { Part, CreatePartDto } from '../../types/cmms';
 import {
   Dialog,
@@ -27,7 +28,7 @@ export function PartFormDialog({ open, onOpenChange, part }: PartFormDialogProps
   const queryClient = useQueryClient();
   const isEdit = !!part;
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreatePartDto>({
+  const { register, handleSubmit, reset, setError, formState: { errors } } = useForm<CreatePartDto>({
     defaultValues: part ? {
       code: part.code,
       name: part.name,
@@ -49,7 +50,20 @@ export function PartFormDialog({ open, onOpenChange, part }: PartFormDialogProps
       reset();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create part');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to create part');
+      }
     },
   });
 
@@ -62,7 +76,20 @@ export function PartFormDialog({ open, onOpenChange, part }: PartFormDialogProps
       onOpenChange(false);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update part');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to update part');
+      }
     },
   });
 

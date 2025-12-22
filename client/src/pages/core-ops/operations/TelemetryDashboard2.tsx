@@ -6,8 +6,8 @@ export function TelemetryDashboard2() {
   const { data: measurements, isLoading } = useQuery({
     queryKey: ['telemetry'],
     queryFn: async () => {
-      const res = await fetch('/api/core/telemetry/measurements');
-      return res.json();
+      const res: any = await telemetryAPI.measurements();
+      return (res && (res.data || res)) || null;
     },
   });
 

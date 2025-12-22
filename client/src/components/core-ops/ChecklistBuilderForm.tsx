@@ -2,6 +2,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { coreOpsService } from '../../services/core-ops.service';
 import { Button } from '../ui/button';
+import { applyServerErrors } from '@/lib/formErrors';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { ChecklistBuilder } from './ChecklistBuilder';
@@ -50,7 +51,20 @@ export function ChecklistBuilderForm({ initialChecklist, onSuccess }: ChecklistB
       onSuccess?.();
     },
     onError: (error: any) => {
-      toast.error(error.message);
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(methods.setError, errorsPayload);
+        const firstField = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${firstField}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.message || 'Failed to save checklist');
+      }
     },
   });
 

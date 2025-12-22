@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\PipelineController;
 use App\Http\Controllers\Api\RbacController;
 use App\Http\Controllers\Api\SchemeController;
+use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\SecurityAlertController;
 use App\Http\Controllers\Api\V1\Operations\EventController;
 use App\Http\Controllers\Api\Crm\CustomerController;
@@ -87,6 +88,9 @@ Route::prefix('v1')->group(function () {
         Route::put('/{scheme}', [SchemeController::class, 'update']);
         Route::delete('/{scheme}', [SchemeController::class, 'destroy']);
     });
+
+    // Lookup values (e.g., county lists)
+    Route::get('/lookup-values', [LookupController::class, 'index']);
     
     Route::prefix('facilities')->group(function () {
         Route::get('/', [FacilityController::class, 'index']);
@@ -109,6 +113,86 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('pipelines', PipelineController::class);
     Route::apiResource('zones', ZoneController::class);
     Route::apiResource('addresses', AddressController::class);
+
+    // Mobile Integration Module routes
+        // Integration Platform Module routes (grouped by feature)
+        Route::prefix('integration')->middleware(['auth:sanctum'])->group(function () {
+            // API Keys & OAuth
+            Route::get('/api-keys', [\App\Http\Controllers\Api\Integration\ApiKeyController::class, 'index']);
+            Route::post('/api-keys', [\App\Http\Controllers\Api\Integration\ApiKeyController::class, 'store']);
+            Route::post('/api-keys/{id}/rotate', [\App\Http\Controllers\Api\Integration\ApiKeyController::class, 'rotate']);
+            Route::delete('/api-keys/{id}', [\App\Http\Controllers\Api\Integration\ApiKeyController::class, 'destroy']);
+            Route::post('/oauth-clients', [\App\Http\Controllers\Api\Integration\OAuthController::class, 'store']);
+
+            // Master Data Management
+            Route::get('/mdm/entities', [\App\Http\Controllers\Api\Integration\MdmController::class, 'listEntities']);
+            Route::post('/mdm/entities/{id1}/merge/{id2}', [\App\Http\Controllers\Api\Integration\MdmController::class, 'merge']);
+            Route::post('/mdm/entities/{id1}/unmerge/{mergeId}', [\App\Http\Controllers\Api\Integration\MdmController::class, 'unmerge']);
+
+            // EDRMS
+            Route::post('/edrms/documents', [\App\Http\Controllers\Api\Integration\EdrmsController::class, 'store']);
+            Route::get('/edrms/documents/{id}', [\App\Http\Controllers\Api\Integration\EdrmsController::class, 'show']);
+
+            // Data Warehouse
+            Route::get('/dw/tables', [\App\Http\Controllers\Api\Integration\DataWarehouseController::class, 'listTables']);
+            Route::get('/dw/lineage/{source}/{target}', [\App\Http\Controllers\Api\Integration\DataWarehouseController::class, 'lineage']);
+            Route::get('/dw/quality-metrics', [\App\Http\Controllers\Api\Integration\DataWarehouseController::class, 'qualityMetrics']);
+
+            // Notifications
+            Route::post('/notifications/channels', [\App\Http\Controllers\Api\Integration\NotificationController::class, 'createChannel']);
+            Route::post('/notifications/send', [\App\Http\Controllers\Api\Integration\NotificationController::class, 'send']);
+            Route::post('/notifications/templates', [\App\Http\Controllers\Api\Integration\NotificationController::class, 'createTemplate']);
+            Route::get('/notifications/queue', [\App\Http\Controllers\Api\Integration\NotificationController::class, 'queue']);
+
+            // Devices
+            Route::post('/devices/register', [\App\Http\Controllers\Api\Integration\DeviceController::class, 'register']);
+            Route::get('/devices', [\App\Http\Controllers\Api\Integration\DeviceController::class, 'index']);
+            Route::delete('/devices/{id}', [\App\Http\Controllers\Api\Integration\DeviceController::class, 'destroy']);
+            Route::post('/devices/{device}/sync', [\App\Http\Controllers\Api\Integration\DeviceController::class, 'queueSync']);
+            Route::get('/devices/sync/pending/{device}', [\App\Http\Controllers\Api\Integration\DeviceController::class, 'pendingSync']);
+            Route::post('/devices/sync/{syncOp}/complete', [\App\Http\Controllers\Api\Integration\DeviceController::class, 'completeSync']);
+            Route::post('/devices/sync/{syncOp}/resolve-conflict', [\App\Http\Controllers\Api\Integration\DeviceController::class, 'resolveConflict']);
+
+            // Observability
+            Route::post('/observability/metrics', [\App\Http\Controllers\Api\Integration\ObservabilityController::class, 'recordMetric']);
+            Route::get('/observability/metrics/{metric}', [\App\Http\Controllers\Api\Integration\ObservabilityController::class, 'getMetrics']);
+            Route::post('/observability/alerts', [\App\Http\Controllers\Api\Integration\ObservabilityController::class, 'createAlertPolicy']);
+            Route::get('/observability/alerts', [\App\Http\Controllers\Api\Integration\ObservabilityController::class, 'listAlertPolicies']);
+            Route::post('/observability/incidents/{incident}/acknowledge', [\App\Http\Controllers\Api\Integration\ObservabilityController::class, 'acknowledgeIncident']);
+            Route::post('/observability/incidents/{incident}/resolve', [\App\Http\Controllers\Api\Integration\ObservabilityController::class, 'resolveIncident']);
+            Route::get('/observability/dashboard', [\App\Http\Controllers\Api\Integration\ObservabilityController::class, 'dashboard']);
+
+            // Backup & Disaster Recovery
+            Route::post('/backup/policies', [\App\Http\Controllers\Api\Integration\BackupController::class, 'createPolicy']);
+            Route::post('/backup/{policy}/run', [\App\Http\Controllers\Api\Integration\BackupController::class, 'runBackup']);
+            Route::get('/backup/jobs/{job}', [\App\Http\Controllers\Api\Integration\BackupController::class, 'getJob']);
+
+            // Secrets Vault
+            Route::post('/secrets', [\App\Http\Controllers\Api\Integration\SecretController::class, 'store']);
+            Route::get('/secrets/{secret}', [\App\Http\Controllers\Api\Integration\SecretController::class, 'show']);
+            Route::post('/secrets/{secret}/rotate', [\App\Http\Controllers\Api\Integration\SecretController::class, 'rotate']);
+            Route::get('/secrets/audit-log', [\App\Http\Controllers\Api\Integration\SecretController::class, 'auditLog']);
+        });
+    Route::prefix('mobile')->group(function () {
+        Route::post('/devices', [\App\Http\Controllers\Api\Mobile\DeviceController::class, 'register']);
+        Route::get('/devices', [\App\Http\Controllers\Api\Mobile\DeviceController::class, 'index'])->middleware('auth:sanctum', 'permission:view devices');
+        Route::patch('/devices/{device}', [\App\Http\Controllers\Api\Mobile\DeviceController::class, 'update'])->middleware('auth:sanctum', 'permission:edit devices');
+
+        Route::post('/sync/push', [\App\Http\Controllers\Api\Mobile\SyncController::class, 'push']);
+        Route::post('/sync/pull', [\App\Http\Controllers\Api\Mobile\SyncController::class, 'pull']);
+        Route::post('/sync/ack', [\App\Http\Controllers\Api\Mobile\SyncController::class, 'ack']);
+
+        Route::post('/submissions', [\App\Http\Controllers\Api\Mobile\SubmissionController::class, 'store']);
+        Route::get('/submissions/{id}', [\App\Http\Controllers\Api\Mobile\SubmissionController::class, 'show']);
+
+        Route::get('/conflicts', [\App\Http\Controllers\Api\Mobile\ConflictController::class, 'index'])->middleware('auth:sanctum', 'permission:view conflicts');
+        Route::get('/conflicts/{id}', [\App\Http\Controllers\Api\Mobile\ConflictController::class, 'show'])->middleware('auth:sanctum', 'permission:view conflicts');
+        Route::post('/conflicts/{id}/resolve', [\App\Http\Controllers\Api\Mobile\ConflictController::class, 'resolve'])->middleware('auth:sanctum', 'permission:resolve conflicts');
+
+        Route::post('/media/presign', [\App\Http\Controllers\Api\Mobile\MediaController::class, 'presign']);
+
+        Route::post('/telemetry', [\App\Http\Controllers\Api\Mobile\TelemetryController::class, 'ingest']);
+    });
 
     Route::prefix('gis')->group(function () {
         Route::post('/schemes/import', [SchemeController::class, 'importGeojson'])->middleware('permission:import spatial data');

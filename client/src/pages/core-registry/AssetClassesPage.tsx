@@ -96,14 +96,14 @@ export function AssetClassesPage() {
 
   const { data: classes, isLoading, error } = useQuery({
     queryKey: ['asset-classes', search],
-    queryFn: () => apiClient.get<AssetClass[]>('/asset-classes', search ? { search } : {}),
+    queryFn: () => apiClient.get<AssetClass[]>('/api/asset-classes', search ? { search } : {}),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: AssetClassFormData) => apiClient.post<AssetClass>('/asset-classes', data),
+    mutationFn: (data: AssetClassFormData) => apiClient.post<AssetClass>('/api/asset-classes', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['asset-classes'] });
-      toast.success('Asset class created successfully');
+      toast.success('Record created successfully');
       handleCloseDialog();
     },
     onError: (err: any) => {
@@ -113,10 +113,10 @@ export function AssetClassesPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AssetClassFormData> }) =>
-      apiClient.put<AssetClass>(`/asset-classes/${id}`, data),
+      apiClient.put<AssetClass>(`/api/asset-classes/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['asset-classes'] });
-      toast.success('Asset class updated successfully');
+      toast.success('Record updated successfully');
       handleCloseDialog();
     },
     onError: (err: any) => {
@@ -125,10 +125,10 @@ export function AssetClassesPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiClient.delete(`/asset-classes/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`/api/asset-classes/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['asset-classes'] });
-      toast.success('Asset class deleted successfully');
+      toast.success('Record deleted successfully');
       setDeleteDialogOpen(false);
       setDeletingClass(null);
     },

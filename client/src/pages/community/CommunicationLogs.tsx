@@ -33,54 +33,37 @@ interface Stakeholder {
   category: string;
 }
 
-const mockLogs: CommunicationLog[] = [
-  {
-    id: 1,
-    stakeholderId: 1,
-    stakeholderName: 'County Water Director',
-    type: 'meeting',
-    direction: 'outbound',
-    subject: 'Quarterly Review Meeting',
-    summary: 'Discussed water quality improvements and budget allocation for Q1 2026. Director expressed satisfaction with recent progress.',
-    date: '2025-11-20',
-    duration: 60,
-    outcome: 'positive',
-    followUpRequired: true,
-    followUpDate: '2025-12-15',
-    createdBy: 'John Operator',
-  },
-  {
-    id: 2,
-    stakeholderId: 2,
-    stakeholderName: 'Community Chairperson',
-    type: 'phone',
-    direction: 'inbound',
-    subject: 'Tariff Concern',
-    summary: 'Chairperson called to express community concerns about proposed tariff increase. Requested a community meeting.',
-    date: '2025-11-18',
-    duration: 25,
-    outcome: 'neutral',
-    followUpRequired: true,
-    followUpDate: '2025-11-25',
-    createdBy: 'Mary Supervisor',
-  },
-  {
-    id: 3,
-    stakeholderId: 5,
-    stakeholderName: 'Women Vendors Group',
-    type: 'email',
-    direction: 'outbound',
-    subject: 'Water Access Program Update',
-    summary: 'Sent monthly update on the women vendors water access program. Included schedule for next training session.',
-    date: '2025-11-15',
-    outcome: 'positive',
-    followUpRequired: false,
-    createdBy: 'John Operator',
-  },
-];
-
 export function CommunicationLogs() {
-  const [logs, setLogs] = useState<CommunicationLog[]>(mockLogs);
+  const [logs, setLogs] = useState<CommunicationLog[]>([]);
+  
+  // Map an incoming grievance/ticket (server) to the CommunicationLog shape used here
+  const mapTicketToLog = (t: any): CommunicationLog => ({
+    id: Number(t.id),
+    stakeholderId: 0,
+    stakeholderName: t.location || t.ticketNumber || 'Unknown',
+    type: 'other',
+    direction: 'inbound',
+    subject: t.ticketNumber || t.category || t.subject || 'Communication',
+    summary: t.details || t.message || '',
+    date: t.createdAt || t.date || new Date().toISOString().split('T')[0],
+    duration: undefined,
+    outcome: t.status === 'resolved' ? 'positive' : (t.status === 'in-progress' || t.status === 'assigned' ? 'pending' : 'neutral'),
+    followUpRequired: false,
+    followUpDate: undefined,
+    createdBy: t.createdBy || t.sender || 'System',
+  });
+
+  useEffect(() => {
+    // Fetch communication-like tickets from CRM (server)
+    apiClient.get<{ data: any[] }>('/api/crm/tickets')
+      .then(res => {
+        const data = (res && (res as any).data) || res || [];
+        if (Array.isArray(data)) {
+          setLogs(data.map(mapTicketToLog));
+        }
+      })
+      .catch(err => console.error('Failed to load communication logs:', err));
+  }, []);
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
@@ -93,9 +76,11 @@ export function CommunicationLogs() {
   });
 
   useEffect(() => {
+    // Try community route, then fallback to v1 datasets if not available
     apiClient.get<{ data: Stakeholder[] }>('/community/stakeholders')
+      .catch(() => apiClient.get<{ data: Stakeholder[] }>('/api/v1/datasets/stakeholders'))
       .then(res => {
-        const data = res.data || res;
+        const data = (res && (res as any).data) || res || [];
         setStakeholders(Array.isArray(data) ? data : []);
       })
       .catch(err => console.error(err));
@@ -130,32 +115,35 @@ export function CommunicationLogs() {
 
   const handleAddLog = () => {
     if (!newLog.stakeholderId || !newLog.subject || !newLog.summary) return;
-    
+
     const stakeholder = stakeholders.find(s => s.id === newLog.stakeholderId);
-    const log: CommunicationLog = {
-      id: logs.length + 1,
-      stakeholderId: newLog.stakeholderId!,
-      stakeholderName: stakeholder?.name || 'Unknown',
-      type: newLog.type as CommunicationLog['type'],
-      direction: newLog.direction as CommunicationLog['direction'],
-      subject: newLog.subject!,
-      summary: newLog.summary!,
-      date: new Date().toISOString().split('T')[0],
-      duration: newLog.duration,
-      outcome: newLog.outcome as CommunicationLog['outcome'],
-      followUpRequired: newLog.followUpRequired || false,
-      followUpDate: newLog.followUpDate,
-      createdBy: 'Current User',
+
+    const payload = {
+      category: 'communication',
+      details: newLog.summary,
+      location: stakeholder?.name,
+      subject: newLog.subject,
+      status: 'new',
+      createdAt: new Date().toISOString().split('T')[0],
     };
-    
-    setLogs([log, ...logs]);
-    setShowAddDialog(false);
-    setNewLog({
-      type: 'phone',
-      direction: 'outbound',
-      outcome: 'neutral',
-      followUpRequired: false,
-    });
+
+    // Post to CRM tickets endpoint (used here as a communication store)
+    apiClient.post('/api/crm/tickets', payload)
+      .then((res: any) => {
+        const created = (res && res.data) || res || payload;
+        const mapped = mapTicketToLog(created);
+        setLogs(prev => [mapped, ...prev]);
+        setShowAddDialog(false);
+        setNewLog({
+          type: 'phone',
+          direction: 'outbound',
+          outcome: 'neutral',
+          followUpRequired: false,
+        });
+      })
+      .catch(err => {
+        console.error('Failed to create communication log:', err);
+      });
   };
 
   return (

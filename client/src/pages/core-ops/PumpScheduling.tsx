@@ -55,27 +55,17 @@ export function PumpScheduling() {
 
   const optimizeSchedules = useMutation({
     mutationFn: async (period: { start_date: string; end_date: string }) => {
-      const response = await fetch('/api/v1/pump-schedules/optimize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(period),
+      // Use coreOpsService to perform optimization on the backend
+      return coreOpsService.scheduling.optimize(period).catch((err) => {
+        console.error('Optimization API failed:', err);
+        throw err;
       });
-      
-      if (!response.ok) {
-        // Return mock optimization result for demo
-        return {
-          schedules: generateOptimizedSchedules(period.start_date, period.end_date),
-          estimated_savings: 1250.50,
-          peak_hours_avoided: 18,
-        };
-      }
-      
-      return response.json();
     },
     onSuccess: (result) => {
-      setOptimizationResult(result);
-      toast.success(`Optimization complete! Estimated savings: $${result.estimated_savings.toFixed(2)}`);
+      if (result) {
+        setOptimizationResult(result);
+        toast.success(`Optimization complete! Estimated savings: $${result.estimated_savings.toFixed(2)}`);
+      }
     },
     onError: () => {
       toast.error('Optimization failed');
@@ -86,15 +76,7 @@ export function PumpScheduling() {
     mutationFn: async () => {
       if (!optimizationResult) return;
       
-      const response = await fetch('/api/v1/pump-schedules/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ schedules: optimizationResult.schedules }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to apply schedules');
-      return response.json();
+      return coreOpsService.scheduling.applyBatch(optimizationResult.schedules);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pump-schedules'] });

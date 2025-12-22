@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { predictionsAPI } from '@/lib/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
@@ -50,77 +52,41 @@ interface OutageImpact {
 export function PredictionsDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('assets');
 
-  // Mock data - will be replaced with API calls
-  const assetRisks: AssetRisk[] = [
-    {
-      assetId: 'pump_001',
-      failureProbability: 87,
-      daysToFailure: 8,
-      confidence: 0.92,
-      riskLevel: 'high',
-      recommendedAction: 'schedule_maintenance_today',
-    },
-    {
-      assetId: 'pump_003',
-      failureProbability: 62,
-      daysToFailure: 21,
-      confidence: 0.85,
-      riskLevel: 'medium',
-      recommendedAction: 'monitor_closely',
-    },
-    {
-      assetId: 'motor_005',
-      failureProbability: 45,
-      daysToFailure: 35,
-      confidence: 0.78,
-      riskLevel: 'medium',
-      recommendedAction: 'plan_maintenance_next_month',
-    },
-  ];
+  // Attempt to load predictions from server; fallback to local mock data where necessary
+  const { data: assetRisksData } = useQuery(['predictions', 'assetFailures'], async () => {
+    const res: any = await predictionsAPI.assetFailures();
+    return (res && (res.data || res)) || null;
+  });
 
-  const nrwAnomalies: NrwAnomaly[] = [
-    {
-      dmaId: 'dma_001',
-      nrwPercentage: 35.2,
-      baselineNrw: 28.5,
-      anomalyScore: 0.87,
-      leakDetected: true,
-      estimatedLossMc: 450,
-      estimatedCostPerDay: 2250,
-      urgency: 'high',
-    },
-  ];
+  const { data: nrwAnomaliesData } = useQuery(['predictions', 'nrwAnomalies'], async () => {
+    const res: any = await predictionsAPI.nrwAnomalies();
+    return (res && (res.data || res)) || null;
+  });
 
-  const demandForecasts: DemandForecast[] = [
-    { date: '2025-12-01', demand: 1200, lower: 1050, upper: 1350 },
-    { date: '2025-12-02', demand: 1350, lower: 1180, upper: 1520 },
-    { date: '2025-12-03', demand: 1100, lower: 950, upper: 1250 },
-    { date: '2025-12-04', demand: 1280, lower: 1120, upper: 1440 },
-  ];
+  const { data: demandForecastsData } = useQuery(['predictions', 'demandForecasts'], async () => {
+    const res: any = await predictionsAPI.demandForecast(1, 7).catch(() => null);
+    return (res && (res.data || res)) || null;
+  });
 
-  const pumpSchedules: PumpSchedule[] = [
-    {
-      pumpId: 'pump_001',
-      startTime: '22:00',
-      endTime: '04:00',
-      reason: 'off_peak_tariff',
-      estimatedCost: 450,
-    },
-    {
-      pumpId: 'pump_002',
-      startTime: '08:00',
-      endTime: '10:00',
-      reason: 'peak_demand',
-      estimatedCost: 180,
-    },
-  ];
+  const { data: pumpSchedulesData } = useQuery(['predictions', 'pumpSchedules'], async () => {
+    const res: any = await predictionsAPI.pumpSchedules();
+    return (res && (res.data || res)) || null;
+  });
 
-  const outageImpact: OutageImpact = {
-    affectedConnections: 1240,
-    affectedPopulation: 6200,
-    impactScore: 72,
-    suggestedTiming: '2025-12-22 midnight (Sunday, lower demand)',
-  };
+  const { data: outageImpactData } = useQuery(['predictions', 'outageImpact'], async () => {
+    const res: any = await predictionsAPI.outageImpact();
+    return (res && (res.data || res)) || null;
+  });
+
+  const assetRisks: AssetRisk[] = (assetRisksData && (assetRisksData.data || assetRisksData)) || [];
+
+  const nrwAnomalies: NrwAnomaly[] = (nrwAnomaliesData && (nrwAnomaliesData.data || nrwAnomaliesData)) || [];
+
+  const demandForecasts: DemandForecast[] = (demandForecastsData && (demandForecastsData.data || demandForecastsData)) || [];
+
+  const pumpSchedules: PumpSchedule[] = (pumpSchedulesData && (pumpSchedulesData.data || pumpSchedulesData)) || [];
+
+  const outageImpact: OutageImpact | null = (outageImpactData && (outageImpactData.data || outageImpactData)) || null;
 
   const getRiskColor = (probability: number) => {
     if (probability >= 80) return 'text-red-600 bg-red-50';
@@ -334,37 +300,41 @@ export function PredictionsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 rounded-lg border border-orange-200 bg-orange-50">
-                  <h3 className="font-semibold text-gray-900 mb-3">Current Outage Plan</h3>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm opacity-75">Affected Connections</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {outageImpact.affectedConnections.toLocaleString()}
-                      </p>
+                {outageImpact ? (
+                  <div className="p-4 rounded-lg border border-orange-200 bg-orange-50">
+                    <h3 className="font-semibold text-gray-900 mb-3">Current Outage Plan</h3>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-sm opacity-75">Affected Connections</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {outageImpact.affectedConnections.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm opacity-75">Affected Population</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {outageImpact.affectedPopulation.toLocaleString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm opacity-75">Affected Population</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {outageImpact.affectedPopulation.toLocaleString()}
-                      </p>
+                    <div className="mb-4">
+                      <p className="text-sm opacity-75">Impact Score</p>
+                      <div className="w-full bg-gray-200 h-2 rounded-full mt-1">
+                        <div
+                          className="h-full bg-orange-500 rounded-full"
+                          style={{ width: `${outageImpact.impactScore}%` }}
+                        />
+                      </div>
+                      <p className="text-sm font-medium mt-1">{outageImpact.impactScore} / 100</p>
+                    </div>
+                    <div className="p-3 bg-white rounded border border-orange-300">
+                      <p className="text-sm opacity-75">Suggested Alternative Timing</p>
+                      <p className="font-semibold text-gray-900">{outageImpact.suggestedTiming}</p>
                     </div>
                   </div>
-                  <div className="mb-4">
-                    <p className="text-sm opacity-75">Impact Score</p>
-                    <div className="w-full bg-gray-200 h-2 rounded-full mt-1">
-                      <div
-                        className="h-full bg-orange-500 rounded-full"
-                        style={{ width: `${outageImpact.impactScore}%` }}
-                      />
-                    </div>
-                    <p className="text-sm font-medium mt-1">{outageImpact.impactScore} / 100</p>
-                  </div>
-                  <div className="p-3 bg-white rounded border border-orange-300">
-                    <p className="text-sm opacity-75">Suggested Alternative Timing</p>
-                    <p className="font-semibold text-gray-900">{outageImpact.suggestedTiming}</p>
-                  </div>
-                </div>
+                ) : (
+                  <div className="p-4 text-sm text-muted-foreground">No outage impact prediction available.</div>
+                )}
               </div>
             </CardContent>
           </Card>

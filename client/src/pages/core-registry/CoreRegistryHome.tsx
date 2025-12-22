@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Droplets, Gauge, Settings } from 'lucide-react';
+import { Activity, Droplets, Gauge, Settings, Plus } from 'lucide-react';
 
 export function CoreRegistryHome() {
   const { data: stats } = useQuery({
@@ -15,9 +16,45 @@ export function CoreRegistryHome() {
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Core Registry</h1>
-        <p className="text-muted-foreground">Phase 1-2: Water Infrastructure Foundation</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Core Registry</h1>
+          <p className="text-muted-foreground">Phase 1-2: Water Infrastructure Foundation</p>
+        </div>
+
+        <div className="flex gap-2">
+          <RequirePerm permission="create dmas">
+            <Button asChild>
+              <Link to="/core/dmas">
+                <Plus className="mr-2 h-4 w-4" />New DMA
+              </Link>
+            </Button>
+          </RequirePerm>
+
+          <RequirePerm permission="create zones">
+            <Button asChild>
+              <Link to="/core/zones">
+                <Plus className="mr-2 h-4 w-4" />New Zone
+              </Link>
+            </Button>
+          </RequirePerm>
+
+          <RequirePerm permission="create pipelines">
+            <Button asChild>
+              <Link to="/core/pipelines">
+                <Plus className="mr-2 h-4 w-4" />New Pipeline
+              </Link>
+            </Button>
+          </RequirePerm>
+
+          <RequirePerm permission="create meters">
+            <Button asChild>
+              <Link to="/core/meters">
+                <Plus className="mr-2 h-4 w-4" />New Meter
+              </Link>
+            </Button>
+          </RequirePerm>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

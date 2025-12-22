@@ -9,15 +9,7 @@ export function AssetsPageEnhanced() {
     queryKey: ['assets'],
     queryFn: async () => {
       const laravel = await assetsAPI.list();
-      if (laravel) return laravel;
-      // Fallback to mock
-      return {
-        data: [
-          { id: 1, code: 'PUMP_001', name: 'Main Pump', type: 'pump', status: 'operational', condition: 'good' },
-          { id: 2, code: 'PIPE_001', name: 'Primary Pipeline', type: 'pipe', status: 'operational', condition: 'fair' },
-          { id: 3, code: 'RES_001', name: 'Main Reservoir', type: 'reservoir', status: 'operational', condition: 'good' },
-        ],
-      };
+      return laravel || { data: [] };
     },
   });
 

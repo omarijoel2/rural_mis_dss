@@ -35,7 +35,7 @@ export interface PmTemplateFilters {
   trigger_type?: 'time_based' | 'usage_based' | 'combined';
 }
 
-const BASE_URL = '';
+const BASE_URL = '/api';
 
 export const assetService = {
   getClasses: () =>

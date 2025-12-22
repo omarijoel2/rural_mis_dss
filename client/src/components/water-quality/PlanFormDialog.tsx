@@ -58,7 +58,20 @@ export function PlanFormDialog({ open, onOpenChange, plan }: PlanFormDialogProps
       reset();
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to create plan');
+      const errorsPayload = error?.payload?.errors || error?.response?.data?.errors;
+      if (errorsPayload) {
+        applyServerErrors(setError, errorsPayload);
+        const first = Object.keys(errorsPayload)[0];
+        setTimeout(() => {
+          const el = document.querySelector(`[name="${first}"]`);
+          if (el && (el as HTMLElement).scrollIntoView) {
+            (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as any).focus?.();
+          }
+        }, 200);
+      } else {
+        toast.error(error.message || 'Failed to create plan');
+      }
     },
   });
 

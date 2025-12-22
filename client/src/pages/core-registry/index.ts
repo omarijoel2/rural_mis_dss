@@ -4,3 +4,8 @@ export { AssetClassesPage } from './AssetClassesPage';
 export { CoreRegistryHome } from './CoreRegistryHome';
 export { SchemesPageEnhanced } from './SchemesPageEnhanced';
 export { AssetsPageEnhanced } from './AssetsPageEnhanced';
+export { default as CoreFacilitiesPage } from './CoreFacilitiesPage';
+export { default as CoreAddressesPage } from './CoreAddressesPage';
+export { default as CoreDmasPage } from './CoreDmasPage';
+export { default as CoreMetersPage } from './CoreMetersPage';
+export { default as CoreZonesPage } from './CoreZonesPage';

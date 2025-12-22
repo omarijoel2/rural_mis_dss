@@ -19,7 +19,7 @@ export function CommitteesDirectory() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    fetch('/api/community/committees')
+    fetch('/api/v1/datasets/committees')
       .then(r => r.json())
       .then(d => setCommittees(d.data || []))
       .catch(() => setCommittees([

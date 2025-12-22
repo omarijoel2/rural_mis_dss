@@ -96,7 +96,7 @@ export function AssetsPageWithForm() {
     setIsDeleting(true);
     try {
       await assetService.deleteAsset(deleteAsset.id);
-      toast.success(`${deleteAsset.name} has been deleted.`);
+      toast.success('Record deleted successfully');
       setDeleteAsset(null);
       refetch();
     } catch (error: any) {

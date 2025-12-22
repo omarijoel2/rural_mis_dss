@@ -33,15 +33,7 @@ export function TelemetryPageWithForms() {
     queryKey: ['telemetry-tags'],
     queryFn: async () => {
       const laravel = await telemetryAPI.tags();
-      if (laravel) return laravel;
-      return {
-        data: [
-          { id: 1, tag: 'PUMP_001_FLOW', ioType: 'AI', unit: 'lpm', assetId: 1, thresholds: { low: 50, high: 500 } },
-          { id: 2, tag: 'RES_001_LEVEL', ioType: 'AI', unit: 'm3', assetId: 3, thresholds: { low: 10, high: 95 } },
-          { id: 3, tag: 'PUMP_001_STATUS', ioType: 'DI', unit: 'on/off', assetId: 1 },
-          { id: 4, tag: 'CHLORINE_RESIDUAL', ioType: 'AI', unit: 'mg/L', assetId: 2, thresholds: { low: 0.2, high: 1.5 } },
-        ],
-      };
+      return laravel || { data: [] };
     },
   });
 
@@ -49,14 +41,7 @@ export function TelemetryPageWithForms() {
     queryKey: ['assets-for-telemetry'],
     queryFn: async () => {
       const laravel = await assetsAPI.list();
-      if (laravel) return laravel;
-      return {
-        data: [
-          { id: 1, code: 'PUMP_001', name: 'Main Pump' },
-          { id: 2, code: 'CHL_001', name: 'Chlorinator' },
-          { id: 3, code: 'RES_001', name: 'Main Reservoir' },
-        ],
-      };
+      return laravel || { data: [] };
     },
   });
 
@@ -108,26 +93,22 @@ export function TelemetryPageWithForms() {
           from = subDays(to, 1);
       }
 
-      const response = await fetch(
-        `/api/v1/telemetry/measurements?tag_id=${tagId}&from=${from.toISOString()}&to=${to.toISOString()}&per_page=500`,
-        { credentials: 'include' }
-      );
+      // Request tag-specific measurements from the backend using server-side params
+      const result: any = await telemetryAPI.measurements(tagId, { from: from.toISOString(), to: to.toISOString(), per_page: 500 });
 
-      if (response.ok) {
-        const result = await response.json();
-        const data = (result.data || result).map((m: any) => ({
+      const payload = (result && (result.data || result)) || null;
+      if (payload && Array.isArray(payload)) {
+        const data = payload.map((m: any) => ({
           timestamp: m.ts || m.timestamp,
-          value: m.value,
+          value: Number(m.value),
           formatted_time: format(new Date(m.ts || m.timestamp), period === '7d' ? 'MMM dd HH:mm' : 'HH:mm'),
         }));
         setTrendData(data);
       } else {
-        const mockData = generateMockTrendData(period);
-        setTrendData(mockData);
+        setTrendData([]);
       }
     } catch {
-      const mockData = generateMockTrendData(period);
-      setTrendData(mockData);
+      setTrendData([]);
     } finally {
       setIsLoadingTrend(false);
     }

@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Settings, Database, Shield, Clock, Plus, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,24 +41,36 @@ export function DatasetBuilder() {
 
   const currentSource = useMemo(() => SOURCE_TABLES.find(t => t.id === selectedSource), [selectedSource]);
 
-  const mockPreviewData: PreviewRow[] = useMemo(() => {
-    if (selectedSource === 'committees') {
-      return [
-        { id: '1', name: 'Kiambu Committee', community: 'Kiambu', members: 12, status: 'active', complianceScore: 92 },
-        { id: '2', name: 'Kajiado Committee', community: 'Kajiado', members: 10, status: 'active', complianceScore: 85 },
-      ];
-    } else if (selectedSource === 'vendors') {
-      return [
-        { id: '1', companyName: 'WaterTech', status: 'approved', kycStatus: 'verified', rating: 4.8 },
-        { id: '2', companyName: 'Nairobi Supplies', status: 'approved', kycStatus: 'verified', rating: 4.5 },
-      ];
-    } else if (selectedSource === 'grievances') {
-      return [
-        { id: '1', category: 'water-quality', severity: 'high', status: 'new', location: 'Kilimani' },
-        { id: '2', category: 'billing', severity: 'medium', status: 'resolved', location: 'Westlands' },
-      ];
-    }
-    return [];
+  const [previewData, setPreviewData] = useState<PreviewRow[]>([]);
+
+  // Fetch preview rows from server based on source selection
+  useEffect(() => {
+    const fetchPreview = async () => {
+      try {
+        let res: any;
+        if (selectedSource === 'committees') {
+          res = await apiClient.get('/api/v1/datasets/committees');
+        } else if (selectedSource === 'vendors') {
+          res = await apiClient.get('/api/procurement/vendors');
+        } else if (selectedSource === 'grievances') {
+          res = await apiClient.get('/api/crm/tickets');
+        } else {
+          res = { data: [] };
+        }
+
+        const data = res?.data || res || [];
+        if (Array.isArray(data)) {
+          setPreviewData(data.slice(0, 10));
+        } else {
+          setPreviewData([]);
+        }
+      } catch (err) {
+        console.error('Failed to load preview data:', err);
+        setPreviewData([]);
+      }
+    };
+
+    fetchPreview();
   }, [selectedSource]);
 
   const addTransformation = (type: TransformationStep['type'], label: string, config: Record<string, string>) => {
@@ -361,7 +374,22 @@ export function DatasetBuilder() {
                 <label className="text-sm font-medium">Transformations</label>
                 <div className="text-sm text-muted-foreground mt-1">{transformations.length} applied</div>
               </div>
-              <Button className="w-full">Save Dataset</Button>
+              <Button className="w-full" onClick={async () => {
+                const payload = {
+                  title: datasetName || `${currentSource?.name} dataset`,
+                  topic: currentSource?.id || selectedSource,
+                  license: 'CC BY 4.0',
+                  description: `Dataset generated from ${currentSource?.name}`,
+                  refreshSchedule,
+                  transformations,
+                };
+                try {
+                  const res = await apiClient.post('/api/open-data/catalog', payload);
+                  console.log('Dataset registered:', res);
+                } catch (err) {
+                  console.warn('Failed to register dataset to server; keeping locally (server may not support POST).', err);
+                }
+              }}>Save Dataset</Button>
             </CardContent>
           </Card>
 
@@ -373,16 +401,16 @@ export function DatasetBuilder() {
             </CardHeader>
             <CardContent>
               <div className="text-xs space-y-2">
-                {mockPreviewData.slice(0, 3).map((row, i) => (
+                {previewData.slice(0, 3).map((row, i) => (
                   <div key={i} className="p-2 bg-muted rounded">
                     {Object.entries(row).slice(0, 2).map(([k, v]) => (
                       <div key={k} className="text-xs">
-                        <span className="font-medium">{k}:</span> {v}
+                        <span className="font-medium">{k}:</span> {String(v)}
                       </div>
                     ))}
                   </div>
                 ))}
-                <p className="text-muted-foreground text-xs italic">+{mockPreviewData.length - 1} more rows</p>
+                <p className="text-muted-foreground text-xs italic">+{Math.max(0, previewData.length - 1)} more rows</p>
               </div>
             </CardContent>
           </Card>

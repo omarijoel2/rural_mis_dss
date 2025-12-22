@@ -1,0 +1,475 @@
+openapi: 3.1.0
+info:
+  title: Mobile Integration API - Sync
+  version: 1.0.0
+  description: >-
+    Sync-oriented endpoints to support offline-first mobile apps, device management,
+    submission ingest, conflicts, telemetry and media handling for the Water MIS.
+servers:
+  - url: /api/v1/mobile
+    description: Mobile API (v1)
+paths:
+  /devices:
+    post:
+      summary: Register a device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreate'
+      responses:
+        '201':
+          description: Device created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+    get:
+      summary: List devices (admin)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/per_page'
+      responses:
+        '200':
+          description: Paged list of devices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedDevices'
+
+  /devices/{device_id}:
+    get:
+      summary: Get device details
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+    patch:
+      summary: Update device (suspend/revoke/attributes)
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdate'
+      responses:
+        '200':
+          description: Updated device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+  /sync/push:
+    post:
+      summary: Push a batch of local changes from device to server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncBatch'
+      responses:
+        '200':
+          description: Batch received, processed with per-item status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+
+  /sync/pull:
+    post:
+      summary: Pull server updates since last sync token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                since_token:
+                  type: string
+                page:
+                  type: integer
+              required: [since_token]
+      responses:
+        '200':
+          description: Pack of updated resources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  next_token:
+                    type: string
+                  changes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SyncItem'
+
+  /sync/ack:
+    post:
+      summary: Acknowledge processed server changes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ack_token:
+                  type: string
+              required: [ack_token]
+      responses:
+        '200':
+          description: Acknowledgement accepted
+
+  /submissions:
+    post:
+      summary: Submit a field submission (form + metadata + media refs)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionCreate'
+      responses:
+        '201':
+          description: Submission accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+
+  /submissions/{id}:
+    get:
+      summary: Get submission details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Submission detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+
+  /conflicts:
+    get:
+      summary: List conflicts
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/per_page'
+      responses:
+        '200':
+          description: List of conflicts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedConflicts'
+
+  /conflicts/{id}/resolve:
+    post:
+      summary: Resolve a conflict (accept_server|accept_client|manual)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resolution:
+                  type: string
+                  enum: [accept_server, accept_client, manual]
+                merged_payload:
+                  type: object
+      responses:
+        '200':
+          description: Conflict resolved
+
+  /media/presign:
+    post:
+      summary: Request pre-signed upload URL for media
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                content_type:
+                  type: string
+                size_bytes:
+                  type: integer
+      responses:
+        '200':
+          description: Pre-signed upload info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upload_url:
+                    type: string
+                  key:
+                    type: string
+
+  /telemetry:
+    post:
+      summary: Ingest telemetry payload from device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryBatch'
+      responses:
+        '202':
+          description: Telemetry accepted for processing
+
+components:
+  parameters:
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+      required: false
+    per_page:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+      required: false
+
+  schemas:
+    PagedDevices:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+        meta:
+          type: object
+
+    DeviceCreate:
+      type: object
+      required: [device_id, device_type, os_version]
+      properties:
+        device_id:
+          type: string
+        device_type:
+          type: string
+        os_version:
+          type: string
+        app_version:
+          type: string
+        push_token:
+          type: string
+        metadata:
+          type: object
+
+    DeviceUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, suspended, revoked]
+        metadata:
+          type: object
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+        device_id:
+          type: string
+        device_type:
+          type: string
+        app_version:
+          type: string
+        os_version:
+          type: string
+        status:
+          type: string
+        last_seen:
+          type: string
+          format: date-time
+        trust_score:
+          type: number
+        metadata:
+          type: object
+
+    SyncItem:
+      type: object
+      properties:
+        id:
+          type: string
+        resource_type:
+          type: string
+        action:
+          type: string
+          enum: [create, update, delete]
+        payload:
+          type: object
+        client_version:
+          type: integer
+        client_temp_id:
+          type: string
+
+    SyncBatch:
+      type: object
+      required: [device_id, items]
+      properties:
+        device_id:
+          type: string
+        client_sync_token:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncItem'
+
+    SyncResponse:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        processed_at:
+          type: string
+          format: date-time
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              client_temp_id:
+                type: string
+              status:
+                type: string
+                enum: [ok, conflict, error]
+              server_id:
+                type: string
+              error:
+                type: string
+
+    SyncItem:
+      type: object
+      properties:
+        id:
+          type: string
+        resource_type:
+          type: string
+        action:
+          type: string
+        payload:
+          type: object
+
+    SubmissionCreate:
+      type: object
+      required: [form_id, form_version, data, device_id]
+      properties:
+        form_id:
+          type: string
+        form_version:
+          type: string
+        data:
+          type: object
+        device_id:
+          type: string
+        media_keys:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+
+    Submission:
+      type: object
+      properties:
+        id:
+          type: string
+        form_id:
+          type: string
+        form_version:
+          type: string
+        data:
+          type: object
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        device_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Conflict:
+      type: object
+      properties:
+        id:
+          type: string
+        resource_type:
+          type: string
+        server_payload:
+          type: object
+        client_payload:
+          type: object
+        detected_at:
+          type: string
+          format: date-time
+
+    PagedConflicts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conflict'
+        meta:
+          type: object
+
+    TelemetryBatch:
+      type: object
+      required: [device_id, metrics]
+      properties:
+        device_id:
+          type: string
+        metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              value:
+                type: number
+
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 import Map, { Source, Layer, NavigationControl, ScaleControl, FullscreenControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -52,9 +53,85 @@ export function PublicMaps() {
   const [layers, setLayers] = useState(MAP_LAYERS);
   const [embedOpen, setEmbedOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [catalog, setCatalog] = useState<any[]>([]);
+  const [grmTickets, setGrmTickets] = useState<any[]>([]);
+  const [showTicketsPanel, setShowTicketsPanel] = useState(false);
+
+  // Lazy-loaded GeoJSON data per layer
+  const [layerData, setLayerData] = useState<Record<string, any>>({});
+  const [loadingLayers, setLoadingLayers] = useState<Record<string, boolean>>({});
+  const [layerErrors, setLayerErrors] = useState<Record<string, string | null>>({});
+
+  const getLayerEndpoint = (layerId: string) => {
+    switch (layerId) {
+      case 'coverage': return '/api/v1/gis/schemes/geojson';
+      case 'facilities': return '/api/v1/gis/facilities/geojson';
+      case 'kiosks': return '/api/v1/gis/facilities/geojson?kind=kiosk';
+      case 'pipelines': return '/api/v1/gis/pipelines/geojson';
+      case 'meters': return '/api/v1/meters?per_page=1000';
+      case 'complaints': return '/api/crm/tickets?per_page=1000';
+      default: return null;
+    }
+  };
+
+  const loadLayer = async (layerId: string) => {
+    if (loadingLayers[layerId] || layerData[layerId]) return;
+    const endpoint = getLayerEndpoint(layerId);
+    if (!endpoint) return;
+
+    setLoadingLayers(prev => ({ ...prev, [layerId]: true }));
+    setLayerErrors(prev => ({ ...prev, [layerId]: null }));
+
+    try {
+      const res: any = await apiClient.get(endpoint);
+      let geojson = res?.data || res || null;
+
+      // Convert meters list to GeoJSON if needed
+      if (layerId === 'meters' && Array.isArray(geojson)) {
+        geojson = {
+          type: 'FeatureCollection',
+          features: geojson.map((m: any) => ({
+            type: 'Feature',
+            properties: m,
+            geometry: m.location || m.geom || null,
+          })),
+        };
+      }
+
+      setLayerData(prev => ({ ...prev, [layerId]: geojson }));
+    } catch (err: any) {
+      setLayerErrors(prev => ({ ...prev, [layerId]: err?.message || 'Failed to load' }));
+      setLayerData(prev => ({ ...prev, [layerId]: null }));
+    } finally {
+      setLoadingLayers(prev => ({ ...prev, [layerId]: false }));
+    }
+  };
+
+  // Load catalog, tickets and any initially visible layers
+  useEffect(() => {
+    apiClient.get('/api/open-data/catalog')
+      .then((res: any) => setCatalog(res?.data || res || []))
+      .catch(() => setCatalog([]));
+
+    apiClient.get('/api/crm/tickets')
+      .then((res: any) => setGrmTickets(res?.data || res || []))
+      .catch(() => setGrmTickets([]));
+
+    // Load visible layers initially
+    layers.filter(l => l.visible).forEach(l => loadLayer(l.id));
+  }, []);
 
   const toggleLayer = useCallback((layerId: string) => {
-    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l));
+    setLayers(prev => {
+      return prev.map(l => {
+        if (l.id === layerId) {
+          const visible = !l.visible;
+          if (visible) loadLayer(l.id);
+          return { ...l, visible };
+        }
+        return l;
+      });
+    });
   }, []);
 
   const visibleCount = useMemo(() => layers.filter(l => l.visible).length, [layers]);
@@ -144,9 +221,9 @@ export function PublicMaps() {
                   <ScaleControl />
                   <FullscreenControl position="top-right" />
                   
-                  {/* Mock GeoJSON layers */}
+                  {/* GeoJSON layers (loaded lazily from server) */}
                   {layers.filter(l => l.visible).map(layer => (
-                    <Source key={layer.id} id={layer.id + '-source'} type="geojson" data={{ type: 'FeatureCollection', features: [] }}>
+                    <Source key={layer.id} id={layer.id + '-source'} type="geojson" data={layerData[layer.id] || { type: 'FeatureCollection', features: [] }}>
                       <Layer 
                         id={layer.id + '-layer'}
                         type="circle"
@@ -157,6 +234,19 @@ export function PublicMaps() {
                 </Map>
               </div>
             </CardContent>
+
+            {/* Layer load statuses */}
+            <div className="p-2 mt-2 text-xs flex flex-wrap gap-2">
+              {layers.filter(l => l.visible).map(layer => {
+                const loading = loadingLayers[layer.id];
+                const err = layerErrors[layer.id];
+                return (
+                  <div key={layer.id} className={`px-2 py-1 rounded ${err ? 'bg-red-50 text-red-700' : loading ? 'bg-yellow-50 text-yellow-700' : 'bg-green-50 text-green-700'}`}>
+                    {loading ? `Loading ${layer.name}…` : err ? `${layer.name} failed` : `${layer.name} loaded`}
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         </div>
 
@@ -208,11 +298,39 @@ export function PublicMaps() {
                           </Label>
                           <p className="text-xs text-muted-foreground">{layer.description}</p>
                         </div>
+
+                        {layer.id === 'complaints' && (
+                          <div className="ml-2">
+                            <Button size="xs" onClick={() => setShowTicketsPanel(prev => !prev)}>
+                              {showTicketsPanel ? 'Hide' : `Load (${grmTickets.length})`}
+                            </Button>
+                          </div>
+                        )}
+
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
+
+              {showTicketsPanel && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold">Reported Issues (GRM)</h4>
+                  <div className="max-h-48 overflow-auto mt-2 space-y-2">
+                    {grmTickets.length === 0 ? (
+                      <div className="text-xs text-muted-foreground">No tickets found</div>
+                    ) : (
+                      grmTickets.map((t: any) => (
+                        <div key={t.id} className="p-2 bg-muted rounded text-xs">
+                          <div className="font-medium">{t.ticketNumber || `#${t.id}`}</div>
+                          <div className="text-muted-foreground">{t.category} • {t.status}</div>
+                          <div className="mt-1">{t.details}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
