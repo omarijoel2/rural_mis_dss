@@ -1,36 +1,62 @@
+// src/pages/admin/SettingsPage.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { listSettings, createSetting, updateSetting, deleteSetting } from '@/services/adminApi';
 import { Zap, Database, Shield, Activity } from 'lucide-react';
 
+// ✅ Define and export the component
 export function SettingsPage() {
-  const [modules, setModules] = useState([
-    { key: 'core-registry', name: 'Core Registry', description: 'Schemes, assets, facilities management', enabled: true, icon: Database },
-    { key: 'core-ops', name: 'Core Operations', description: 'Telemetry, outages, SCADA control', enabled: true, icon: Activity },
-    { key: 'crm', name: 'CRM', description: 'Customer relationship management', enabled: true, icon: Shield },
-    { key: 'cmms', name: 'CMMS', description: 'Asset maintenance and work orders', enabled: true, icon: Zap },
-    { key: 'water-quality', name: 'Water Quality', description: 'WQ parameters, sampling, compliance', enabled: true, icon: Database },
-    { key: 'hydromet', name: 'Hydromet', description: 'Hydro-meteorological data', enabled: true, icon: Database },
-    { key: 'costing', name: 'Costing & Finance', description: 'Budgets, allocations, cost-to-serve', enabled: true, icon: Zap },
-    { key: 'procurement', name: 'Procurement', description: 'RFQs, LPOs, vendor management', enabled: true, icon: Shield },
-    { key: 'projects', name: 'Projects', description: 'Project planning and tracking', enabled: true, icon: Activity },
-    { key: 'community', name: 'Community & Stakeholder', description: 'Committees, grievances, vendors', enabled: true, icon: Shield },
-    { key: 'risk-compliance', name: 'Risk, Compliance & Governance', description: 'Risk register, incidents, audit', enabled: true, icon: Shield },
-    { key: 'dsa', name: 'Decision Support & Analytics', description: 'Forecasts, scenarios, optimization', enabled: true, icon: Zap },
-    { key: 'training', name: 'Training & Knowledge', description: 'Learning management, certifications', enabled: true, icon: Database },
-    { key: 'me', name: 'M&E', description: 'Monitoring & evaluation, KPIs', enabled: true, icon: Activity },
-  ]);
+  const [settings, setSettings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<any>({});
+  const [editId, setEditId] = useState<string | null>(null);
 
-  const toggleModule = (key: string) => {
-    setModules(modules.map(m => 
-      m.key === key ? { ...m, enabled: !m.enabled } : m
-    ));
+  useEffect(() => {
+    setLoading(true);
+    listSettings()
+      .then((data) => {
+        setSettings(Array.isArray(data) ? data : data.data || []);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleAddSetting = () => {
+    setForm({});
+    setEditId(null);
+    setShowForm(true);
   };
 
-  const enabledCount = modules.filter(m => m.enabled).length;
+  const handleEditSetting = (setting: any) => {
+    setForm(setting);
+    setEditId(setting.id);
+    setShowForm(true);
+  };
 
+  const handleDeleteSetting = async (id: string) => {
+    if (!window.confirm('Delete this setting?')) return;
+    await deleteSetting(id);
+    setSettings(settings.filter((s) => s.id !== id));
+  };
+
+  const handleFormSubmit = async (e: any) => {
+    e.preventDefault();
+    if (editId) {
+      const updated = await updateSetting(editId, form);
+      setSettings(settings.map((s) => (s.id === editId ? updated : s)));
+    } else {
+      const created = await createSetting(form);
+      setSettings([...settings, created]);
+    }
+    setShowForm(false);
+  };
+
+  // ...existing code for module toggling can be adapted for settings if needed
+
+  // ✅ return is now INSIDE the function
   return (
     <div className="space-y-6">
       <div>
@@ -40,46 +66,79 @@ export function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Module Management</CardTitle>
-          <CardDescription>Enable or disable modules for this tenant. Disabled modules won't appear in the sidebar.</CardDescription>
+          <CardTitle>System Settings</CardTitle>
+          <CardDescription>Manage system settings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-3 bg-blue-500/10 rounded-lg border border-blue-200">
-            <p className="text-sm font-medium text-blue-900">
-              Enabled: <strong>{enabledCount} of {modules.length}</strong> modules
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {modules.map((module) => {
-              const Icon = module.icon;
-              return (
-                <div key={module.key} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition">
-                  <div className="flex items-start gap-4 flex-1">
-                    <Icon className="h-5 w-5 text-muted-foreground mt-1" />
-                    <div className="flex-1">
-                      <p className="font-semibold">{module.name}</p>
-                      <p className="text-sm text-muted-foreground">{module.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={module.enabled ? 'default' : 'secondary'}>
-                      {module.enabled ? 'Enabled' : 'Disabled'}
-                    </Badge>
-                    <Switch
-                      checked={module.enabled}
-                      onCheckedChange={() => toggleModule(module.key)}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-6 flex gap-2 justify-end">
-            <Button variant="outline">Cancel</Button>
-            <Button>Save Changes</Button>
-          </div>
+          {loading ? (
+            <div className="py-8 text-center">Loading…</div>
+          ) : settings.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Shield className="mx-auto h-12 w-12 mb-4 opacity-50" />
+              <p>No settings found.</p>
+            </div>
+          ) : (
+            <table className="w-full table-auto">
+              <thead>
+                <tr>
+                  <th className="p-2 text-left">Key</th>
+                  <th className="p-2 text-left">Value</th>
+                  <th className="p-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {settings.map((s) => (
+                  <tr key={s.id}>
+                    <td className="p-2">{s.key}</td>
+                    <td className="p-2">{s.value}</td>
+                    <td className="p-2 flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEditSetting(s)}>
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-500"
+                        onClick={() => handleDeleteSetting(s.id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <Button className="mt-4" onClick={handleAddSetting}>
+            Add Setting
+          </Button>
+          {showForm && (
+            <form className="mt-6 space-y-4" onSubmit={handleFormSubmit}>
+              <h3 className="font-semibold text-lg mb-2">
+                {editId ? 'Edit Setting' : 'Add Setting'}
+              </h3>
+              <input
+                className="border p-2 rounded w-full"
+                placeholder="Key"
+                value={form.key || ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, key: e.target.value }))}
+                required
+              />
+              <input
+                className="border p-2 rounded w-full"
+                placeholder="Value"
+                value={form.value || ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, value: e.target.value }))}
+                required
+              />
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">{editId ? 'Update' : 'Add'}</Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
 

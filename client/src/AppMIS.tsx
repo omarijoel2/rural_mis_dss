@@ -6,7 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { SignupPage } from './pages/auth/SignupPage';
-import { CoreRegistryHome } from './pages/core-registry/CoreRegistryHome';
+import { CoreRegistryHome } from './pages/core-registry/';
 import { SchemesPage } from './pages/core-registry/SchemesPage';
 import { SchemesExplorerPage } from './pages/core-registry/SchemesExplorerPage';
 import { FacilitiesPage } from './pages/core-registry/FacilitiesPage';

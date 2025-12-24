@@ -2,7 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { listApiKeys, revokeApiKey , rotateApiKey } from '@/services/integrationApi';
 import { Key, Plus, RotateCcw, Eye, EyeOff, Trash2, Copy, AlertCircle } from 'lucide-react';
 
 interface ApiKey {
@@ -28,30 +29,13 @@ interface OAuthClient {
 }
 
 export function ApiCatalogPage() {
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([
-    {
-      id: 1,
-      appName: 'SCADA Integration',
-      keyId: 'sk_live_abc123xyz',
-      keySecret: '••••••••••••••••',
-      scopes: ['read:telemetry', 'write:alarms'],
-      rateLimit: 5000,
-      lastUsedAt: '2025-11-24T14:32:00Z',
-      createdAt: '2025-11-01T10:00:00Z',
-      isActive: true,
-    },
-    {
-      id: 2,
-      appName: 'Billing System',
-      keyId: 'sk_live_def456uvw',
-      keySecret: '••••••••••••••••',
-      scopes: ['read:billing', 'write:payments'],
-      rateLimit: 1000,
-      lastUsedAt: '2025-11-24T16:15:00Z',
-      createdAt: '2025-11-10T08:30:00Z',
-      isActive: true,
-    },
-  ]);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [apiError, setApiError] = useState<string|null>(null);
+  useEffect(() => {
+    listApiKeys()
+      .then(data => setApiKeys(Array.isArray(data) ? data : (data.data || [])))
+      .catch(() => setApiError('Failed to fetch API keys'));
+  }, []);
 
   const [oauthClients] = useState<OAuthClient[]>([
     {
@@ -76,18 +60,23 @@ export function ApiCatalogPage() {
     navigator.clipboard.writeText(text);
   };
 
-  const rotateKey = (id: number) => {
-    setApiKeys(prev =>
-      prev.map(key =>
-        key.id === id
-          ? { ...key, keySecret: 'sk_live_' + Math.random().toString(36).substr(2, 20) }
-          : key
-      )
-    );
+  const rotateKey = async (id: number) => {
+    try {
+      await rotateApiKey(id);
+      const updated = await listApiKeys();
+      setApiKeys(Array.isArray(updated) ? updated : (updated.data || []));
+    } catch {
+      setApiError('Failed to rotate API key');
+    }
   };
 
-  const deleteKey = (id: number) => {
-    setApiKeys(prev => prev.filter(key => key.id !== id));
+  const deleteKey = async (id: number) => {
+    try {
+      await deleteApiKey(id);
+      setApiKeys(apiKeys.filter(key => key.id !== id));
+    } catch {
+      setApiError('Failed to delete API key');
+    }
   };
 
   const filteredKeys = apiKeys.filter(key =>
@@ -97,6 +86,7 @@ export function ApiCatalogPage() {
 
   return (
     <div className="space-y-6">
+      {apiError && <div className="text-red-500 mb-2">Error loading API keys: {apiError}</div>}
       <div>
         <h1 className="text-3xl font-bold">API Catalog & Key Management</h1>
         <p className="text-muted-foreground">Manage API keys, OAuth clients, and integration credentials</p>

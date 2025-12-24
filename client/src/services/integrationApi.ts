@@ -29,7 +29,20 @@ export async function rotateApiKey(keyId: string) {
   return response.json();
 }
 
+export async function listApiKeys() {
+  const response = await fetch(`${API_BASE}/api-keys`);
+  return response.json();
+}
+
 export async function revokeApiKey(keyId: string) {
+  const response = await fetch(`${API_BASE}/api-keys/${keyId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return response.json();
+}
+
+export async function deleteApiKey(keyId: string) {
   const response = await fetch(`${API_BASE}/api-keys/${keyId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },

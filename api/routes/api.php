@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\Api\AddressController;
@@ -75,6 +76,15 @@ Route::prefix('v1/gis')->group(function () {
     Route::get('/pipelines/geojson', [PipelineController::class, 'geojson']);
     Route::get('/zones/geojson', [ZoneController::class, 'geojson']);
     Route::get('/addresses/geojson', [AddressController::class, 'geojson']);
+});
+    Route::prefix('v1/admin')->middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('users', \App\Http\Controllers\Api\Admin\UserController::class);
+    Route::apiResource('roles', \App\Http\Controllers\Api\Admin\RoleController::class);
+    Route::apiResource('permissions', \App\Http\Controllers\Api\Admin\PermissionController::class);
+    Route::apiResource('settings', \App\Http\Controllers\Api\Admin\SettingController::class);
+    Route::get('audit', [\App\Http\Controllers\Api\Admin\AuditController::class, 'index']);
+    Route::get('audit/{id}', [\App\Http\Controllers\Api\Admin\AuditController::class, 'show']);
+    Route::delete('audit/{id}', [\App\Http\Controllers\Api\Admin\AuditController::class, 'destroy']);
 });
 
 Route::prefix('v1')->group(function () {

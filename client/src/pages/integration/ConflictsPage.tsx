@@ -15,7 +15,11 @@ export function ConflictsPage() {
   if (isLoading) return <div>Loading conflicts…</div>;
   if (error) return <div>Error loading conflicts</div>;
 
-  const items = data?.data ?? data ?? [];
+  // Ensure items is always an array
+  let items: any[] = [];
+  if (Array.isArray(data)) items = data;
+  else if (Array.isArray(data?.data)) items = data.data;
+  else if (data && typeof data === 'object' && data !== null) items = Object.values(data);
 
   return (
     <div className="p-4">
@@ -37,7 +41,11 @@ export function ConflictsPage() {
                 <td className="p-2">{c.id}</td>
                 <td className="p-2">{c.resource_type}</td>
                 <td className="p-2">{c.resource_id}</td>
-                <td className="p-2">{new Date(c.created_at).toLocaleString()}</td>
+                <td className="p-2">{
+                  c.created_at && !isNaN(Date.parse(c.created_at))
+                    ? new Date(c.created_at).toLocaleString()
+                    : '—'
+                }</td>
                 <td className="p-2">
                   <Link to={`/integration/conflicts/${c.id}`} state={{ conflict: c }} className="btn btn-sm">View</Link>
                 </td>
